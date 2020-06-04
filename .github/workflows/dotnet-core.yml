@@ -25,16 +25,16 @@ jobs:
     - name: Publish
       run: dotnet publish src/Meziantou.Moneiz/Meziantou.Moneiz.csproj --configuration Release
     
-#    - name: GitHub Pages action
-#      uses: peaceiris/actions-gh-pages@v3.6.1
-#      with:
-#        # Set a generated GITHUB_TOKEN for pushing to the remote branch.
-#        github_token: # optional
-#        # Set a personal access token for pushing to the remote branch.
-#        personal_token: # optional
-#        # Set a target branch for deployment.
-#        publish_branch: gh-pages
-#        publish_dir: src/Meziantou.Moneiz/bin/Release/netstandard2.1/publish/wwwroot
-#        allow_empty_commit: false
-#        keep_files: false
-#        force_orphan: true
+    - name: GitHub Pages action
+      uses: peaceiris/actions-gh-pages@v3.6.1
+      with:
+        # Set a generated GITHUB_TOKEN for pushing to the remote branch.
+        github_token: # optional
+        # Set a personal access token for pushing to the remote branch.
+        personal_token: # optional
+        # Set a target branch for deployment.
+        publish_branch: gh-pages
+        publish_dir: src/Meziantou.Moneiz/bin/Release/netstandard2.1/publish/wwwroot
+        allow_empty_commit: false
+        keep_files: false
+        force_orphan: true
