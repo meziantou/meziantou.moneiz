@@ -1,0 +1,59 @@
+﻿html, body {
+    height: 100%;
+}
+
+body {
+    min-height: 100%;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: minmax(300px, 1fr) 3fr;
+    grid-gap: 10px;
+    justify-items: stretch;
+    align-items: stretch;
+    align-content: stretch;
+    height: 100%;
+}
+
+.site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--navbar-height);
+}
+
+.site-sidebar {
+    padding-top: var(--navbar-padding);
+    grid-column-start: 1;
+    grid-column-end: 1;
+}
+
+.site-main {
+    padding-top: var(--navbar-padding);
+    grid-column-start: 2;
+    grid-column-end: 3;
+}
+
+.container {
+    max-width: var(--container-width);
+    margin-left: auto;
+    margin-right: auto;
+    transition-property: max-width;
+    transition-duration: 1s;
+}
+
+.fullscreen .container {
+    max-width: 100%;
+    margin-right: 10px;
+}
+
+.toolbar {
+    margin-bottom: 15px;
+}

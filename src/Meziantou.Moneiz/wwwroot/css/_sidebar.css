@@ -1,0 +1,41 @@
+﻿.site-sidebar {
+    background: #f5f5f5;
+}
+
+    .site-sidebar nav li {
+        list-style: none;
+    }
+
+    .site-sidebar nav a {
+        display: block;
+        text-decoration: none;
+        line-height: 40px;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+        .site-sidebar nav a:hover {
+            background-color: #d8d8d8;
+        }
+
+    .site-sidebar a .fas {
+        color: black;
+        width: 30px;
+    }
+
+.widget-accounts {
+    list-style: none;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+    .widget-accounts li {
+        display: flex;
+    }
+
+    .widget-accounts a {
+        flex-grow: 1;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+    }

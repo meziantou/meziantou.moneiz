@@ -1,0 +1,18 @@
+﻿<div class="dropdown @(isOpened ? "opened" : "")" @onclick="() => Toggle()">
+    <a><i class="fas fa-cog"></i></a>
+    <ul class="dropdown-content">
+        @ChildContent
+    </ul>
+</div>
+
+@code {
+    bool isOpened;
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    public void Toggle()
+    {
+        isOpened = !isOpened;
+    }
+}

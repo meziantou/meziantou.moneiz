@@ -1,0 +1,55 @@
+﻿@page "/categories"
+@inject IDatabaseProvider DatabaseProvider
+
+<h1>Categories</h1>
+
+<div class="toolbar">
+    <a class="btn" href="/categories/create">Create group</a>
+</div>
+
+<Loading IsLoading="database == null">
+    <ul class="category-groups">
+        @foreach (var group in database.CategoryGroups)
+        {
+            <li>
+                <div class="category-group-header">
+                    <span class="category-group-name" title="@group.Name">@group.Name</span>
+                    <div class="dropdown">
+                        <a class="dropdown-toggle"><i class="fa fa-cog"></i></a>
+                        <ul class="dropdown-content">
+                            <li><a class="view-transactions">View Transactions</a></li>
+                            <li><a class="edit">Edit</a></li>
+                            <li><a class="delete">Delete</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <ul class="categories">
+                    @foreach (var category in group.Categories)
+                    {
+                        <li>
+                            <span class="category-name" title="@category.Name">@category.Name</span>
+                            <div class="dropdown">
+                                <a class="dropdown-toggle"><i class="fa fa-cog"></i></a>
+                                <ul class="dropdown-content">
+                                    <li><a class="view-transactions">View Transactions</a></li>
+                                    <li><a class="edit">Edit</a></li>
+                                    <li><a class="delete">Delete</a></li>
+                                </ul>
+                            </div>
+                        </li>
+                    }
+                    <li class="create-category"><a>Add a category</a></li>
+                </ul>
+            </li>
+        }
+    </ul>
+</Loading>
+
+@code {
+    Database database;
+
+    protected override async Task OnInitializedAsync()
+    {
+        database = await DatabaseProvider.GetDatabase();
+    }
+}

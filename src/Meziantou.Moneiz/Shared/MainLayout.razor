@@ -1,0 +1,37 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+
+<header class="site-header">
+    <div class="container">
+        <nav class="navbar">
+            <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                <img class="navbar-brand-img" alt="Logo" src="images/moneiz_24x24.png" asp-append-version="true" />
+                <span>Moneiz</span>
+                <span class="beta">beta</span>
+            </a>
+
+            <ul class="navbar-nav">
+                <li><a asp-area="App" asp-controller="Transaction" asp-action="Create" asp-route-returnUrl="@NavigationManager.Uri"><i class="fa fa-plus-circle"></i> Create a transaction</a></li>
+            </ul>
+
+            <ul class="navbar-nav navbar-nav-right">
+                @* TODO toggle fullscreen **@
+                <li class="dropdown">
+                    <a class="dropdown-toggle"><span moneiz-username></span> <i class="fa fa-caret-down"></i></a>
+                    <ul class="dropdown-content">
+                        <li><a asp-area="App" asp-controller="User" asp-action="Index">My account</a></li>
+                    </ul>
+                </li>
+            </ul>
+
+        </nav>
+    </div>
+</header>
+
+<div class="grid-container container">
+    <NavMenu />
+
+    <main class="site-main">
+        @Body
+    </main>
+</div>

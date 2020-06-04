@@ -1,0 +1,26 @@
+{
+  "name": "meziantou.moneiz",
+  "version": "1.0.0",
+  "private": true,
+  "devDependencies": {
+    "gulp": "4.0.2",
+    "gulp-rename": "1.4.0",
+    "gulp-sourcemaps": "2.6.5",
+    "gulp-postcss": "8.0.0",
+    "postcss-import": "12.0.1",
+    "postcss-custom-properties": "9.1.1",
+    "postcss-custom-selectors": "5.1.2",
+    "postcss-custom-media": "7.0.8",
+    "postcss-normalize": "9.0.0",
+    "autoprefixer": "9.8.0",
+    "cssnano": "4.1.10",
+    "gulp-uglify": "3.0.2",
+    "typescript": "3.9.4",
+    "gulp-typescript": "5.0.1",
+    "caniuse-lite": "1.0.30001066"
+  },
+  "browserslist": [
+    "last 2 versions",
+    "> 1%"
+  ]
+}

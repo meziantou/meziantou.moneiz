@@ -1,0 +1,18 @@
+﻿<span class="amount-currency">@Currency</span>
+<span class="@GetClassName()">@Value.ToString("N2", System.Globalization.CultureInfo.InvariantCulture)</span>
+
+@code {
+    [Parameter]
+    public decimal Value { get; set; }
+
+    [Parameter]
+    public string Currency { get; set; }
+
+    private string GetClassName()
+    {
+        if (Value < 0)
+            return "amount-value amount-negative";
+
+        return "amount-value amount-positive";
+    }
+}

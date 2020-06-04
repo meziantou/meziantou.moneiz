@@ -1,0 +1,13 @@
+﻿@import "_blazor.css";
+@import "_base.css";
+@import "_layout.css";
+@import "_sidebar.css";
+@import "_navbar.css";
+@import "_dropdown.css";
+@import "_buttons.css";
+@import "_table.css";
+@import "_form.css";
+
+@import "_page-categories.css";
+@import "_page-transactions.css";
+@import "_big-table.css";

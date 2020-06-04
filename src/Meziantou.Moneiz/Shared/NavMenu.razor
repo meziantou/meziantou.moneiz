@@ -1,0 +1,54 @@
+﻿@inject IDatabaseProvider DatabaseProvider
+@implements IDisposable
+
+<aside class="site-sidebar">
+    <div class="widget-accounts">
+        <Repeater Items="database?.Accounts.Where(a => a.ShowOnSidebar).OrderBy(a => a.SortOrder)">
+            <RepeaterContainerTemplate>
+                <ul>
+                    @context
+                </ul>
+            </RepeaterContainerTemplate>
+
+            <ItemTemplate Context="account">
+                <li>
+                    <a href="account/@account.Id/transactions">@account.FullName</a>
+                    <Amount Value="@account.Balance" Currency="@account.CurrencyIsoCode" />
+                </li>
+            </ItemTemplate>
+        </Repeater>
+    </div>
+
+    <nav>
+        <ul>
+            <li><NavLink href="/accounts"><i class="fas fa-university"></i><span>My accounts</span></NavLink></li>
+            <li><NavLink href="/categories"><i class="fas fa-tags"></i><span>My categories</span></NavLink></li>
+            <li><NavLink><i class="fas fa-users"></i><span>My payees</span></NavLink></li>
+            <li><NavLink><i class="fas fa-clone"></i><span>My presets</span></NavLink></li>
+            <li><NavLink><i class="fas fa-calendar"></i><span>My scheduler</span></NavLink></li>
+            <li><NavLink><i class="fas fa-download"></i><span>Export</span></NavLink></li>
+            <li><NavLink><i class="fas fa-upload"></i><span>Import</span></NavLink></li>
+            <li><NavLink><i class="fas fa-chart-line"></i><span>Analytics</span></NavLink></li>
+        </ul>
+    </nav>
+</aside>
+
+@code {
+    private Database database;
+
+    protected override async Task OnInitializedAsync()
+    {
+        database = await DatabaseProvider.GetDatabase();
+        database.DatabaseChanged += OnDatabaseChanged;
+    }
+
+    public void Dispose()
+    {
+        database.DatabaseChanged -= OnDatabaseChanged;
+    }
+
+    private void OnDatabaseChanged(object sender, EventArgs e)
+    {
+        InvokeAsync(() => StateHasChanged());
+    }
+}

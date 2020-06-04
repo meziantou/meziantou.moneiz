@@ -1,0 +1,72 @@
+﻿@page "/accounts"
+@inject IDatabaseProvider DatabaseProvider
+@inject ConfirmService ConfirmService
+
+<h1>Accounts</h1>
+
+<div class="toolbar">
+    <a class="btn" href="/accounts/create">Create an account</a>
+</div>
+
+<Repeater Items="@database?.Accounts.OrderBy(a => a.SortOrder)">
+    <RepeaterContainerTemplate>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Currency</th>
+                    <th></th>
+                </tr>
+            </thead>
+            @context
+        </table>
+    </RepeaterContainerTemplate>
+
+    <ItemTemplate Context="account">
+        <tr>
+            <td>@account.FullName</td>
+            <td>@account.CurrencyIsoCode</td>
+            <td></td>
+
+            <td class="commands">
+                <Dropdown>
+                    <DropdownItem><a class="view-transactions">View Transactions</a></DropdownItem>
+                    <DropdownItem><button type="button" class="btn-link" @onclick="() => MoveUp(account)">Move up</button></DropdownItem>
+                    <DropdownItem><button type="button" class="btn-link" @onclick="() => MoveDown(account)">Move down</button></DropdownItem>
+                    <DropdownItem><a class="edit" href="/accounts/@account.Id/edit">Edit</a></DropdownItem>
+                    <DropdownItem><button type="button" class="btn-link" @onclick="() => Delete(account)">Delete</button></DropdownItem>
+                </Dropdown>
+            </td>
+        </tr>
+    </ItemTemplate>
+</Repeater>
+
+@code {
+    Database database;
+
+    protected override async Task OnInitializedAsync()
+    {
+        database = await DatabaseProvider.GetDatabase();
+    }
+
+    public async Task MoveUp(Account account)
+    {
+        database.MoveUpAccount(account);
+        await DatabaseProvider.Save();
+    }
+
+    public async Task MoveDown(Account account)
+    {
+        database.MoveDownAccount(account);
+        await DatabaseProvider.Save();
+    }
+
+    public async Task Delete(Account account)
+    {
+        if (await ConfirmService.Confirm("Do you really want to delete this account?"))
+        {
+            database.RemoveAccount(account);
+            await DatabaseProvider.Save();
+        }
+    }
+}
