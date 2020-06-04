@@ -29,10 +29,7 @@ jobs:
       uses: peaceiris/actions-gh-pages@v3.6.1
       with:
         # Set a generated GITHUB_TOKEN for pushing to the remote branch.
-        github_token: # optional
-        # Set a personal access token for pushing to the remote branch.
-        personal_token: # optional
-        # Set a target branch for deployment.
+        # github_token: # optional
         publish_branch: gh-pages
         publish_dir: src/Meziantou.Moneiz/bin/Release/netstandard2.1/publish/wwwroot
         allow_empty_commit: false
