@@ -28,8 +28,7 @@ jobs:
     - name: GitHub Pages action
       uses: peaceiris/actions-gh-pages@v3.6.1
       with:
-        # Set a generated GITHUB_TOKEN for pushing to the remote branch.
-        # github_token: # optional
+        github_token: ${{ secrets.PUBLISH_TOKEN }}
         publish_branch: gh-pages
         publish_dir: src/Meziantou.Moneiz/bin/Release/netstandard2.1/publish/wwwroot
         allow_empty_commit: false
