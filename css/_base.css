@@ -1,0 +1,93 @@
+﻿:root {
+    --container-width: 1200px;
+    --navbar-height: 50px;
+    --navbar-margin: 0px;
+    --navbar-padding: calc(var(--navbar-height) + var(--navbar-margin));
+    --color-error: #a94442;
+    --font-size: 14px;
+    --font-size-small: 12px;
+}
+
+body {
+    background: #fafafa;
+    font-family: 'Roboto', sans-serif;
+    font-size: var(--font-size);
+}
+
+hr {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    border: 0;
+    border-top: 1px solid #eee;
+}
+
+.single-form {
+    margin-top: 65px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 320px;
+}
+
+.single-form-header,
+.single-form-footer {
+    text-align: center;
+}
+
+.panel {
+    padding: 15px;
+    padding-top: 0;
+    margin-bottom: 20px;
+    background-color: #fff;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    box-shadow: 0 1px 1px rgba(0,0,0,.05);
+    border-color: #ddd;
+}
+
+.float-left {
+    float: left;
+}
+
+.float-right {
+    float: right;
+}
+
+.text-left {
+    text-align: left;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+h2 {
+    font-weight: normal;
+}
+
+.empty-list-page {
+    text-align: center;
+}
+
+ul {
+    -webkit-padding-start: 0;
+}
+
+li {
+    line-height: 1.4;
+}
+
+a {
+    color: #337ab7;
+}
+
+.hide {
+    display: none;
+}
+
+ul.unstyled > li {
+    list-style: none;
+}

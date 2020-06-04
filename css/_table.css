@@ -1,0 +1,47 @@
+﻿table {
+    border: 1px solid #ddd;
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 20px;
+    background-color: transparent;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+thead th {
+    border: 1px solid #ddd;
+    vertical-align: bottom;
+    border-bottom-width: 2px;
+    border-top: 0;
+}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+}
+
+td {
+    border: 1px solid #ddd;
+    vertical-align: top;
+}
+
+    td.commands {
+        cursor: pointer;
+        width: 20px;
+        text-align: center;
+        padding: 0;
+    }
+
+        td.commands > .dropdown {
+            padding: 8px;
+        }
+
+@media (hover) {
+    td.commands > .dropdown:not(.opened) {
+        visibility: hidden;
+    }
+
+    tr:hover td.commands > .dropdown {
+        visibility: visible;
+    }
+}

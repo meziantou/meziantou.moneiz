@@ -1,0 +1,47 @@
+﻿@custom-selector :--buttons .btn, button, input[type=submit];
+@custom-selector :--buttons-primary .btn, button, input[type=submit];
+
+:--buttons {
+    display: inline-block;
+    margin-bottom: 0;
+    font-weight: normal;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    background-image: none;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    padding: 6px 12px;
+    font-size: var(--main-font-size);
+    border-radius: 4px;
+    text-decoration: none;
+}
+
+    :--buttons:focus,
+    :--buttons:hover {
+        color: #333;
+        text-decoration: none;
+    }
+
+:--buttons-primary {
+    color: #fff;
+    background-color: #337ab7;
+    border-color: #2e6da4;
+}
+
+    :--buttons-primary:hover {
+        color: #fff;
+        background-color: #286090;
+        border-color: #204d74;
+    }
+
+    :--buttons-primary:focus {
+        color: #fff;
+        background-color: #286090;
+        border-color: #122b40;
+    }
+
+.navbar :--buttons-primary {
+    color: #fff;
+    padding: 6px 12px;
+}
