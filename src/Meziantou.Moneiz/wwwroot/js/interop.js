@@ -2,15 +2,15 @@
 const MoneizDbFileName = "moneiz.moneizdb";
 
 function MoneizLoadDatabase() {
-  return localStorage.getItem(MoneizLocalStorageName);
+  return localforage.getItem(MoneizLocalStorageName);
 }
 
 function MoneizSaveDatabase(content) {
-  return localStorage.setItem(MoneizLocalStorageName, content);
+  return localforage.setItem(MoneizLocalStorageName, content);
 }
 
-function MoneizExportDatabase() {
-  const content = MoneizLoadDatabase();
+async function MoneizExportDatabase() {
+  const content = await MoneizLoadDatabase();
 
   const file = new File([content], MoneizDbFileName, { type: "application/octet-stream" });
   const exportUrl = URL.createObjectURL(file);
