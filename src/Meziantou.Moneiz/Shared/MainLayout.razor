@@ -16,9 +16,12 @@
 
             <ul class="navbar-nav navbar-nav-right">
                 @* TODO toggle fullscreen **@
-                <Dropdown MenuText="My account" MenuIcon="fa-caret-down">
-                    <DropdownItem><a href="/database">Import/Export database</a></DropdownItem>
-                </Dropdown>
+                <li><DatabaseNotExported /></li>
+                <li>
+                    <Dropdown MenuText="My account" MenuIcon="fa-caret-down">
+                        <DropdownItem><a href="/database">Import/Export database</a></DropdownItem>
+                    </Dropdown>
+                </li>
             </ul>
 
         </nav>

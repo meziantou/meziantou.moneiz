@@ -71,19 +71,22 @@ namespace Meziantou.Moneiz
             if (_database == null)
                 throw new InvalidOperationException("Database is not loaded");
 
-            return Save(_database);
+            return Save(_database, new SaveOptions { IndicateDbChanged = true });
         }
 
-        private async Task Save(Database database)
+        private async Task Save(Database database, SaveOptions options)
         {
             var bytes = JsonSerializer.SerializeToUtf8Bytes(database);
             var content = Convert.ToBase64String(bytes);
-            await _jsRuntime.InvokeVoidAsync("MoneizSaveDatabase", content);
+            await _jsRuntime.InvokeVoidAsync("MoneizSaveDatabase", content, options);
+
+            DatabaseChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public async Task Export()
         {
-            await _jsRuntime.InvokeVoidAsync("MoneizExportDatabase", "moneiz.db");
+            await _jsRuntime.InvokeVoidAsync("MoneizExportDatabase");
+            RaiseDatabaseChanged();
         }
 
         public async Task Import(Stream stream)
@@ -92,7 +95,7 @@ namespace Meziantou.Moneiz
             var base64 = await reader.ReadToEndAsync();
             var content = Convert.FromBase64String(base64);
             var db = JsonSerializer.Deserialize<Database>(content);
-            await Save(db);
+            await Save(db, new SaveOptions { IndicateDbChanged = false });
 
             _database = null;
             DatabaseChanged?.Invoke(this, EventArgs.Empty);
@@ -100,7 +103,17 @@ namespace Meziantou.Moneiz
 
         private void Database_DatabaseChanged(object sender, EventArgs e)
         {
+            RaiseDatabaseChanged();
+        }
+
+        private void RaiseDatabaseChanged()
+        {
             DatabaseChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public async Task<bool> IsExported()
+        {
+            return await _jsRuntime.InvokeAsync<bool>("MoneizDatabaseIsExported");
         }
     }
 }

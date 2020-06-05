@@ -1,0 +1,37 @@
+﻿@inject IDatabaseProvider DatabaseProvider
+@implements IDisposable
+
+@if (needExport)
+{
+    <a class="database-not-exported" href="/database"><span>Export database</span></a>
+}
+
+@code {
+    private bool needExport;
+
+    protected override async Task OnInitializedAsync()
+    {
+        DatabaseProvider.DatabaseChanged += DatabaseChanged;
+        await GetState();
+    }
+
+    public void Dispose()
+    {
+        DatabaseProvider.DatabaseChanged -= DatabaseChanged;
+    }
+
+    private void DatabaseChanged(object sender, EventArgs e)
+    {
+        InvokeAsync(() => GetState());
+    }
+
+    private async Task GetState()
+    {
+        var value = !(await DatabaseProvider.IsExported());
+        if (value != needExport)
+        {
+            needExport = value;
+            StateHasChanged();
+        }
+    }
+}

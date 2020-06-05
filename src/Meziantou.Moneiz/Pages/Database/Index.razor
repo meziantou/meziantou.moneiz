@@ -6,7 +6,7 @@
 
 <h1>Export database</h1>
 
-<button onclick="MoneizExportDatabase('moneiz.db')">Export</button>
+<button @onclick="() => ExportDatabase()">Export</button>
 
 <h1>Import database</h1>
 <form>
@@ -20,6 +20,11 @@
 
 @code {
     ElementReference inputTypeFileElement;
+
+    private async Task ExportDatabase()
+    {
+        await DatabaseProvider.Export();
+    }
 
     private async Task ImportDatabase()
     {

@@ -1,12 +1,18 @@
-﻿const MoneizLocalStorageName = "moneiz.db";
+﻿const MoneizLocalStorageDbName = "moneiz.db";
+const MoneizLocalStorageChangedName = "moneiz.dbchanged";
 const MoneizDbFileName = "moneiz.moneizdb";
 
-function MoneizLoadDatabase() {
-  return localforage.getItem(MoneizLocalStorageName);
+async function MoneizDatabaseIsExported() {
+  return (await localforage.getItem(MoneizLocalStorageChangedName)) !== true;
 }
 
-function MoneizSaveDatabase(content) {
-  return localforage.setItem(MoneizLocalStorageName, content);
+function MoneizLoadDatabase() {
+  return localforage.getItem(MoneizLocalStorageDbName);
+}
+
+async function MoneizSaveDatabase(content, options) {
+  await localforage.setItem(MoneizLocalStorageDbName, content);
+  await localforage.setItem(MoneizLocalStorageChangedName, options.indicateDbChanged);
 }
 
 async function MoneizExportDatabase() {
@@ -22,6 +28,8 @@ async function MoneizExportDatabase() {
   a.target = "_self";
   a.click();
   //URL.revokeObjectURL(exportUrl); doesn't work with Safari
+
+  await localforage.removeItem(MoneizLocalStorageChangedName);
 }
 
 function MoneizConfirm(message) {
