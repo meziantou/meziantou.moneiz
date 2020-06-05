@@ -1,8 +1,12 @@
-﻿@page "/database/import"
+﻿@page "/database"
 @inject NavigationManager NavigationManager
 @inject ConfirmService ConfirmService
 @inject IDatabaseProvider DatabaseProvider
 @inject Blazor.FileReader.IFileReaderService FileReaderService
+
+<h1>Export database</h1>
+
+<button onclick="MoneizExportDatabase('moneiz.db')">Export</button>
 
 <h1>Import database</h1>
 <form>
@@ -12,6 +16,8 @@
             <input type="file" @ref="inputTypeFileElement" @onchange="() => ImportDatabase()" />
         </label>
     </div>
+
+    <button onclick="MoneizImportDatabaseFromOnedrive()">Open from OneDrive</button>
 </form>
 
 @code {
