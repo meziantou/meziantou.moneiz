@@ -12,7 +12,7 @@
 
             <ItemTemplate Context="account">
                 <li>
-                    <a href="account/@account.Id/transactions">@account.FullName</a>
+                    <a href="account/@account.Id/transactions">@account</a>
                     <Amount Value="@account.Balance" Currency="@account.CurrencyIsoCode" />
                 </li>
             </ItemTemplate>
@@ -23,11 +23,10 @@
         <ul>
             <li><NavLink href="/accounts"><i class="fas fa-university"></i><span>My accounts</span></NavLink></li>
             <li><NavLink href="/categories"><i class="fas fa-tags"></i><span>My categories</span></NavLink></li>
-            <li><NavLink><i class="fas fa-users"></i><span>My payees</span></NavLink></li>
-            <li><NavLink><i class="fas fa-clone"></i><span>My presets</span></NavLink></li>
+            <li><NavLink href="/payees"><i class="fas fa-users"></i><span>My payees</span></NavLink></li>
             <li><NavLink><i class="fas fa-calendar"></i><span>My scheduler</span></NavLink></li>
-            <li><NavLink><i class="fas fa-download"></i><span>Export</span></NavLink></li>
-            <li><NavLink><i class="fas fa-upload"></i><span>Import</span></NavLink></li>
+            <li><NavLink><i class="fas fa-download"></i><span>Export transactions</span></NavLink></li>
+            <li><NavLink><i class="fas fa-upload"></i><span>Import transactions</span></NavLink></li>
             <li><NavLink><i class="fas fa-chart-line"></i><span>Analytics</span></NavLink></li>
         </ul>
     </nav>

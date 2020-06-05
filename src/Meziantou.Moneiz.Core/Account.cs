@@ -15,21 +15,18 @@
         public string? HolderName { get; set; }
         public string? Bank { get; set; }
 
-        public string FullName
+        public decimal Balance => InitialBalance;
+
+        public override string ToString()
         {
-            get
+            if (!string.IsNullOrEmpty(Bank))
             {
-                if (!string.IsNullOrEmpty(Bank))
-                {
-                    return Bank + " - " + Name;
-                }
-                else
-                {
-                    return Name ?? "";
-                }
+                return Bank + " - " + Name;
+            }
+            else
+            {
+                return Name ?? "";
             }
         }
-
-        public decimal Balance => InitialBalance;
     }
 }

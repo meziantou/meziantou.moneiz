@@ -24,9 +24,8 @@
 
     <ItemTemplate Context="account">
         <tr>
-            <td>@account.FullName</td>
+            <td>@account</td>
             <td>@account.CurrencyIsoCode</td>
-            <td></td>
 
             <td class="commands">
                 <Dropdown>
@@ -63,7 +62,7 @@
 
     public async Task Delete(Account account)
     {
-        if (await ConfirmService.Confirm("Do you really want to delete this account?"))
+        if (await ConfirmService.Confirm($"Do you really want to delete '{account}'?"))
         {
             database.RemoveAccount(account);
             await DatabaseProvider.Save();

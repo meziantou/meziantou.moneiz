@@ -1,0 +1,87 @@
+﻿@page "/categories/create"
+@page "/categories/{id:int}/edit"
+@inject IDatabaseProvider DatabaseProvider
+@inject NavigationManager NavigationManager
+
+<h1>Create category</h1>
+
+<Loading IsLoading="database == null">
+    <EditForm Model="@model" OnValidSubmit="OnSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            <label>
+                Group Name
+                <InputText @bind-Value="model.GroupName" list="categorygroups" />
+                <datalist id="categorygroups">
+                    @foreach (var group in database.CategoryGroups.OrderBy(item => item))
+                    {
+                        <option>@group</option>
+                    }
+                </datalist>
+            </label>
+        </div>
+
+        <div class="form-group">
+            <label>
+                Name
+                <InputText @bind-Value="model.Name" />
+            </label>
+        </div>
+
+        <button type="submit">Submit</button>
+    </EditForm>
+</Loading>
+
+@code {
+    Database database;
+    EditModel model = new EditModel();
+
+    [Parameter]
+    public int? Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        database = await DatabaseProvider.GetDatabase();
+    }
+
+    protected override void OnParametersSet()
+    {
+        var category = database.GetCategoryById(Id);
+        if (category == null && Id != null)
+        {
+            NavigationManager.NavigateToCategories();
+            return;
+        }
+
+        if (category != null)
+        {
+            model = new EditModel
+            {
+                Name = category.Name,
+                GroupName = category.GroupName,
+            };
+        }
+    }
+
+    private async Task OnSubmit()
+    {
+        var category = database.GetCategoryById(Id) ?? new Category();
+
+        category.Name = model.Name.TrimAndNullify();
+        category.GroupName = model.GroupName.TrimAndNullify();
+
+        database.SaveCategory(category);
+        await DatabaseProvider.Save();
+        NavigationManager.NavigateToCategories();
+    }
+
+    private sealed class EditModel
+    {
+        [Required]
+        public string Name { get; set; }
+
+        public string GroupName { get; set; }
+    }
+}

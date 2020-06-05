@@ -1,76 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using Meziantou.Framework;
 
 namespace Meziantou.Moneiz.Core
 {
-    public sealed class Database
+    public sealed partial class Database
     {
         public event EventHandler? DatabaseChanged;
 
         public IList<Account> Accounts { get; set; } = new List<Account>();
         public IList<Currency> Currencies { get; set; } = new List<Currency>();
-        public IList<CategoryGroup> CategoryGroups { get; set; } = new List<CategoryGroup>();
+        public IList<Category> Categories { get; set; } = new List<Category>();
+        public IList<Payee> Payees { get; set; } = new List<Payee>();
 
-        public Account? GetAccountById(int? id)
+        private static void AddOrReplace<T>(IList<T> items, T? existingItem, T newItem) where T : class
         {
-            if (id == null)
-                return null;
-
-            return Accounts.FirstOrDefault(account => account.Id == id);
-        }
-
-        public void SaveAccount(Account account)
-        {
-            var existingAccount = Accounts.FirstOrDefault(a => a.Id == account.Id);
-            if (existingAccount == null)
+            if (existingItem != null)
             {
-                account.Id = GenerateId(Accounts, a => a.Id);
-                Accounts.Add(account);
-            }
-            else
-            {
-                Accounts.AddOrReplace(existingAccount, account);
+                var index = items.IndexOf(existingItem);
+                if (index >= 0)
+                {
+                    items[index] = newItem;
+                    return;
+                }
             }
 
-            RaiseDatabaseChanged();
-        }
-
-        public void MoveUpAccount(Account account)
-        {
-            MoveAccount(account, -1);
-        }
-
-        public void MoveDownAccount(Account account)
-        {
-            MoveAccount(account, 1);
-        }
-
-        private void MoveAccount(Account account, int direction)
-        {
-            var accounts = Accounts.OrderBy(a => a.SortOrder).ToList();
-            for (var i = 0; i < accounts.Count; i++)
-            {
-                accounts[i].SortOrder = i;
-            }
-
-            var newSortOrder = account.SortOrder + direction;
-            if (newSortOrder >= 0 && newSortOrder < accounts.Count)
-            {
-                accounts.First(a => a.SortOrder == newSortOrder).SortOrder = account.SortOrder;
-                account.SortOrder = newSortOrder;
-
-                RaiseDatabaseChanged();
-            }
-        }
-
-        public void RemoveAccount(Account account)
-        {
-            if (Accounts.Remove(account))
-            {
-                RaiseDatabaseChanged();
-            }
+            items.Add(newItem);
         }
 
         private static int GenerateId<T>(IEnumerable<T> items, Func<T, int> idSelector)

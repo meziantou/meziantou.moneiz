@@ -1,19 +1,20 @@
-﻿@page "/categories"
+﻿@page "/payees"
 @inject IDatabaseProvider DatabaseProvider
 @inject ConfirmService ConfirmService
 
 <h1>Categories</h1>
 
 <div class="toolbar">
-    <a class="btn" href="/categories/create">Create category</a>
+    <a class="btn" href="/payees/create">Create payee</a>
 </div>
 
-<Repeater Items="@database?.Categories.OrderBy(c => c.GroupName).ThenBy(c => c.Name)">
+<Repeater Items="@database?.Payees.OrderBy(c => c.Name)">
     <RepeaterContainerTemplate>
         <table>
             <thead>
                 <tr>
                     <th>Name</th>
+                    <th>Default category</th>
                     <th></th>
                 </tr>
             </thead>
@@ -21,14 +22,15 @@
         </table>
     </RepeaterContainerTemplate>
 
-    <ItemTemplate Context="category">
+    <ItemTemplate Context="payee">
         <tr>
-            <td>@category</td>
+            <td>@payee</td>
+            <td>@payee.DefaultCategory</td>
             <td class="commands">
                 <Dropdown>
                     <DropdownItem><a class="view-transactions">View Transactions</a></DropdownItem>
-                    <DropdownItem><a class="edit" href="/categories/@category.Id/edit">Edit</a></DropdownItem>
-                    <DropdownItem><button type="button" class="btn-link" @onclick="() => Delete(category)">Delete</button></DropdownItem>
+                    <DropdownItem><a class="edit" href="/payees/@payee.Id/edit">Edit</a></DropdownItem>
+                    <DropdownItem><button type="button" class="btn-link" @onclick="() => Delete(payee)">Delete</button></DropdownItem>
                 </Dropdown>
             </td>
         </tr>
@@ -43,11 +45,11 @@
         database = await DatabaseProvider.GetDatabase();
     }
 
-    private async Task Delete(Category category)
+    private async Task Delete(Payee payee)
     {
-        if (await ConfirmService.Confirm($"Do you really want to delete '{category}'?"))
+        if (await ConfirmService.Confirm($"Do you really want to delete '{payee}'?"))
         {
-            database.RemoveCategory(category);
+            database.RemovePayee(payee);
             await DatabaseProvider.Save();
         }
     }

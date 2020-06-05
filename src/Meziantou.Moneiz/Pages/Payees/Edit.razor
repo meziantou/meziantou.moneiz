@@ -1,0 +1,88 @@
+﻿@page "/payees/create"
+@page "/payees/{id:int}/edit"
+@inject IDatabaseProvider DatabaseProvider
+@inject NavigationManager NavigationManager
+
+<h1>Create payee</h1>
+
+<Loading IsLoading="database == null">
+    <EditForm Model="@model" OnValidSubmit="OnSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            <label>
+                Name
+                <InputText @bind-Value="model.Name" />
+            </label>
+        </div>
+
+        <div class="form-group">
+            <label>
+                Default category
+                <InputSelectCategory Database="database" IsOptional="true" @bind-Value="model.Category" />
+
+                @*<InputSelect @bind-Value="model.CategoryId">
+                        <option></option>
+                        @foreach (var category in database.Categories.OrderBy(c => c.ToString()))
+                        {
+                            <option value="@category.Id">@category</option>
+                        }
+                    </InputSelect>*@
+            </label>
+        </div>
+
+        <button type="submit">Submit</button>
+    </EditForm>
+</Loading>
+
+@code {
+    Database database;
+    EditModel model = new EditModel();
+
+    [Parameter]
+    public int? Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        database = await DatabaseProvider.GetDatabase();
+    }
+
+    protected override void OnParametersSet()
+    {
+        var payee = database.GetPayeeById(Id);
+        if (payee == null && Id != null)
+        {
+            NavigationManager.NavigateToPayees();
+            return;
+        }
+
+        if (payee != null)
+        {
+            model = new EditModel
+            {
+                Name = payee.Name,
+                Category = payee.DefaultCategory,
+            };
+        }
+    }
+
+    private async Task OnSubmit()
+    {
+        var payee = database.GetPayeeById(Id) ?? new Payee();
+
+        payee.Name = model.Name.TrimAndNullify();
+        payee.DefaultCategory = model.Category;
+
+        database.SavePayee(payee);
+        await DatabaseProvider.Save();
+        NavigationManager.NavigateToPayees();
+    }
+
+    private sealed class EditModel
+    {
+        [Required]
+        public string Name { get; set; }
+        public Category Category { get; set; }
+    }
+}

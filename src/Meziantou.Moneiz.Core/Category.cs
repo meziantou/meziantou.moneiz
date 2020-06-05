@@ -4,10 +4,14 @@
     {
         public int Id { get; set; }
         public string? Name { get; set; }
+        public string? GroupName { get; set; }
 
         public override string ToString()
         {
-            return Name ?? "";
+            if (GroupName == null)
+                return Name ?? "";
+
+            return GroupName + "::" + Name;
         }
     }
 }
