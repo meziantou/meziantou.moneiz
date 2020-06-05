@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Meziantou.Moneiz.Core;
 using Meziantou.Moneiz.Extensions;
+using Blazor.FileReader;
 
 namespace Meziantou.Moneiz
 {
@@ -18,6 +19,7 @@ namespace Meziantou.Moneiz
             builder.Services.AddTransient(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
             builder.Services.AddSingleton<IDatabaseProvider, DatabaseProvider>();
             builder.Services.AddSingleton<ConfirmService>();
+            builder.Services.AddFileReaderService(options => options.UseWasmSharedBuffer = true);
 
             await builder.Build().RunAsync();
         }

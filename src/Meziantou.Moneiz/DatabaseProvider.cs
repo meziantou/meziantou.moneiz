@@ -1,6 +1,7 @@
 ﻿using Meziantou.Moneiz.Core;
 using Microsoft.JSInterop;
 using System;
+using System.IO;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ namespace Meziantou.Moneiz
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         private Database _database;
 
+        public event EventHandler DatabaseChanged;
 
         public DatabaseProvider(IJSRuntime jsRuntime)
         {
@@ -60,17 +62,45 @@ namespace Meziantou.Moneiz
                 _database.Currencies.Add(new Currency { Name = "United States dollar", IsoName = "USD" });
             }
 
+            _database.DatabaseChanged += Database_DatabaseChanged;
             return _database;
         }
 
-        public async Task Save()
+        public Task Save()
         {
             if (_database == null)
                 throw new InvalidOperationException("Database is not loaded");
 
-            var bytes = JsonSerializer.SerializeToUtf8Bytes(_database);
+            return Save(_database);
+        }
+
+        private async Task Save(Database database)
+        {
+            var bytes = JsonSerializer.SerializeToUtf8Bytes(database);
             var content = Convert.ToBase64String(bytes);
             await _jsRuntime.InvokeVoidAsync("MoneizSaveDatabase", content);
+        }
+
+        public async Task Export()
+        {
+            await _jsRuntime.InvokeVoidAsync("MoneizExportDatabase", "moneiz.db");
+        }
+
+        public async Task Import(Stream stream)
+        {
+            var reader = new StreamReader(stream);
+            var base64 = await reader.ReadToEndAsync();
+            var content = Convert.FromBase64String(base64);
+            var db = JsonSerializer.Deserialize<Database>(content);
+            await Save(db);
+
+            _database = null;
+            DatabaseChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void Database_DatabaseChanged(object sender, EventArgs e)
+        {
+            DatabaseChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }

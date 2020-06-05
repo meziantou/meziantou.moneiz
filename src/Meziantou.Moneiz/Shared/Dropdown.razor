@@ -1,5 +1,5 @@
 ﻿<div class="dropdown @(isOpened ? "opened" : "")" @onclick="() => Toggle()">
-    <a><i class="fas fa-cog"></i></a>
+    <a>@MenuText <i class="fas @MenuIcon"></i></a>
     <ul class="dropdown-content">
         @ChildContent
     </ul>
@@ -7,6 +7,12 @@
 
 @code {
     bool isOpened;
+
+    [Parameter]
+    public string MenuText { get; set; }
+
+    [Parameter]
+    public string MenuIcon { get; set; } = "fa-cog";
 
     [Parameter]
     public RenderFragment ChildContent { get; set; }

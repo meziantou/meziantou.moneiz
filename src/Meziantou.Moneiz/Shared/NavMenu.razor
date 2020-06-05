@@ -38,8 +38,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        database = await DatabaseProvider.GetDatabase();
-        database.DatabaseChanged += OnDatabaseChanged;
+        DatabaseProvider.DatabaseChanged += OnDatabaseChanged;
+        await LoadDatabase();
     }
 
     public void Dispose()
@@ -49,6 +49,16 @@
 
     private void OnDatabaseChanged(object sender, EventArgs e)
     {
-        InvokeAsync(() => StateHasChanged());
+        InvokeAsync(async () =>
+        {
+            await LoadDatabase();
+            StateHasChanged();
+        });
+
+    }
+
+    private async Task LoadDatabase()
+    {
+        database = await DatabaseProvider.GetDatabase();
     }
 }

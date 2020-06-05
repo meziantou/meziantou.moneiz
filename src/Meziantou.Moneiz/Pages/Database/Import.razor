@@ -1,0 +1,39 @@
+﻿@page "/database/import"
+@inject NavigationManager NavigationManager
+@inject ConfirmService ConfirmService
+@inject IDatabaseProvider DatabaseProvider
+@inject Blazor.FileReader.IFileReaderService FileReaderService
+
+<h1>Import database</h1>
+<form>
+    <div class="form-group">
+        <label>
+            Database file
+            <input type="file" @ref="inputTypeFileElement" @onchange="() => ImportDatabase()" />
+        </label>
+    </div>
+</form>
+
+@code {
+    ElementReference inputTypeFileElement;
+
+    private async Task ImportDatabase()
+    {
+        var files = await FileReaderService.CreateReference(inputTypeFileElement).EnumerateFilesAsync();
+        var file = files.FirstOrDefault();
+        if (file == null)
+            return;
+
+        try
+        {
+            await using var stream = await file.OpenReadAsync();
+            await DatabaseProvider.Import(stream);
+            await ConfirmService.Alert("Database imported");
+            NavigationManager.NavigateTo("/");
+        }
+        catch
+        {
+            await ConfirmService.Alert("Cannot import database");
+        }
+    }
+}

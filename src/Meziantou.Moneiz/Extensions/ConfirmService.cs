@@ -16,5 +16,10 @@ namespace Meziantou.Moneiz.Extensions
         {
             return _jSRuntime.InvokeAsync<bool>("MoneizConfirm", message);
         }
+
+        public ValueTask Alert(string message)
+        {
+            return _jSRuntime.InvokeVoidAsync("MoneizAlert", message);
+        }
     }
 }

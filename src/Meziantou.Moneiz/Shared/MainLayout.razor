@@ -16,12 +16,10 @@
 
             <ul class="navbar-nav navbar-nav-right">
                 @* TODO toggle fullscreen **@
-                <li class="dropdown">
-                    <a class="dropdown-toggle"><span moneiz-username></span> <i class="fa fa-caret-down"></i></a>
-                    <ul class="dropdown-content">
-                        <li><a asp-area="App" asp-controller="User" asp-action="Index">My account</a></li>
-                    </ul>
-                </li>
+                <Dropdown MenuText="My account" MenuIcon="fa-caret-down">
+                    <DropdownItem><ExportDatabase>Export database</ExportDatabase></DropdownItem>
+                    <DropdownItem><a href="/database/import">Import database</a></DropdownItem>
+                </Dropdown>
             </ul>
 
         </nav>
