@@ -15,14 +15,14 @@ namespace Meziantou.Moneiz.Core
 
         public Database()
         {
-            InitializeCurrencies();
+            Currencies = InitializeCurrencies();
         }
 
         [JsonPropertyName("a")]
         public IList<Account> Accounts { get; set; } = new List<Account>();
 
         [JsonIgnore]
-        public IList<Currency> Currencies { get; } = new List<Currency>();
+        public IReadOnlyList<Currency> Currencies { get; }
 
         [JsonPropertyName("c")]
         public IList<Category> Categories { get; set; } = new List<Category>();

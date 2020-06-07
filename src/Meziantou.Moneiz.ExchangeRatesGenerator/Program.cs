@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -7,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace Meziantou.Moneiz.ExchangeRatesGenerator
 {
-    class Program
+    internal static class Program
     {
-        static async Task Main(string[] args)
+        private static async Task Main(string[] args)
         {
             using var httpClient = new HttpClient();
 
@@ -37,23 +39,28 @@ namespace Meziantou.Moneiz.Core
 {
     partial class Database
     {
-        private void InitializeCurrencies()
+        private static System.Collections.Generic.IReadOnlyList<Currency> InitializeCurrencies()
         {
+            var result = new Currency[" + currencies.Count.ToString(CultureInfo.InvariantCulture) + @"];
 ");
+            var i = 0;
             foreach (var currency in currencies)
             {
                 var exchangeRate = rates.GetValueOrDefault(currency.Key, 1d);
 
-                sb.AppendLine($"            Currencies.Add(new Currency(\"{currency.Key}\", \"{currency.Value}\", {exchangeRate}m));");
+                sb.AppendLine($"            result[{i.ToString(CultureInfo.InvariantCulture)}] = new Currency(\"{currency.Key}\", \"{currency.Value}\", {exchangeRate}m);");
+                i++;
             }
 
-            sb.Append(@"
+            sb.Append(@"            return result;
         }
     }
 }
 ");
 
             File.WriteAllText(args[0], sb.ToString());
+            Console.WriteLine("File written to " + Path.GetFullPath(args[0]));
+            Console.WriteLine(sb.ToString());
         }
 
         private class ExchangeRatesResponse
