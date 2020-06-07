@@ -56,7 +56,27 @@ namespace Meziantou.Moneiz.Core
             }
         }
 
-        public decimal GetBalance(Account account, DateTime dateTime, TransactionState transactionState)
+        public decimal GetReconciledBalance(Account account)
+        {
+            return GetBalance(account, DateTime.MaxValue, TransactionState.Reconciliated);
+        }
+
+        public decimal GetCheckedBalance(Account account)
+        {
+            return GetBalance(account, DateTime.MaxValue, TransactionState.Checked);
+        }
+
+        public decimal GetTodayBalance(Account account)
+        {
+            return GetBalance(account, DateTime.UtcNow, TransactionState.NotChecked);
+        }
+
+        public decimal GetBalance(Account account)
+        {
+            return GetBalance(account, DateTime.MaxValue, TransactionState.NotChecked);
+        }
+
+        private decimal GetBalance(Account account, DateTime dateTime, TransactionState transactionState)
         {
             return account.InitialBalance + Transactions.Where(IncludeTransaction).Sum(t => t.Amount);
 
@@ -75,6 +95,15 @@ namespace Meziantou.Moneiz.Core
                     return false;
 
                 return true;
+            }
+        }
+
+        public void Reconcile(Account account)
+        {
+            var now = DateTime.UtcNow;
+            foreach (var transaction in Transactions.Where(t => t.Account == account && t.State == TransactionState.Checked))
+            {
+                transaction.ReconciliationDate = now;
             }
         }
     }

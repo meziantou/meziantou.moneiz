@@ -25,44 +25,65 @@ else
 {
     <div class="account-balance">
         <div>
-            <span class="account-balance-title">On <UserDate date="Model.Account.Today" />:</span>
-            <Amount value="@database.GetBalance(account, today, TransactionState.NotChecked)" currency="@account.CurrencyIsoCode" />
+            <span class="account-balance-title">On <UserDate Date="@today" />:</span>
+            <Amount value="@database.GetTodayBalance(account)" currency="@account.CurrencyIsoCode" />
         </div>
         <div>
             <span class="account-balance-title">All transactions:</span>
-            <Amount value="@database.GetBalance(account, DateTime.MaxValue, TransactionState.NotChecked)" currency="@account.CurrencyIsoCode" />
+            <Amount value="@database.GetBalance(account)" currency="@account.CurrencyIsoCode" />
         </div>
         <div>
             <span class="account-balance-title">Checked transactions:</span>
             <span id="CheckedBalanceContainer">
-                <Amount value="@database.GetBalance(account, DateTime.MaxValue, TransactionState.Checked)" currency="@account.CurrencyIsoCode" />
+                <Amount value="@database.GetCheckedBalance(account)" currency="@account.CurrencyIsoCode" />
             </span>
         </div>
         <div>
             <span class="account-balance-title">Reconciled transactions:</span>
             <span>
-                <Amount value="@database.GetBalance(account, DateTime.MaxValue, TransactionState.Reconciliated)" currency="@account.CurrencyIsoCode" />
+                <Amount value="@database.GetReconciledBalance(account)" currency="@account.CurrencyIsoCode" />
             </span>
         </div>
         <div>
-            <a asp-controller="Account" asp-action="Reconcile" asp-route-id="@account.Id" class="btn btn-primary">Reconcile</a>
+            <a class="btn btn-primary" @onclick="Reconcile">Reconcile</a>
         </div>
     </div>
 }
 
-<Repeater Items="transactions?.Skip(pageIndex * pageSize).Take(pageSize)">
+<Repeater Items="transactions?.OrderBy(t => t.ValueDate).ThenBy(t=>t.Payee?.Name).Skip(pageIndex * pageSize).Take(pageSize)">
     <RepeaterContainerTemplate>
         <table>
-            <tr>
-                <th></th>
-                <th>Operation Date</th>
-                <th>Category</th>
-                <th>Title</th>
-                <th>Amount</th>
-                <th>Comment</th>
-                <th></th>
-            </tr>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Operation Date</th>
+                    <th>Category</th>
+                    <th>Title</th>
+                    <th>Amount</th>
+                    <th>Comment</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            @if (pageIndex > 0)
+            {
+                <tr>
+                    <td colspan="7" class="row-navigation">
+                        <a @onclick="() => pageIndex--">Newer transactions</a>
+                    </td>
+                </tr>
+            }
+
             @context
+
+            @if (HasMorePages())
+            {
+                <tr>
+                    <td colspan="7" class="row-navigation">
+                        <a @onclick="() => pageIndex++">Older transactions</a>
+                    </td>
+                </tr>
+            }
         </table>
     </RepeaterContainerTemplate>
 
@@ -71,23 +92,25 @@ else
             <td class="transaction-state">
                 @if (transaction.State == TransactionState.Reconciliated)
                 {
-                    <div class="btn-transaction-unchecked" title="@transaction.State"></div>
+                    <div class="btn-transaction-status fas fa-check-square" title="@transaction.State"></div>
                 }
                 else if (transaction.State == TransactionState.Checked)
                 {
-                    <div class="btn-transaction-checked" title="@transaction.State" @onclick="() => Uncheck(transaction)"></div>
+                    <div class="btn-transaction-status far fa-check-square" title="@transaction.State" @onclick="() => Uncheck(transaction)"></div>
                 }
                 else
                 {
-                    <div class="btn-transaction-unchecked" title="@transaction.State" @onclick="() => Check(transaction)"></div>
+                    <div class="btn-transaction-status far fa-square" title="@transaction.State" @onclick="() => Check(transaction)"></div>
                 }
             </td>
             <td><UserDate Date="@transaction.ValueDate" /></td>
             <td>@transaction.Category</td>
             <td>@transaction.FinalTitle</td>
             <td><Amount Value="@transaction.Amount" Currency="@transaction.Account.CurrencyIsoCode" /></td>
+            <td>@transaction.Comment</td>
             <td class="commands">
                 <Dropdown>
+                    <DropdownItem><CreateTransactionLink DuplicatedTransaction="transaction" class="duplicate">Duplicate</CreateTransactionLink></DropdownItem>
                     <DropdownItem><CreateTransactionLink Transaction="transaction" class="view-transactions">Edit</CreateTransactionLink></DropdownItem>
                     <DropdownItem><button type="button" class="btn-link" @onclick="() => Delete(transaction)">Delete</button></DropdownItem>
                 </Dropdown>
@@ -155,6 +178,20 @@ else
     private async Task Delete(Transaction transaction)
     {
         database.RemoveTransaction(transaction);
+        await DatabaseProvider.Save();
+    }
+
+    private bool HasMorePages()
+    {
+        return transactions.Skip((pageIndex + 1) * pageSize).Any();
+    }
+
+    private async Task Reconcile()
+    {
+        if (!await ConfirmService.Confirm($"Balance of '{account}': {account?.CurrencyIsoCode}{database.GetCheckedBalance(account)}.\nDo you confirm this balance?"))
+            return;
+
+        database.Reconcile(account);
         await DatabaseProvider.Save();
     }
 }

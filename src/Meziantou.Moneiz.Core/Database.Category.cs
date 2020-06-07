@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using Meziantou.Framework;
 
 namespace Meziantou.Moneiz.Core
 {
     partial class Database
     {
+        [JsonIgnore]
         public IEnumerable<string> CategoryGroups => Categories.Select(c => c.GroupName).WhereNotNull().Distinct();
 
         public Category? GetCategoryById(int? id)

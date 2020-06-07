@@ -1,6 +1,7 @@
 ﻿@page "/transactions/create"
 @page "/transactions/{Id:int}/edit"
-
+@inject NavigationManager NavigationManager
+@inject IDatabaseProvider DatabaseProvider
 
 <h1>Create transaction</h1>
 
@@ -9,19 +10,85 @@
         <DataAnnotationsValidator />
         <ValidationSummary />
 
-        @*<div class="form-group">
+        @if (database.Accounts.Count > 1)
+        {
+            <div class="form-group">
+                <label>
+                    Inter-account
+                    <InputCheckbox @bind-Value="model.InterAccount" />
+                </label>
+            </div>
+        }
+
+        <div class="form-group">
             <label>
-                Name
-                <InputText @bind-Value="model.Name" />
+                @if (model.InterAccount)
+                {
+                    @: Debited account
+                }
+                else
+                {
+                    @: Account
+                }
+                <InputSelectAccount @bind-Value="model.DebitedAccount" />
             </label>
+        </div>
+
+        @if (model.InterAccount)
+        {
+
+            <div class="form-group">
+                <label>
+                    CreditedAccount
+                    <InputSelectAccount @bind-Value="model.CreditedAccount" />
+                </label>
+            </div>
+        }
+
+        <div class="form-group">
+            <label>
+                Payee
+                <InputText @bind-Value="model.Payee" list="Payees" @onfocusout="OnPayeeChanged" />
+            </label>
+
+            <datalist id="Payees">
+                @foreach (var payee in database.Payees.OrderBy(p => p.Name))
+                {
+                    <option value="@payee" />
+                }
+            </datalist>
         </div>
 
         <div class="form-group">
             <label>
                 Category
-                <InputSelectCategory Database="database" IsOptional="true" @bind-Value="model.Category" />
+                <InputSelectCategory IsOptional="true" @bind-Value="model.Category" />
             </label>
-        </div>*@
+        </div>
+
+        <div class="form-group">
+            <label>
+                Operation date
+                <InputDate @bind-Value="model.ValueDate" />
+            </label>
+
+            <button tabindex="-1" class="btn-link" @onclick="() => model.ValueDate = DateTime.Now">Today</button>
+            <button tabindex="-1" class="btn-link" @onclick="() => model.ValueDate = DateTime.Now.AddDays(-1)">Yesterday</button>
+        </div>
+
+        <div class="form-group">
+            <label>
+                Amount
+                <InputNumber @bind-Value="model.Amount" />
+            </label>
+        </div>
+
+        <div class="form-group">
+            <label>
+                Comment
+                <InputText @bind-Value="model.Comment" />
+            </label>
+        </div>
 
         <button type="submit">Submit</button>
     </EditForm>
@@ -34,9 +101,114 @@
     [Parameter]
     public int? Id { get; set; }
 
+    protected override async Task OnInitializedAsync()
+    {
+        database = await DatabaseProvider.GetDatabase();
+    }
+
+    protected override void OnParametersSet()
+    {
+        var transaction = database.GetDebitedTransactionById(Id) ?? database.GetTransactionById(NavigationManager.GetQueryStringNullableInt32("duplicatedTransaction"));
+        if (transaction == null && Id != null)
+        {
+            NavigationManager.NavigateToReturnUrlOrHome();
+            return;
+        }
+
+        if (transaction != null)
+        {
+            model = new EditModel
+            {
+                DebitedAccount = transaction.Account,
+                CreditedAccount = transaction.LinkedTransaction?.Account,
+                InterAccount = transaction.LinkedTransaction != null,
+                Amount = transaction.LinkedTransaction != null ? Math.Abs(transaction.Amount) : transaction.Amount,
+                Category = transaction.Category,
+                Comment = transaction.Comment,
+                Payee = transaction.Payee?.Name,
+                ValueDate = transaction.ValueDate,
+            };
+        }
+        else
+        {
+            var account = database.GetAccountById(NavigationManager.GetQueryStringNullableInt32("accountId"));
+            model = new EditModel()
+            {
+                DebitedAccount = account,
+                ValueDate = DateTime.Now, // We want the local user date
+                Amount = account?.DefaultCashFlow == CashFlow.Expense ? -1m : 1m,
+            };
+        }
+    }
+
     private async Task OnSubmit()
     {
+        Transaction transaction;
+        if (Id != null)
+        {
+            transaction = database.GetDebitedTransactionById(Id);
+        }
+        else
+        {
+            transaction = new Transaction();
+            if (model.DebitedAccount.DefaultTransactionState == TransactionState.Checked)
+            {
+                transaction.CheckedDate = DateTime.UtcNow;
+            }
+        }
 
+        if (!model.InterAccount && transaction.LinkedTransaction != null)
+        {
+            database.RemoveTransaction(transaction.LinkedTransaction);
+            transaction.LinkedTransaction = null;
+        }
+
+        transaction.Account = model.DebitedAccount;
+        transaction.Payee = database.GetOrCreatePayeeByName(model.Payee.TrimAndNullify());
+        transaction.Category = model.Category;
+        transaction.ValueDate = model.ValueDate;
+        transaction.Amount = model.InterAccount ? -Math.Abs(model.Amount) : model.Amount;
+        transaction.Comment = model.Comment;
+
+        if (model.InterAccount)
+        {
+            var creditedTransaction = transaction.LinkedTransaction;
+            if (creditedTransaction == null)
+            {
+                creditedTransaction = new Transaction();
+                if (model.CreditedAccount.DefaultTransactionState == TransactionState.Checked)
+                {
+                    creditedTransaction.CheckedDate = DateTime.UtcNow;
+                }
+            }
+
+            creditedTransaction.Payee = transaction.Payee;
+            creditedTransaction.Category = transaction.Category;
+            creditedTransaction.ValueDate = transaction.ValueDate;
+            creditedTransaction.Amount = -Math.Abs(transaction.Amount);
+            creditedTransaction.Comment = model.Comment;
+
+            creditedTransaction.LinkedTransaction = transaction;
+            transaction.LinkedTransaction = creditedTransaction;
+
+            database.SaveTransaction(creditedTransaction);
+        }
+
+        database.SaveTransaction(transaction);
+        await DatabaseProvider.Save();
+        NavigationManager.NavigateToReturnUrlOrHome();
+    }
+
+    private void OnPayeeChanged()
+    {
+        if (model.Category == null && !string.IsNullOrWhiteSpace(model.Payee))
+        {
+            var payee = database.GetPayeeByName(model.Payee);
+            if (payee?.DefaultCategory != null)
+            {
+                model.Category = payee.DefaultCategory;
+            }
+        }
     }
 
     private sealed class EditModel
@@ -50,6 +222,5 @@
         public DateTime ValueDate { get; set; }
         public decimal Amount { get; set; }
         public string Comment { get; set; }
-        public TransactionState TransactionState { get; set; }
     }
 }

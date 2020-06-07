@@ -13,6 +13,18 @@ namespace Meziantou.Moneiz.Core
             return Transactions.FirstOrDefault(item => item.Id == id);
         }
 
+        public Transaction? GetDebitedTransactionById(int? id)
+        {
+            if (id == null)
+                return null;
+
+            var transaction = Transactions.FirstOrDefault(item => item.Id == id);
+            if (transaction.Amount > 0 && transaction.LinkedTransaction != null)
+                return transaction.LinkedTransaction;
+
+            return transaction;
+        }
+
 
         public void SaveTransaction(Transaction transaction)
         {
@@ -23,6 +35,13 @@ namespace Meziantou.Moneiz.Core
             }
 
             AddOrReplace(Transactions, existingTransaction, transaction);
+
+            if (transaction.Payee != null && transaction.Payee.DefaultCategory == null && transaction.Category != null)
+            {
+                transaction.Payee.DefaultCategory = transaction.Category;
+                SavePayee(transaction.Payee);
+            }
+
             RaiseDatabaseChanged();
         }
 

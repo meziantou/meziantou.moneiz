@@ -1,29 +1,13 @@
 ﻿.transaction-state {
-    padding-left: 0;
-    padding-right: 0;
+  padding-left: 0;
+  padding-right: 0;
+  text-align: center;
 }
 
-.btn-transaction-unchecked,
-.btn-transaction-checked,
-.btn-transaction-reconciliated {
-    font-family: "FontAwesome";
-    text-align: center;
-    font-size: 16px;
-    cursor: pointer;
+.btn-transaction-status {
+  font-size: 16px;
+  cursor: pointer;
 }
-
-    .btn-transaction-unchecked::before {
-        content: "\f096"; /*fa-square-o*/
-    }
-
-    .btn-transaction-checked::before {
-        content: "\f046"; /*fa-check-square-o*/
-    }
-
-    .btn-transaction-reconciliated::before {
-        content: "\f14a"; /*fa-check-square*/
-        cursor: default;
-    }
 
 .toolbar-left {
     float: left;

@@ -13,6 +13,29 @@ namespace Meziantou.Moneiz.Core
             return Payees.FirstOrDefault(item => item.Id == id);
         }
 
+        public Payee? GetPayeeByName(string? name)
+        {
+            if (name == null)
+                return null;
+
+            return Payees.FirstOrDefault(item => item.Name == name);
+        }
+
+        public Payee? GetOrCreatePayeeByName(string? name)
+        {
+            if (name == null)
+                return null;
+
+            var payee = Payees.FirstOrDefault(item => item.Name == name);
+            if(payee == null)
+            {
+                payee = new Payee { Name = name };
+                SavePayee(payee);
+            }
+
+            return payee;
+        }
+
         public void RemovePayee(Payee payee)
         {
             ReplacePayee(oldPayee: payee, newPayee: null);

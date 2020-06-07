@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Components.Rendering;
 
 namespace Meziantou.Moneiz.Shared
 {
-    public sealed class InputSelectCategory : InputBase<Category>
+    public sealed class InputSelectAccount : InputBase<Account>
     {
         private Database _database;
 
@@ -21,31 +21,21 @@ namespace Meziantou.Moneiz.Shared
             _database = await DatabaseProvider.GetDatabase();
         }
 
-        [Parameter]
-        public bool IsOptional { get; set; }
-
-        protected override string FormatValueAsString(Category value)
+        protected override string FormatValueAsString(Account value)
         {
             return value?.Id.ToStringInvariant();
         }
 
-        protected override bool TryParseValueFromString(string value, out Category result, out string validationErrorMessage)
+        protected override bool TryParseValueFromString(string value, out Account result, out string validationErrorMessage)
         {
             if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var resultInt))
             {
-                result = _database.GetCategoryById(resultInt);
+                result = _database.GetAccountById(resultInt);
                 validationErrorMessage = null;
                 return true;
             }
             else
             {
-                if (IsOptional)
-                {
-                    result = null;
-                    validationErrorMessage = null;
-                    return true;
-                }
-
                 result = default;
                 validationErrorMessage = "The chosen value is not a valid number.";
                 return false;
@@ -63,32 +53,12 @@ namespace Meziantou.Moneiz.Shared
             if (_database != null)
             {
                 var i = 5;
-                if (IsOptional)
+                foreach (var account in _database.Accounts.OrderBy(account => account.ToString()))
                 {
                     builder.OpenElement(i++, "option");
+                    builder.AddAttribute(i++, "value", account.Id.ToStringInvariant());
+                    builder.AddContent(i++, account.ToString());
                     builder.CloseElement();
-                }
-
-                foreach (var group in _database.Categories.GroupBy(c => c.GroupName).OrderBy(g => g.Key))
-                {
-                    if (group.Key != null)
-                    {
-                        builder.OpenElement(i++, "optgroup");
-                        builder.AddAttribute(i++, "label", group.Key);
-                    }
-
-                    foreach (var category in group.OrderBy(c => c.Name))
-                    {
-                        builder.OpenElement(i++, "option");
-                        builder.AddAttribute(i++, "value", category.Id.ToStringInvariant());
-                        builder.AddContent(i++, category.Name);
-                        builder.CloseElement();
-                    }
-
-                    if (group.Key != null)
-                    {
-                        builder.CloseElement();
-                    }
                 }
             }
 

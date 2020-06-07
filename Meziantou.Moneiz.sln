@@ -12,6 +12,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{FF1F5957-AD48-4C6A-ABB5-233E04911A45}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{2BB5C7BE-E380-438C-84E6-38D350FE6E26}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Meziantou.Moneiz.CoreTests", "tests\Meziantou.Moneiz.CoreTests\Meziantou.Moneiz.CoreTests.csproj", "{5D7D69B1-CBD0-4A08-A80A-11C2ACD124DC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,9 +32,18 @@ Global
 		{00537C36-09E3-408D-AE63-F09F2AF97393}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{00537C36-09E3-408D-AE63-F09F2AF97393}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{00537C36-09E3-408D-AE63-F09F2AF97393}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D7D69B1-CBD0-4A08-A80A-11C2ACD124DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D7D69B1-CBD0-4A08-A80A-11C2ACD124DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D7D69B1-CBD0-4A08-A80A-11C2ACD124DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D7D69B1-CBD0-4A08-A80A-11C2ACD124DC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{051DC434-EBD3-4F1D-A090-B100E07C7372} = {FF1F5957-AD48-4C6A-ABB5-233E04911A45}
+		{00537C36-09E3-408D-AE63-F09F2AF97393} = {FF1F5957-AD48-4C6A-ABB5-233E04911A45}
+		{5D7D69B1-CBD0-4A08-A80A-11C2ACD124DC} = {2BB5C7BE-E380-438C-84E6-38D350FE6E26}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1AF0DAAD-95D2-4D2B-A74F-8F9C0A33880C}

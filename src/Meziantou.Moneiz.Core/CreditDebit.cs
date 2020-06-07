@@ -1,8 +1,8 @@
 ﻿namespace Meziantou.Moneiz.Core
 {
-    public enum CreditDebit
+    public enum CashFlow
     {
-        Debit = -1,
-        Credit = 1,
+        Expense = -1,
+        Income = 1,
     }
 }

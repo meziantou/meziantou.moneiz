@@ -39,7 +39,7 @@ namespace Meziantou.Moneiz
                         if (!string.IsNullOrEmpty(result))
                         {
                             var content = Convert.FromBase64String(result);
-                            _database = JsonSerializer.Deserialize<Database>(content);
+                            _database = await Database.Import(content);
                         }
 
                         if (_database == null)
@@ -76,7 +76,7 @@ namespace Meziantou.Moneiz
 
         private async Task Save(Database database, SaveOptions options)
         {
-            var bytes = JsonSerializer.SerializeToUtf8Bytes(database);
+            var bytes = database.Export();
             var content = Convert.ToBase64String(bytes);
             await _jsRuntime.InvokeVoidAsync("MoneizSaveDatabase", content, options);
 

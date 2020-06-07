@@ -1,7 +1,7 @@
 ﻿@inject NavigationManager NavigationManager
 @implements IDisposable
 
-<a href="@GetUrl()">@ChildContent</a>
+<a href="@GetUrl()" @attributes="@LinkAttributes">@ChildContent</a>
 
 @code {
     [Parameter]
@@ -16,9 +16,22 @@
     [Parameter]
     public Transaction DuplicatedTransaction { get; set; }
 
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object> LinkAttributes { get; set; }
+
     private string GetUrl()
     {
-        return $"/transactions/create?accountId={EscapeUri(Account?.Id.ToStringInvariant())}&returnUrl={EscapeUri(NavigationManager.Uri)}";
+        string url = "";
+        if (Transaction != null)
+        {
+            url = $"/transactions/{EscapeUri(Transaction.Id.ToStringInvariant())}/edit";
+        }
+        else
+        {
+            url = "/transactions/create";
+        }
+
+        return url + $"?accountId={EscapeUri(Account?.Id.ToStringInvariant())}&duplicatedTransaction={EscapeUri(DuplicatedTransaction?.Id.ToStringInvariant())}&returnUrl={EscapeUri(NavigationManager.Uri)}";
     }
 
     protected override void OnInitialized()

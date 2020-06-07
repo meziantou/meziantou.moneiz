@@ -53,9 +53,9 @@
 
         <div class="form-group">
             <label>
-                Default Credit or Debit
-                <InputSelect @bind-Value="model.DefaultCreditDebit">
-                    @foreach (var item in Enum.GetValues(typeof(CreditDebit)))
+                Default cash flow
+                <InputSelect @bind-Value="model.DefaultCashFlow">
+                    @foreach (var item in Enum.GetValues(typeof(CashFlow)))
                     {
                         <option value="@item">@item</option>
                     }
@@ -117,7 +117,7 @@
                 Currency = account.CurrencyIsoCode,
                 InitialBalance = account.InitialBalance,
                 AccountType = account.AccountType,
-                DefaultCreditDebit = account.DefaultCreditDebit,
+                DefaultCashFlow = account.DefaultCashFlow,
                 DefaultTransactionState = account.DefaultTransactionState,
                 ShowOnSidebar = account.ShowOnSidebar,
             };
@@ -134,7 +134,7 @@
         account.CurrencyIsoCode = model.Currency;
         account.InitialBalance = model.InitialBalance;
         account.AccountType = model.AccountType;
-        account.DefaultCreditDebit = model.DefaultCreditDebit;
+        account.DefaultCashFlow = model.DefaultCashFlow;
         account.DefaultTransactionState = model.DefaultTransactionState;
         account.ShowOnSidebar = model.ShowOnSidebar;
 
@@ -152,7 +152,7 @@
         public string Currency { get; set; }
         public decimal InitialBalance { get; set; }
         public AccountType AccountType { get; set; }
-        public CreditDebit DefaultCreditDebit { get; set; }
+        public CashFlow DefaultCashFlow { get; set; }
         public TransactionState DefaultTransactionState { get; set; }
         public bool ShowOnSidebar { get; set; } = true;
     }
