@@ -1,0 +1,34 @@
+﻿@page "/currencies"
+@inject IDatabaseProvider DatabaseProvider
+
+<h1>Currencies</h1>
+
+<Repeater Items="@database?.Currencies.OrderBy(c => c.IsoName)">
+    <RepeaterContainerTemplate>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Exchange Rate</th>
+                </tr>
+            </thead>
+            @context
+        </table>
+    </RepeaterContainerTemplate>
+
+    <ItemTemplate Context="currency">
+        <tr>
+            <td>@currency</td>
+            <td>@currency.ExchangeRate</td>
+        </tr>
+    </ItemTemplate>
+</Repeater>
+
+@code {
+    Database database;
+
+    protected override async Task OnInitializedAsync()
+    {
+        database = await DatabaseProvider.GetDatabase();
+    }
+}
