@@ -1,15 +1,18 @@
-﻿using System.Text.Json.Serialization;
-
-namespace Meziantou.Moneiz.Core
+﻿namespace Meziantou.Moneiz.Core
 {
     public sealed class Currency
     {
-        [JsonPropertyName("a")]
+        public Currency(string isoName, string displayName, decimal exchangeRate)
+        {
+            IsoName = isoName;
+            DisplayName = displayName;
+            ExchangeRate = exchangeRate;
+        }
+
         public string? IsoName { get; set; }
+        public string? DisplayName { get; set; }
+        public decimal ExchangeRate { get; }
 
-        [JsonPropertyName("b")]
-        public string? Name { get; set; }
-
-        public override string ToString() => IsoName + " - " + Name;
+        public override string ToString() => IsoName + " - " + DisplayName;
     }
 }

@@ -56,10 +56,10 @@ namespace Meziantou.Moneiz
 
             if (_database.Currencies.Count == 0)
             {
-                _database.Currencies.Add(new Currency { Name = "Euro", IsoName = "EUR" });
-                _database.Currencies.Add(new Currency { Name = "Canadian Dollar", IsoName = "CAD" });
-                _database.Currencies.Add(new Currency { Name = "Great Britain Pound", IsoName = "GBP" });
-                _database.Currencies.Add(new Currency { Name = "United States dollar", IsoName = "USD" });
+                _database.Currencies.Add(new Currency { DisplayName = "Euro", IsoName = "EUR" });
+                _database.Currencies.Add(new Currency { DisplayName = "Canadian Dollar", IsoName = "CAD" });
+                _database.Currencies.Add(new Currency { DisplayName = "Great Britain Pound", IsoName = "GBP" });
+                _database.Currencies.Add(new Currency { DisplayName = "United States dollar", IsoName = "USD" });
             }
 
             _database.DatabaseChanged += Database_DatabaseChanged;

@@ -13,11 +13,16 @@ namespace Meziantou.Moneiz.Core
 
         public event EventHandler? DatabaseChanged;
 
+        public Database()
+        {
+            InitializeCurrencies();
+        }
+
         [JsonPropertyName("a")]
         public IList<Account> Accounts { get; set; } = new List<Account>();
 
-        [JsonPropertyName("b")]
-        public IList<Currency> Currencies { get; set; } = new List<Currency>();
+        [JsonIgnore]
+        public IList<Currency> Currencies { get; } = new List<Currency>();
 
         [JsonPropertyName("c")]
         public IList<Category> Categories { get; set; } = new List<Category>();
