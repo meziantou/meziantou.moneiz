@@ -1,0 +1,46 @@
+﻿@inject NavigationManager NavigationManager
+@implements IDisposable
+
+<a href="@GetUrl()">@ChildContent</a>
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public Account Account { get; set; }
+
+    [Parameter]
+    public Transaction Transaction { get; set; }
+
+    [Parameter]
+    public Transaction DuplicatedTransaction { get; set; }
+
+    private string GetUrl()
+    {
+        return $"/transactions/create?accountId={EscapeUri(Account?.Id.ToStringInvariant())}&returnUrl={EscapeUri(NavigationManager.Uri)}";
+    }
+
+    protected override void OnInitialized()
+    {
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object sender, LocationChangedEventArgs e)
+    {
+        StateHasChanged();
+    }
+
+    private static string EscapeUri(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return "";
+
+        return Uri.EscapeDataString(value);
+    }
+}

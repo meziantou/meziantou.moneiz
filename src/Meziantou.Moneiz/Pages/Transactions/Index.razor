@@ -1,0 +1,160 @@
+﻿@page "/accounts/{AccountId:int}/transactions"
+@page "/categories/{CategoryId:int}/transactions"
+@page "/payees/{PayeeId:int}/transactions"
+@inject IDatabaseProvider DatabaseProvider
+@inject ConfirmService ConfirmService
+@inject NavigationManager NavigationManager
+
+
+@if (account != null)
+{
+    <h1>Transactions of @account</h1>
+}
+else
+{
+    <h1>My transactions</h1>
+}
+
+<div class="toolbar">
+    <div class="toolbar-left">
+        <CreateTransactionLink Account="account">Create transaction</CreateTransactionLink>
+    </div>
+</div>
+
+@if (account != null)
+{
+    <div class="account-balance">
+        <div>
+            <span class="account-balance-title">On <UserDate date="Model.Account.Today" />:</span>
+            <Amount value="@database.GetBalance(account, today, TransactionState.NotChecked)" currency="@account.CurrencyIsoCode" />
+        </div>
+        <div>
+            <span class="account-balance-title">All transactions:</span>
+            <Amount value="@database.GetBalance(account, DateTime.MaxValue, TransactionState.NotChecked)" currency="@account.CurrencyIsoCode" />
+        </div>
+        <div>
+            <span class="account-balance-title">Checked transactions:</span>
+            <span id="CheckedBalanceContainer">
+                <Amount value="@database.GetBalance(account, DateTime.MaxValue, TransactionState.Checked)" currency="@account.CurrencyIsoCode" />
+            </span>
+        </div>
+        <div>
+            <span class="account-balance-title">Reconciled transactions:</span>
+            <span>
+                <Amount value="@database.GetBalance(account, DateTime.MaxValue, TransactionState.Reconciliated)" currency="@account.CurrencyIsoCode" />
+            </span>
+        </div>
+        <div>
+            <a asp-controller="Account" asp-action="Reconcile" asp-route-id="@account.Id" class="btn btn-primary">Reconcile</a>
+        </div>
+    </div>
+}
+
+<Repeater Items="transactions?.Skip(pageIndex * pageSize).Take(pageSize)">
+    <RepeaterContainerTemplate>
+        <table>
+            <tr>
+                <th></th>
+                <th>Operation Date</th>
+                <th>Category</th>
+                <th>Title</th>
+                <th>Amount</th>
+                <th>Comment</th>
+                <th></th>
+            </tr>
+            @context
+        </table>
+    </RepeaterContainerTemplate>
+
+    <ItemTemplate Context="transaction">
+        <tr>
+            <td class="transaction-state">
+                @if (transaction.State == TransactionState.Reconciliated)
+                {
+                    <div class="btn-transaction-unchecked" title="@transaction.State"></div>
+                }
+                else if (transaction.State == TransactionState.Checked)
+                {
+                    <div class="btn-transaction-checked" title="@transaction.State" @onclick="() => Uncheck(transaction)"></div>
+                }
+                else
+                {
+                    <div class="btn-transaction-unchecked" title="@transaction.State" @onclick="() => Check(transaction)"></div>
+                }
+            </td>
+            <td><UserDate Date="@transaction.ValueDate" /></td>
+            <td>@transaction.Category</td>
+            <td>@transaction.FinalTitle</td>
+            <td><Amount Value="@transaction.Amount" Currency="@transaction.Account.CurrencyIsoCode" /></td>
+            <td class="commands">
+                <Dropdown>
+                    <DropdownItem><CreateTransactionLink Transaction="transaction" class="view-transactions">Edit</CreateTransactionLink></DropdownItem>
+                    <DropdownItem><button type="button" class="btn-link" @onclick="() => Delete(transaction)">Delete</button></DropdownItem>
+                </Dropdown>
+            </td>
+        </tr>
+    </ItemTemplate>
+</Repeater>
+
+@code {
+    Database database;
+    Account account;
+    IEnumerable<Transaction> transactions;
+    int pageIndex = 0;
+    int pageSize = 100;
+    DateTime today = DateTime.UtcNow;
+
+    [Parameter]
+    public int? AccountId { get; set; }
+
+    [Parameter]
+    public int? CategoryId { get; set; }
+
+    [Parameter]
+    public int? PayeeId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        database = await DatabaseProvider.GetDatabase();
+    }
+
+    protected override void OnParametersSet()
+    {
+        transactions = database.Transactions;
+        if (AccountId != null)
+        {
+            account = database.GetAccountById(AccountId);
+            transactions = transactions.Where(t => t.Account == account);
+        }
+
+        if (PayeeId != null)
+        {
+            var payee = database.GetPayeeById(PayeeId);
+            transactions = transactions.Where(t => t.Payee == payee);
+        }
+
+        if (CategoryId != null)
+        {
+            var category = database.GetCategoryById(CategoryId);
+            transactions = transactions.Where(t => t.Category == category);
+        }
+    }
+
+    private async Task Check(Transaction transaction)
+    {
+        database.CheckTransaction(transaction);
+        await DatabaseProvider.Save();
+    }
+
+    private async Task Uncheck(Transaction transaction)
+    {
+        database.UncheckTransaction(transaction);
+        await DatabaseProvider.Save();
+    }
+
+    private async Task Delete(Transaction transaction)
+    {
+        database.RemoveTransaction(transaction);
+        await DatabaseProvider.Save();
+    }
+}

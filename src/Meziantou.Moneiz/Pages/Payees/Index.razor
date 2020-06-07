@@ -28,7 +28,7 @@
             <td>@payee.DefaultCategory</td>
             <td class="commands">
                 <Dropdown>
-                    <DropdownItem><a class="view-transactions">View Transactions</a></DropdownItem>
+                    <DropdownItem><a class="view-transactions" href="/payees/@payee.Id/transactions">View Transactions</a></DropdownItem>
                     <DropdownItem><a class="edit" href="/payees/@payee.Id/edit">Edit</a></DropdownItem>
                     <DropdownItem><button type="button" class="btn-link" @onclick="() => Delete(payee)">Delete</button></DropdownItem>
                 </Dropdown>

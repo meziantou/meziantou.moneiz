@@ -13,7 +13,6 @@ namespace Meziantou.Moneiz.Core
             return Payees.FirstOrDefault(item => item.Id == id);
         }
 
-
         public void RemovePayee(Payee payee)
         {
             ReplacePayee(oldPayee: payee, newPayee: null);

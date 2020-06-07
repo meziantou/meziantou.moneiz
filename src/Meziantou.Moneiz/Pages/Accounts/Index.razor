@@ -29,7 +29,7 @@
 
             <td class="commands">
                 <Dropdown>
-                    <DropdownItem><a class="view-transactions">View Transactions</a></DropdownItem>
+                    <DropdownItem><a class="view-transactions" href="/accounts/@account.Id/transactions">View Transactions</a></DropdownItem>
                     <DropdownItem><button type="button" class="btn-link" @onclick="() => MoveUp(account)">Move up</button></DropdownItem>
                     <DropdownItem><button type="button" class="btn-link" @onclick="() => MoveDown(account)">Move down</button></DropdownItem>
                     <DropdownItem><a class="edit" href="/accounts/@account.Id/edit">Edit</a></DropdownItem>

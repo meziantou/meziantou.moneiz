@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 namespace Meziantou.Moneiz.Core
 {
@@ -52,6 +53,28 @@ namespace Meziantou.Moneiz.Core
             {
                 // TODO remove transactions, etc.
                 RaiseDatabaseChanged();
+            }
+        }
+
+        public decimal GetBalance(Account account, DateTime dateTime, TransactionState transactionState)
+        {
+            return account.InitialBalance + Transactions.Where(IncludeTransaction).Sum(t => t.Amount);
+
+            bool IncludeTransaction(Transaction transaction)
+            {
+                if (transaction.Account != account)
+                    return false;
+
+                if (transaction.ValueDate > dateTime)
+                    return false;
+
+                if (transactionState == TransactionState.Reconciliated && transaction.ReconciliationDate == null)
+                    return false;
+
+                if (transactionState == TransactionState.Checked && transaction.CheckedDate == null)
+                    return false;
+
+                return true;
             }
         }
     }

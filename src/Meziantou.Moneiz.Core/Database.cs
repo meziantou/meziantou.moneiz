@@ -11,6 +11,7 @@ namespace Meziantou.Moneiz.Core
         public IList<Currency> Currencies { get; set; } = new List<Currency>();
         public IList<Category> Categories { get; set; } = new List<Category>();
         public IList<Payee> Payees { get; set; } = new List<Payee>();
+        public IList<Transaction> Transactions { get; set; } = new List<Transaction>();
 
         private static void AddOrReplace<T>(IList<T> items, T? existingItem, T newItem) where T : class
         {

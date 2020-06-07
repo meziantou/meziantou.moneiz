@@ -1,0 +1,55 @@
+﻿@page "/transactions/create"
+@page "/transactions/{Id:int}/edit"
+
+
+<h1>Create transaction</h1>
+
+<Loading IsLoading="database == null">
+    <EditForm Model="@model" OnValidSubmit="OnSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        @*<div class="form-group">
+            <label>
+                Name
+                <InputText @bind-Value="model.Name" />
+            </label>
+        </div>
+
+        <div class="form-group">
+            <label>
+                Category
+                <InputSelectCategory Database="database" IsOptional="true" @bind-Value="model.Category" />
+            </label>
+        </div>*@
+
+        <button type="submit">Submit</button>
+    </EditForm>
+</Loading>
+
+@code {
+    Database database;
+    EditModel model;
+
+    [Parameter]
+    public int? Id { get; set; }
+
+    private async Task OnSubmit()
+    {
+
+    }
+
+    private sealed class EditModel
+    {
+        public bool InterAccount { get; set; }
+
+        public Account DebitedAccount { get; set; }
+        public Account CreditedAccount { get; set; }
+        public string Payee { get; set; }
+        public Category Category { get; set; }
+        public DateTime ValueDate { get; set; }
+        public decimal Amount { get; set; }
+        public string Comment { get; set; }
+        public TransactionState TransactionState { get; set; }
+    }
+}

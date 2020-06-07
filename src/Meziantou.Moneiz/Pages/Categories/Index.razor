@@ -26,7 +26,7 @@
             <td>@category</td>
             <td class="commands">
                 <Dropdown>
-                    <DropdownItem><a class="view-transactions">View Transactions</a></DropdownItem>
+                    <DropdownItem><a class="view-transactions" href="/categories/@category.Id/transactions">View Transactions</a></DropdownItem>
                     <DropdownItem><a class="edit" href="/categories/@category.Id/edit">Edit</a></DropdownItem>
                     <DropdownItem><button type="button" class="btn-link" @onclick="() => Delete(category)">Delete</button></DropdownItem>
                 </Dropdown>

@@ -21,14 +21,6 @@
             <label>
                 Default category
                 <InputSelectCategory Database="database" IsOptional="true" @bind-Value="model.Category" />
-
-                @*<InputSelect @bind-Value="model.CategoryId">
-                        <option></option>
-                        @foreach (var category in database.Categories.OrderBy(c => c.ToString()))
-                        {
-                            <option value="@category.Id">@category</option>
-                        }
-                    </InputSelect>*@
             </label>
         </div>
 
