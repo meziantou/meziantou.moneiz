@@ -20,7 +20,7 @@ jobs:
         dotnet-version: 3.1.300
       
     - name: Exchange rates
-      run: 'dotnet run --project src\Meziantou.Moneiz.ExchangeRatesGenerator -- src\Meziantou.Moneiz.Core\Database.Currencies.generated.cs ${{ secrets.OPENEXCHANGERATES_APIKEY }}'
+      run: 'dotnet run --project src/Meziantou.Moneiz.ExchangeRatesGenerator -- src/Meziantou.Moneiz.Core/Database.Currencies.generated.cs "${{ secrets.OPENEXCHANGERATES_APIKEY }}"'
             
     - name: Test
       run: dotnet test
