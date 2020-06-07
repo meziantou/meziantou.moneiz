@@ -38,9 +38,9 @@ namespace Meziantou.Moneiz.CoreTests
 
             Assert.Single(imported.Accounts);
             Assert.Single(imported.Categories);
-            Assert.Single(imported.Currencies);
             Assert.Single(imported.Payees);
             Assert.Equal(3, imported.Transactions.Count);
+            Assert.NotEmpty(imported.Currencies);
 
             // Check references
             Assert.Same(imported.Payees.Single().DefaultCategory, imported.Categories.Single());
