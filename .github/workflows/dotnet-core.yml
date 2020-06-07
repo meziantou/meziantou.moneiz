@@ -29,6 +29,7 @@ jobs:
       run: dotnet publish src/Meziantou.Moneiz/Meziantou.Moneiz.csproj --configuration Release
     
     - name: GitHub Pages action
+      if: ${{ github.ref == 'ref/head/master' }}
       uses: peaceiris/actions-gh-pages@v3.6.1
       with:
         github_token: ${{ secrets.PUBLISH_TOKEN }}
