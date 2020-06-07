@@ -21,10 +21,7 @@ jobs:
       
     - name: Exchange rates
       run: curl https://openexchangerates.org/api/latest.json?app_id=${{ secrets.OPENEXCHANGERATES_APIKEY }} --output src/Meziantou.Moneiz/wwwroot/data/exchangerates.json
-      
-    - name: Exchange rates (debug)
-      run: cat src/Meziantou.Moneiz/wwwroot/exchangerates.json
-      
+            
     - name: Test
       run: dotnet test
       
