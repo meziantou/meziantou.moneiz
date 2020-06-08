@@ -19,6 +19,9 @@ jobs:
       with:
         dotnet-version: 3.1.300
       
+    - name: Debug
+      run: 'echo "${{ github.ref }}"'
+      
     - name: Exchange rates
       run: 'dotnet run --project src/Meziantou.Moneiz.ExchangeRatesGenerator -- src/Meziantou.Moneiz.Core/Database.Currencies.generated.cs "${{ secrets.OPENEXCHANGERATES_APIKEY }}"'
             
@@ -29,7 +32,7 @@ jobs:
       run: dotnet publish src/Meziantou.Moneiz/Meziantou.Moneiz.csproj --configuration Release
     
     - name: GitHub Pages action
-      if: ${{ github.ref == 'ref/head/master' }}
+      if: ${{ github.ref == 'refs/heads/master' }}
       uses: peaceiris/actions-gh-pages@v3.6.1
       with:
         github_token: ${{ secrets.PUBLISH_TOKEN }}
