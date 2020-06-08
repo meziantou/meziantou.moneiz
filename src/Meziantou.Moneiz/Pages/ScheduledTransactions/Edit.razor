@@ -1,0 +1,216 @@
+﻿@page "/scheduler/create"
+@page "/scheduler/{Id:int}/edit"
+@inject NavigationManager NavigationManager
+@inject IDatabaseProvider DatabaseProvider
+
+<h1>Create scheduled transaction</h1>
+
+<Loading IsLoading="database == null">
+    <EditForm Model="@model" OnValidSubmit="OnSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            <label>
+                Name
+                <InputText @bind-Value="model.Name" />
+            </label>
+        </div>
+
+        <div class="form-group">
+            <label>
+                Recurrence rule
+                <InputText @bind-Value="model.RecurrenceRule" readonly="@(Id != null)" list="RecurrenceRuleSamples" />
+            </label>
+
+            <datalist id="RecurrenceRuleSamples">
+                <option>FREQ=DAILY;INTERVAL=1</option>
+                <option>FREQ=WEEKLY;BYDAY=FR;INTERVAL=2</option>
+                <option>FREQ=MONTHLY;BYMONTHDAY=1;INTERVAL=1</option>
+                <option>FREQ=MONTHLY;BYSETPOS=-1;BYDAY=MO,TU,WE,TH,FR;INTERVAL=1</option>
+            </datalist>
+        </div>
+
+        @if (database.Accounts.Count > 1)
+        {
+            <div class="form-group">
+                <label>
+                    Inter-account
+                    <InputCheckbox @bind-Value="model.InterAccount" />
+                </label>
+            </div>
+        }
+
+        <div class="form-group">
+            <label>
+                @if (model.InterAccount)
+                {
+                    @: Debited account
+                }
+                else
+                {
+                    @: Account
+                }
+                <InputSelectAccount @bind-Value="model.DebitedAccount" />
+            </label>
+        </div>
+
+        @if (model.InterAccount)
+        {
+            <div class="form-group">
+                <label>
+                    CreditedAccount
+                    <InputSelectAccount @bind-Value="model.CreditedAccount" />
+                </label>
+            </div>
+        }
+
+        @if (!model.InterAccount)
+        {
+            <div class="form-group">
+                <label>
+                    Payee
+                    <InputText @bind-Value="model.Payee" list="Payees" @onfocusout="OnPayeeChanged" />
+                </label>
+
+                <datalist id="Payees">
+                    @foreach (var payee in database.Payees.OrderBy(p => p.Name))
+                    {
+                        <option value="@payee" />
+                    }
+                </datalist>
+            </div>
+        }
+
+        <div class="form-group">
+            <label>
+                Category
+                <InputSelectCategory IsOptional="true" @bind-Value="model.Category" />
+            </label>
+        </div>
+
+        <div class="form-group">
+            <label>
+                Amount
+                <InputNumber @bind-Value="model.Amount" />
+            </label>
+        </div>
+
+        <div class="form-group">
+            <label>
+                Comment
+                <InputText @bind-Value="model.Comment" />
+            </label>
+        </div>
+
+        <button type="submit">Submit</button>
+    </EditForm>
+</Loading>
+
+@code {
+    Database database;
+    EditModel model;
+
+    [Parameter]
+    public int? Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        database = await DatabaseProvider.GetDatabase();
+    }
+
+    protected override void OnParametersSet()
+    {
+        var scheduledTransaction = database.GetScheduledTransactionById(Id);
+        if (scheduledTransaction == null && Id != null)
+        {
+            NavigationManager.NavigateToScheduler();
+            return;
+        }
+
+        if (scheduledTransaction != null)
+        {
+            model = new EditModel
+            {
+                DebitedAccount = scheduledTransaction.Account,
+                CreditedAccount = scheduledTransaction.CreditedAccount,
+                InterAccount = scheduledTransaction.CreditedAccount != null,
+                Amount = scheduledTransaction.Amount,
+                Category = scheduledTransaction.Category,
+                Comment = scheduledTransaction.Comment,
+                Payee = scheduledTransaction.Payee?.Name,
+                Name = scheduledTransaction.Name,
+                RecurrenceRule = scheduledTransaction.RecurrenceRuleText,
+            };
+        }
+        else
+        {
+            model = new EditModel()
+            {
+                DebitedAccount = database.DefaultAccount,
+                CreditedAccount = database.DefaultAccount,
+            };
+        }
+    }
+
+    private async Task OnSubmit()
+    {
+        var scheduledTransaction = database.GetScheduledTransactionById(Id);
+        if (scheduledTransaction == null)
+        {
+            scheduledTransaction = new ScheduledTransaction
+            {
+                StartDate = DateTime.UtcNow,
+                RecurrenceRuleText = model.RecurrenceRule.TrimAndNullify(), // Only settable at creation
+            };
+        }
+
+        scheduledTransaction.Name = model.Name.TrimAndNullify();
+        scheduledTransaction.Account = model.DebitedAccount;
+        if (model.InterAccount)
+        {
+            scheduledTransaction.CreditedAccount = model.CreditedAccount;
+            scheduledTransaction.Payee = null;
+        }
+        else
+        {
+            scheduledTransaction.CreditedAccount = null;
+            scheduledTransaction.Payee = database.GetOrCreatePayeeByName(model.Payee);
+        }
+
+        scheduledTransaction.Category = model.Category;
+        scheduledTransaction.Amount = model.Amount;
+        scheduledTransaction.Comment = model.Comment;
+
+        database.SaveScheduledTransaction(scheduledTransaction);
+        await DatabaseProvider.Save();
+        NavigationManager.NavigateToScheduler();
+    }
+
+    private void OnPayeeChanged()
+    {
+        if (model.Category == null && !string.IsNullOrWhiteSpace(model.Payee))
+        {
+            var payee = database.GetPayeeByName(model.Payee);
+            if (payee?.DefaultCategory != null)
+            {
+                model.Category = payee.DefaultCategory;
+            }
+        }
+    }
+
+    private sealed class EditModel
+    {
+        [Required]
+        public string Name { get; set; }
+        [RecurrenceRuleValidation]
+        public string RecurrenceRule { get; set; }
+        public bool InterAccount { get; set; }
+        public Account DebitedAccount { get; set; }
+        public Account CreditedAccount { get; set; }
+        public string Payee { get; set; }
+        public Category Category { get; set; }
+        public decimal Amount { get; set; }
+        public string Comment { get; set; }
+    }
+}

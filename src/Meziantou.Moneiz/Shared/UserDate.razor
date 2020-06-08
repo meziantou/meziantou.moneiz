@@ -1,6 +1,9 @@
-﻿<span title="@Date.ToLongDateString()">@Date.ToShortDateString()</span>
+﻿@if (Date.HasValue)
+{
+    <span title="@Date.Value.ToLongDateString()">@Date.Value.ToShortDateString()</span>
+}
 
 @code {
     [Parameter]
-    public DateTime Date { get; set; }
+    public DateTime? Date { get; set; }
 }

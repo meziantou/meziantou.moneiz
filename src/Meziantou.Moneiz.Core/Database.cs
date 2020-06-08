@@ -33,6 +33,9 @@ namespace Meziantou.Moneiz.Core
         [JsonPropertyName("e")]
         public IList<Transaction> Transactions { get; set; } = new List<Transaction>();
 
+        [JsonPropertyName("f")]
+        public IList<ScheduledTransaction> ScheduledTransactions { get; set; } = new List<ScheduledTransaction>();
+
         private static JsonSerializerOptions CreateOptions()
         {
             return new JsonSerializerOptions
@@ -62,6 +65,8 @@ namespace Meziantou.Moneiz.Core
 
             var db = await JsonSerializer.DeserializeAsync<Database>(compressedStream, s_jsonOptions);
             db.AssertNoDetachedReferences();
+
+            db.ProcessScheduledTransactions();
             return db;
         }
 

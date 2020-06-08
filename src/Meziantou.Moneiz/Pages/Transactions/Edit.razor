@@ -45,19 +45,22 @@
             </div>
         }
 
-        <div class="form-group">
-            <label>
-                Payee
-                <InputText @bind-Value="model.Payee" list="Payees" @onfocusout="OnPayeeChanged" />
-            </label>
+        @if (!model.InterAccount)
+        {
+            <div class="form-group">
+                <label>
+                    Payee
+                    <InputText @bind-Value="model.Payee" list="Payees" @onfocusout="OnPayeeChanged" />
+                </label>
 
-            <datalist id="Payees">
-                @foreach (var payee in database.Payees.OrderBy(p => p.Name))
-                {
-                    <option value="@payee" />
-                }
-            </datalist>
-        </div>
+                <datalist id="Payees">
+                    @foreach (var payee in database.Payees.OrderBy(p => p.Name))
+                    {
+                        <option value="@payee" />
+                    }
+                </datalist>
+            </div>
+        }
 
         <div class="form-group">
             <label>
@@ -134,7 +137,8 @@
             var account = database.GetAccountById(NavigationManager.GetQueryStringNullableInt32("accountId"));
             model = new EditModel()
             {
-                DebitedAccount = account,
+                DebitedAccount = account ?? database.DefaultAccount,
+                CreditedAccount = account ?? database.DefaultAccount,
                 ValueDate = DateTime.Now, // We want the local user date
                 Amount = account?.DefaultCashFlow == CashFlow.Expense ? -1m : 1m,
             };
@@ -215,6 +219,7 @@
     {
         public bool InterAccount { get; set; }
 
+        [Required]
         public Account DebitedAccount { get; set; }
         public Account CreditedAccount { get; set; }
         public string Payee { get; set; }

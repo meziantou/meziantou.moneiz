@@ -1,0 +1,65 @@
+﻿@page "/scheduler"
+@using Meziantou.Framework.Scheduling
+@inject IDatabaseProvider DatabaseProvider
+@inject ConfirmService ConfirmService
+@inject NavigationManager NavigationManager
+
+<h1>Scheduler</h1>
+
+<div class="toolbar">
+    <div class="toolbar-left">
+        <a href="/scheduler/create">Create scheduled transaction</a>
+    </div>
+</div>
+
+<Repeater Items="database?.ScheduledTransactions.OrderBy(t => t.Name)">
+    <RepeaterContainerTemplate>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Account</th>
+                    <th>Amount</th>
+                    <th>Rule</th>
+                    <th>Next occurrence</th>
+                    <th></th>
+                </tr>
+            </thead>
+            @context
+        </table>
+    </RepeaterContainerTemplate>
+
+    <ItemTemplate Context="scheduledTransaction">
+        <tr>
+            <td>@scheduledTransaction.Name</td>
+            <td>@scheduledTransaction.Account</td>
+            <td><Amount Value="scheduledTransaction.Amount" Currency="@scheduledTransaction.Account?.CurrencyIsoCode" /></td>
+            <td>@scheduledTransaction.RecurrenceRule.GetHumanText()</td>
+            <td><UserDate Date="@scheduledTransaction.NextOccurenceDate" /></td>
+            <td class="commands">
+                <Dropdown>
+                    <DropdownItem><a class="edit" href="/scheduler/@scheduledTransaction.Id/edit">Edit</a></DropdownItem>
+                    <DropdownItem><button type="button" class="btn-link" @onclick="() => Delete(scheduledTransaction)">Delete</button></DropdownItem>
+                </Dropdown>
+            </td>
+        </tr>
+    </ItemTemplate>
+</Repeater>
+
+@code {
+    Database database;
+
+    protected override async Task OnInitializedAsync()
+    {
+        database = await DatabaseProvider.GetDatabase();
+    }
+
+    private async Task Delete(ScheduledTransaction scheduledTransaction)
+    {
+        if (await ConfirmService.Confirm($"Do you want to delete '{scheduledTransaction.Name}'"))
+        {
+            database.RemoveScheduledTransaction(scheduledTransaction);
+            await DatabaseProvider.Save();
+        }
+    }
+}

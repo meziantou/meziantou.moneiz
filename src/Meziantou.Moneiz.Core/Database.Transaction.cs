@@ -31,7 +31,7 @@ namespace Meziantou.Moneiz.Core
             var existingTransaction = Transactions.FirstOrDefault(item => item.Id == transaction.Id);
             if (existingTransaction == null)
             {
-                transaction.Id = GenerateId(Payees, item => item.Id);
+                transaction.Id = GenerateId(Transactions, item => item.Id);
             }
 
             AddOrReplace(Transactions, existingTransaction, transaction);

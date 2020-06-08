@@ -45,5 +45,28 @@ namespace Meziantou.Moneiz.CoreTests
             // Check references
             Assert.Same(imported.Payees.Single().DefaultCategory, imported.Categories.Single());
         }
+
+        [Fact]
+        public void AddScheduledTransaction()
+        {
+            var db = new Database();
+            var account = new Account();
+            db.SaveAccount(account);
+
+            var scheduledTransaction = new ScheduledTransaction
+            {
+                Account = account,
+                Amount = 1,
+                RecurrenceRuleText = "FREQ=daily",
+                Name = "test",
+                StartDate = DateTime.UtcNow,
+            };
+
+            // Act
+            db.SaveScheduledTransaction(scheduledTransaction);
+
+            // Assert
+            Assert.Equal(5, db.Transactions.Count);
+        }
     }
 }

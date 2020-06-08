@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace Meziantou.Moneiz.Core
 {
     partial class Database
     {
+        [JsonIgnore]
+        public Account? DefaultAccount => Accounts.Where(a => a.ShowOnSidebar).OrderBy(a => a.ToString()).FirstOrDefault();
+
         public Account? GetAccountById(int? id)
         {
             if (id == null)
