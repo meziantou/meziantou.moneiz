@@ -10,6 +10,8 @@ namespace Meziantou.Moneiz.Core
     public sealed partial class Database
     {
         private static readonly JsonSerializerOptions s_jsonOptions = CreateOptions();
+        private int _deferedEventCount = 0;
+        private bool _deferedEventCalled = false;
 
         public event EventHandler? DatabaseChanged;
 
@@ -144,7 +146,40 @@ namespace Meziantou.Moneiz.Core
 
         private void RaiseDatabaseChanged()
         {
-            DatabaseChanged?.Invoke(this, EventArgs.Empty);
+            if (_deferedEventCount == 0)
+            {
+                DatabaseChanged?.Invoke(this, EventArgs.Empty);
+                _deferedEventCalled = false;
+            }
+            else
+            {
+                _deferedEventCalled = true;
+            }
+        }
+
+        public IDisposable DeferEvents()
+        {
+            return new DeferedEvents(this);
+        }
+
+        private sealed class DeferedEvents : IDisposable
+        {
+            private readonly Database _database;
+
+            public DeferedEvents(Database database)
+            {
+                database._deferedEventCount++;
+                _database = database;
+            }
+
+            public void Dispose()
+            {
+                _database._deferedEventCount--;
+                if (_database._deferedEventCalled)
+                {
+                    _database.RaiseDatabaseChanged();
+                }
+            }
         }
     }
 }

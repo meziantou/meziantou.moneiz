@@ -28,33 +28,39 @@ namespace Meziantou.Moneiz.Core
 
         public void SaveTransaction(Transaction transaction)
         {
-            var existingTransaction = Transactions.FirstOrDefault(item => item.Id == transaction.Id);
-            if (existingTransaction == null)
+            using (DeferEvents())
             {
-                transaction.Id = GenerateId(Transactions, item => item.Id);
+                var existingTransaction = Transactions.FirstOrDefault(item => item.Id == transaction.Id);
+                if (existingTransaction == null)
+                {
+                    transaction.Id = GenerateId(Transactions, item => item.Id);
+                }
+
+                AddOrReplace(Transactions, existingTransaction, transaction);
+
+                if (transaction.Payee != null && transaction.Payee.DefaultCategory == null && transaction.Category != null)
+                {
+                    transaction.Payee.DefaultCategory = transaction.Category;
+                    SavePayee(transaction.Payee);
+                }
+
+                RaiseDatabaseChanged();
             }
-
-            AddOrReplace(Transactions, existingTransaction, transaction);
-
-            if (transaction.Payee != null && transaction.Payee.DefaultCategory == null && transaction.Category != null)
-            {
-                transaction.Payee.DefaultCategory = transaction.Category;
-                SavePayee(transaction.Payee);
-            }
-
-            RaiseDatabaseChanged();
         }
 
         public void RemoveTransaction(Transaction transaction)
         {
-            foreach (var t in Transactions.Where(t => t.LinkedTransaction == transaction))
+            using (DeferEvents())
             {
-                t.LinkedTransaction = null;
-            }
+                foreach (var t in Transactions.Where(t => t.LinkedTransaction == transaction))
+                {
+                    t.LinkedTransaction = null;
+                }
 
-            if (Transactions.Remove(transaction))
-            {
-                RaiseDatabaseChanged();
+                if (Transactions.Remove(transaction))
+                {
+                    RaiseDatabaseChanged();
+                }
             }
         }
 

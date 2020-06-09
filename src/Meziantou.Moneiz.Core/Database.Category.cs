@@ -22,35 +22,42 @@ namespace Meziantou.Moneiz.Core
 
         public void RemoveCategory(Category category)
         {
-            ReplaceCategory(oldCategory: category, newCategory: null);
-            if (Categories.Remove(category))
+            using (DeferEvents())
             {
+                ReplaceCategory(oldCategory: category, newCategory: null);
+                Categories.Remove(category);
                 RaiseDatabaseChanged();
             }
         }
 
         public void SaveCategory(Category category)
         {
-            var existingCategory = Categories.FirstOrDefault(item => item.Id == category.Id);
-            if (existingCategory == null)
+            using (DeferEvents())
             {
-                category.Id = GenerateId(Categories, item => item.Id);
-            }
+                var existingCategory = Categories.FirstOrDefault(item => item.Id == category.Id);
+                if (existingCategory == null)
+                {
+                    category.Id = GenerateId(Categories, item => item.Id);
+                }
 
-            AddOrReplace(Categories, existingCategory, category);
-            MergeCategories();
-            RaiseDatabaseChanged();
+                AddOrReplace(Categories, existingCategory, category);
+                MergeCategories();
+                RaiseDatabaseChanged();
+            }
         }
 
         private void MergeCategories()
         {
-            foreach (var group in Categories.GroupBy(c => (c.GroupName, c.Name)))
+            using (DeferEvents())
             {
-                var first = group.First();
-                foreach (var c in group.Skip(1))
+                foreach (var group in Categories.GroupBy(c => (c.GroupName, c.Name)))
                 {
-                    ReplaceCategory(oldCategory: c, newCategory: first);
-                    RemoveCategory(c);
+                    var first = group.First();
+                    foreach (var c in group.Skip(1))
+                    {
+                        ReplaceCategory(oldCategory: c, newCategory: first);
+                        RemoveCategory(c);
+                    }
                 }
             }
         }

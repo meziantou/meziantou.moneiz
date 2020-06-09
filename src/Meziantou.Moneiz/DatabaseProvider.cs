@@ -15,6 +15,7 @@ namespace Meziantou.Moneiz
         private Database _database;
 
         public event EventHandler DatabaseChanged;
+        public event EventHandler DatabaseSaved;
 
         public DatabaseProvider(IJSRuntime jsRuntime)
         {
@@ -46,6 +47,8 @@ namespace Meziantou.Moneiz
                         {
                             _database = new Database();
                         }
+
+                        _database.DatabaseChanged += Database_DatabaseChanged;
                     }
                 }
                 finally
@@ -54,8 +57,16 @@ namespace Meziantou.Moneiz
                 }
             }
 
-            _database.DatabaseChanged += Database_DatabaseChanged;
             return _database;
+        }
+
+        private void ResetDatabase()
+        {
+            if (_database != null)
+            {
+                _database.DatabaseChanged -= Database_DatabaseChanged;
+                _database = null;
+            }
         }
 
         public Task Save()
@@ -72,13 +83,13 @@ namespace Meziantou.Moneiz
             var content = Convert.ToBase64String(bytes);
             await _jsRuntime.InvokeVoidAsync("MoneizSaveDatabase", content, options);
 
-            DatabaseChanged?.Invoke(this, EventArgs.Empty);
+            RaiseDatabaseSaved();
         }
 
         public async Task Export()
         {
             await _jsRuntime.InvokeVoidAsync("MoneizExportDatabase");
-            RaiseDatabaseChanged();
+            RaiseDatabaseSaved();
         }
 
         public async Task Import(Stream stream)
@@ -89,8 +100,8 @@ namespace Meziantou.Moneiz
             var db = JsonSerializer.Deserialize<Database>(content);
             await Save(db, new SaveOptions { IndicateDbChanged = false });
 
-            _database = null;
-            DatabaseChanged?.Invoke(this, EventArgs.Empty);
+            ResetDatabase();
+            RaiseDatabaseChanged();
         }
 
         private void Database_DatabaseChanged(object sender, EventArgs e)
@@ -98,8 +109,15 @@ namespace Meziantou.Moneiz
             RaiseDatabaseChanged();
         }
 
+        private void RaiseDatabaseSaved()
+        {
+            Console.WriteLine("DatabaseSaved");
+            DatabaseSaved?.Invoke(this, EventArgs.Empty);
+        }
+
         private void RaiseDatabaseChanged()
         {
+            Console.WriteLine("DatabaseChanged");
             DatabaseChanged?.Invoke(this, EventArgs.Empty);
         }
 

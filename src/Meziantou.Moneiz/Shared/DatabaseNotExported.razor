@@ -11,13 +11,13 @@
 
     protected override async Task OnInitializedAsync()
     {
-        DatabaseProvider.DatabaseChanged += DatabaseChanged;
+        DatabaseProvider.DatabaseSaved += DatabaseChanged;
         await GetState();
     }
 
     public void Dispose()
     {
-        DatabaseProvider.DatabaseChanged -= DatabaseChanged;
+        DatabaseProvider.DatabaseSaved -= DatabaseChanged;
     }
 
     private void DatabaseChanged(object sender, EventArgs e)

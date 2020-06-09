@@ -7,6 +7,7 @@ namespace Meziantou.Moneiz.Core
     public interface IDatabaseProvider
     {
         event EventHandler? DatabaseChanged;
+        event EventHandler? DatabaseSaved;
 
         Task<Database> GetDatabase();
         Task Save();

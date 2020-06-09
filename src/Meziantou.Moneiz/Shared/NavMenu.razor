@@ -42,7 +42,7 @@
 
     public void Dispose()
     {
-        database.DatabaseChanged -= OnDatabaseChanged;
+        DatabaseProvider.DatabaseChanged -= OnDatabaseChanged;
     }
 
     private void OnDatabaseChanged(object sender, EventArgs e)

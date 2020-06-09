@@ -27,7 +27,7 @@ namespace Meziantou.Moneiz.Core
                 return null;
 
             var payee = Payees.FirstOrDefault(item => item.Name == name);
-            if(payee == null)
+            if (payee == null)
             {
                 payee = new Payee { Name = name };
                 SavePayee(payee);
@@ -38,24 +38,28 @@ namespace Meziantou.Moneiz.Core
 
         public void RemovePayee(Payee payee)
         {
-            ReplacePayee(oldPayee: payee, newPayee: null);
-            if (Payees.Remove(payee))
+            using (DeferEvents())
             {
+                ReplacePayee(oldPayee: payee, newPayee: null);
+                Payees.Remove(payee);
                 RaiseDatabaseChanged();
             }
         }
 
         public void SavePayee(Payee payee)
         {
-            var existingPayee = Payees.FirstOrDefault(item => item.Id == payee.Id);
-            if (existingPayee == null)
+            using (DeferEvents())
             {
-                payee.Id = GenerateId(Payees, item => item.Id);
-            }
+                var existingPayee = Payees.FirstOrDefault(item => item.Id == payee.Id);
+                if (existingPayee == null)
+                {
+                    payee.Id = GenerateId(Payees, item => item.Id);
+                }
 
-            AddOrReplace(Payees, existingPayee, payee);
-            MergePayees();
-            RaiseDatabaseChanged();
+                AddOrReplace(Payees, existingPayee, payee);
+                MergePayees();
+                RaiseDatabaseChanged();
+            }
         }
 
         private void MergePayees()

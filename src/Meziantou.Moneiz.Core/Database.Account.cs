@@ -109,6 +109,8 @@ namespace Meziantou.Moneiz.Core
             {
                 transaction.ReconciliationDate = now;
             }
+
+            RaiseDatabaseChanged();
         }
     }
 }
