@@ -1,0 +1,13 @@
+﻿@page "/analytics"
+@inject IDatabaseProvider DatabaseProvider
+
+    <h1>Analytics</h1>
+
+    @code {
+        Database database;
+
+        protected override async Task OnInitializedAsync()
+        {
+            database = await DatabaseProvider.GetDatabase();
+        }
+    }
