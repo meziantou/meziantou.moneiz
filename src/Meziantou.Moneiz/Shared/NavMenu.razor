@@ -3,7 +3,7 @@
 
 <aside class="site-sidebar">
     <div class="widget-accounts">
-        <Repeater Items="database?.Accounts.Where(a => a.ShowOnSidebar).OrderBy(a => a.SortOrder)">
+        <Repeater Items="database?.Accounts.Where(a => a.ShowOnSidebar).Sort()">
             <RepeaterContainerTemplate>
                 <ul>
                     @context
@@ -13,7 +13,7 @@
             <ItemTemplate Context="account">
                 <li>
                     <a href="accounts/@account.Id/transactions">@account</a>
-                    <Amount Value="@database.GetBalance(account)" Currency="@account.CurrencyIsoCode" />
+                    <Amount Value="@database.GetTodayBalance(account)" Currency="@account.CurrencyIsoCode" />
                 </li>
             </ItemTemplate>
         </Repeater>

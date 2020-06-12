@@ -7,7 +7,7 @@ namespace Meziantou.Moneiz.Core
     partial class Database
     {
         [JsonIgnore]
-        public Account? DefaultAccount => Accounts.Where(a => a.ShowOnSidebar).OrderBy(a => a.ToString()).FirstOrDefault();
+        public Account? DefaultAccount => Accounts.Where(a => a.ShowOnSidebar).Sort().FirstOrDefault();
 
         public Account? GetAccountById(int? id)
         {
@@ -35,7 +35,7 @@ namespace Meziantou.Moneiz.Core
 
         private void MoveAccount(Account account, int direction)
         {
-            var accounts = Accounts.OrderBy(a => a.SortOrder).ToList();
+            var accounts = Accounts.Sort().ToList();
             for (var i = 0; i < accounts.Count; i++)
             {
                 accounts[i].SortOrder = i;
@@ -73,6 +73,11 @@ namespace Meziantou.Moneiz.Core
         public decimal GetTodayBalance(Account account)
         {
             return GetBalance(account, DateTime.UtcNow, TransactionState.NotChecked);
+        }
+
+        public decimal GetBalance(Account account, DateTime date)
+        {
+            return GetBalance(account, date, TransactionState.NotChecked);
         }
 
         public decimal GetBalance(Account account)

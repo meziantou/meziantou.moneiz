@@ -50,7 +50,7 @@ else
     </div>
 }
 
-<Repeater Items="transactions?.OrderBy(t => t.ValueDate).ThenBy(t=>t.Payee?.Name).Skip(pageIndex * pageSize).Take(pageSize)">
+<Repeater Items="transactions?.OrderBy(t => t.ValueDate).ThenBy(t => t.Payee?.Name).Skip(pageIndex * pageSize).Take(pageSize)">
     <RepeaterContainerTemplate>
         <table>
             <thead>
@@ -124,7 +124,7 @@ else
     Account account;
     IEnumerable<Transaction> transactions;
     int pageIndex = 0;
-    int pageSize = 100;
+    int pageSize = 50;
     DateTime today = DateTime.UtcNow;
 
     [Parameter]

@@ -1,13 +1,140 @@
 ﻿@page "/analytics"
+@using Meziantou.Moneiz.Core.Analytics
 @inject IDatabaseProvider DatabaseProvider
 
-    <h1>Analytics</h1>
+<h1>Analytics</h1>
 
-    @code {
-        Database database;
+<Loading IsLoading="database == null">
+    <h2>Accounts</h2>
+    <div class="form-group">
+        <div>
+            @foreach (var currency in allAccounts.Select(a => a.CurrencyIsoCode).Distinct().OrderBy(c => c))
+            {
+                <a @onclick="() => SelectByCurrency(currency)">@currency</a>
+            }
+        </div>
+        <div>
+            <a @onclick="() => SelectByType(AccountType.Current)">Current</a>
+            <a @onclick="() => SelectByType(AccountType.Saving)">Saving</a>
+        </div>
+        <ul class="unstyled">
+            @foreach (var account in database.Accounts.Sort())
+            {
+                <li><label><input name="Accounts" type="checkbox" checked="@selectedAccounts.Contains(account)" @onclick="() => Toggle(account)">@account (@account.CurrencyIsoCode)</label></li>
+            }
+        </ul>
+    </div>
 
-        protected override async Task OnInitializedAsync()
+    <h2>Period</h2>
+    <div class="form-group">
+        <a @onclick="()=>SelectCurrentMonth()">This month</a> -
+        <a @onclick="()=>SelectCurrentYear()">This year</a> -
+        <a @onclick="()=> SelectLastXDays(30)">Last 30 days</a> -
+        <a @onclick="()=>SelectLastXDays(365)">Last 365 days</a>
+    </div>
+
+    <div class="form-group">
+        <label for="PeriodFrom">From</label>
+        <input type="date" id="PeriodFrom" @bind-value="@fromDate" />
+    </div>
+
+    <div class="form-group">
+        <label for="PeriodTo">To</label>
+        <input type="date" id="PeriodTo" @bind-value="@toDate" />
+    </div>
+
+    <div>
+        <label>
+            <input name="ShowOnlyTotals" type="checkbox">Show Only Totals In Graph
+        </label>
+    </div>
+
+    <button @onclick="() => Generate()">Generate</button>
+
+    @if (model != null)
+    {
+        <BigTable Model="model.BigTable" />
+        <BalanceHistory Model="model.BalanceHistory" />
+    }
+</Loading>
+
+@code {
+    Database database;
+    IList<Account> allAccounts;
+
+    DateTime fromDate = DateTime.UtcNow.AddDays(-30);
+    DateTime toDate = DateTime.UtcNow;
+    HashSet<Account> selectedAccounts = new HashSet<Account>();
+
+    AnalyticsModel model;
+
+    protected override async Task OnInitializedAsync()
+    {
+        database = await DatabaseProvider.GetDatabase();
+        allAccounts = database.Accounts;
+        selectedAccounts.AddRange(allAccounts);
+    }
+
+    private void SelectByCurrency(string currency)
+    {
+        var accounts = allAccounts.Where(a => a.CurrencyIsoCode == currency);
+        if (selectedAccounts.Intersect(accounts).Count() != accounts.Count())
         {
-            database = await DatabaseProvider.GetDatabase();
+            selectedAccounts.AddRange(accounts);
+        }
+        else
+        {
+            foreach (var account in accounts)
+            {
+                selectedAccounts.Remove(account);
+            }
         }
     }
+
+    private void SelectByType(AccountType accountType)
+    {
+        var accounts = allAccounts.Where(a => a.AccountType == accountType);
+        if (selectedAccounts.Intersect(accounts).Count() != accounts.Count())
+        {
+            selectedAccounts.AddRange(accounts);
+        }
+        else
+        {
+            foreach (var account in accounts)
+            {
+                selectedAccounts.Remove(account);
+            }
+        }
+    }
+
+    private void SelectCurrentYear()
+    {
+        toDate = DateTime.UtcNow;
+        fromDate = new DateTime(DateTime.UtcNow.Year, 1, 1);
+    }
+
+    private void SelectCurrentMonth()
+    {
+        toDate = DateTime.UtcNow;
+        fromDate = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+    }
+
+    private void SelectLastXDays(int days)
+    {
+        toDate = DateTime.UtcNow;
+        fromDate = DateTime.UtcNow.AddDays(-days);
+    }
+
+    private void Toggle(Account account)
+    {
+        if (!selectedAccounts.Remove(account))
+        {
+            selectedAccounts.Add(account);
+        }
+    }
+
+    private void Generate()
+    {
+        model = AnalyticsModel.Build(database, selectedAccounts.ToArray(), fromDate, toDate);
+    }
+}

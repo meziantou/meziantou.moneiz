@@ -1,0 +1,59 @@
+﻿@using Meziantou.Moneiz.Core.Analytics
+
+<label><input type="checkbox" @bind-value="showDetails" /> Show details</label>
+<table id="BigTable" class="bigtable">
+    <thead>
+        <tr>
+            <th></th>
+            @foreach (var date in Model.Dates)
+            {
+                <th>@date.ToString("MMM yy")</th>
+            }
+            <th class="bigtable-totals">Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var group in Model.CategoryGroups)
+        {
+            <tr class="bigtable-categorygroup">
+                <td class="bigtable-categorygroupname">@group.DisplayName</td>
+                @foreach (var total in group.Totals)
+                {
+                    <td><BigTableCell Cell="total" ShowDetails="showDetails" /></td>
+                }
+                <td class="bigtable-totals"><BigTableCell Cell="group.Total" ShowDetails="showDetails" /></td>
+            </tr>
+
+            @if (!group.IsUnclassified)
+            {
+                @foreach (var category in group.Categories)
+                {
+                    <tr class="bigtable-category">
+                        <td class="bigtable-categoryname">@category.DisplayName</td>
+                        @foreach (var total in category.Totals)
+                        {
+                            <td><BigTableCell Cell="total" /></td>
+                        }
+                        <td class="bigtable-totals"><BigTableCell Cell="category.Total" ShowDetails="showDetails" /></td>
+                    </tr>
+                }
+            }
+        }
+
+        <tr class="bigtable-totals">
+            <td class="bigtable-name">Total</td>
+            @foreach (var total in Model.Totals)
+            {
+                <td><BigTableCell Cell="total" /></td>
+            }
+            <td class="bigtable-totals"><BigTableCell Cell="Model.Total" /></td>
+        </tr>
+    </tbody>
+</table>
+
+@code{
+    bool showDetails;
+
+    [Parameter]
+    public Meziantou.Moneiz.Core.Analytics.BigTable Model { get; set; }
+}

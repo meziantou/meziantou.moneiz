@@ -1,44 +1,45 @@
 ﻿.bigtable-categoryname {
-    padding-left: 20px;
+  padding-left: 20px;
 }
 
-.bigtable-categorygroup {
-    background-color: rgb(221, 221, 221);
+.bigtable-categorygroup,
+.balancehistory-currency {
+  background-color: rgb(221, 221, 221);
 }
 
 .bigtable thead th {
-    text-align: center;
-    vertical-align: bottom;
+  text-align: center;
+  vertical-align: bottom;
 }
 
 .bigtable tbody td {
-    vertical-align: middle;
+  vertical-align: middle;
 }
 
-    .bigtable tbody td:not(.bigtable-categoryname):not(.bigtable-categorygroupname) {
-        text-align: right;
-    }
+  .bigtable tbody td:not(.bigtable-categoryname):not(.bigtable-categorygroupname) {
+    text-align: right;
+  }
 
 
 tr.bigtable-totals {
-    border-top-style: double;
-    border-top-color: black;
+  border-top-style: double;
+  border-top-color: black;
 }
 
 td.bigtable-totals,
 th.bigtable-totals {
-    border-left-style: double;
-    border-left-color: black;
+  border-left-style: double;
+  border-left-color: black;
 }
 
 .bigtable .details > span {
-    display: block;
+  display: block;
 }
 
 .bigtable.show-totals .details {
-    display: none;
+  display: none;
 }
 
 .bigtable.show-details .total {
-    display: none;
+  display: none;
 }

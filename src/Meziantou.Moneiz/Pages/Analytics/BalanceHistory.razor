@@ -1,0 +1,33 @@
+﻿<table id="BigTable" class="bigtable">
+    <thead>
+        <tr>
+            <th>Account</th>
+            <th>Start balance</th>
+            <th>End balance</th>
+            <th>Diff</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var group in Model.BalancesByAccount.GroupBy(i => i.Currency))
+        {
+            var entry = new Meziantou.Moneiz.Core.Analytics.BalanceHistoryEntry
+            {
+                Currency = group.Key,
+                StartBalance = group.Sum(g => g.StartBalance),
+                EndBalance = group.Sum(g => g.EndBalance),
+            };
+
+            <BalanceHistoryRow Entry="entry" />
+
+            @foreach (var account in group.OrderBy(e => e.Account.SortOrder))
+            {
+                <BalanceHistoryRow Entry="account" />
+            }
+        }
+    </tbody>
+</table>
+
+@code{
+    [Parameter]
+    public Meziantou.Moneiz.Core.Analytics.BalanceHistory Model { get; set; }
+}

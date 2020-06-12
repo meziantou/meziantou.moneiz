@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.IO;
+using System.Text.Json.Serialization;
 
 namespace Meziantou.Moneiz.Core
 {
@@ -47,6 +48,16 @@ namespace Meziantou.Moneiz.Core
             {
                 return Name ?? "";
             }
+        }
+
+        public override int GetHashCode()
+        {
+            return Id;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is Account a && a.Id == Id;
         }
     }
 }

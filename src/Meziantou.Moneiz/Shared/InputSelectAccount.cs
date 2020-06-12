@@ -53,7 +53,7 @@ namespace Meziantou.Moneiz.Shared
             if (_database != null)
             {
                 var i = 5;
-                foreach (var account in _database.Accounts.OrderBy(account => account.ToString()))
+                foreach (var account in _database.Accounts.Sort())
                 {
                     builder.OpenElement(i++, "option");
                     builder.AddAttribute(i++, "value", account.Id.ToStringInvariant());

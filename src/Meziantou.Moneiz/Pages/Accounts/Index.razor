@@ -8,7 +8,7 @@
     <a class="btn" href="/accounts/create">Create an account</a>
 </div>
 
-<Repeater Items="@database?.Accounts.OrderBy(a => a.SortOrder)">
+<Repeater Items="@database?.Accounts.Sort()">
     <RepeaterContainerTemplate>
         <table>
             <thead>

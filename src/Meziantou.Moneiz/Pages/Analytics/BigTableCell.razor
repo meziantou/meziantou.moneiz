@@ -1,0 +1,30 @@
+﻿@using Meziantou.Moneiz.Core.Analytics
+
+@if (ShowDetails)
+{
+    <div class="details">
+        @if (Cell.Incomes != 0 || Cell.Expenses == 0)
+        {
+            <Amount Value="@Cell.Incomes" />
+        }
+
+        @if (Cell.Expenses != 0)
+        {
+            <Amount Value="@Cell.Expenses" />
+        }
+    </div>
+}
+else
+{
+    <div class="total">
+        <Amount Value="@Cell.Total" />
+    </div>
+}
+
+@code {
+    [Parameter]
+    public BigTableValue Cell { get; set; }
+
+    [Parameter]
+    public bool ShowDetails { get; set; }
+}
