@@ -82,7 +82,21 @@ namespace Meziantou.Moneiz.Core
 
         private void ReplacePayee(Payee? newPayee, Func<Payee?, bool> predicate)
         {
-            // TODO Transaction, ScheduledTransaction, Preset, etc.
+            foreach (var scheduledTransactions in ScheduledTransactions)
+            {
+                if (predicate(scheduledTransactions.Payee))
+                {
+                    scheduledTransactions.Payee = newPayee;
+                }
+            }
+
+            foreach (var transactions in Transactions)
+            {
+                if (predicate(transactions.Payee))
+                {
+                    transactions.Payee = newPayee;
+                }
+            }
         }
     }
 }

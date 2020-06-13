@@ -69,7 +69,29 @@ namespace Meziantou.Moneiz.Core
 
         private void ReplaceCategory(Category? newCategory, Func<Category?, bool> predicate)
         {
-            // TODO Transaction, ScheduledTransaction, Preset, etc.
+            foreach (var payee in Payees)
+            {
+                if (predicate(payee.DefaultCategory))
+                {
+                    payee.DefaultCategory = newCategory;
+                }
+            }
+
+            foreach (var scheduledTransactions in ScheduledTransactions)
+            {
+                if (predicate(scheduledTransactions.Category))
+                {
+                    scheduledTransactions.Category = newCategory;
+                }
+            }
+
+            foreach (var transactions in Transactions)
+            {
+                if (predicate(transactions.Category))
+                {
+                    transactions.Category = newCategory;
+                }
+            }
         }
     }
 }

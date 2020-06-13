@@ -53,10 +53,17 @@ namespace Meziantou.Moneiz.Core
 
         public void RemoveAccount(Account account)
         {
-            if (Accounts.Remove(account))
+            using (DeferEvents())
             {
-                // TODO remove transactions, etc.
-                RaiseDatabaseChanged();
+                if (Accounts.Remove(account))
+                {
+                    foreach (var transaction in Transactions.Where(t => t.Account == account).ToList())
+                    {
+                        RemoveTransaction(transaction);
+                    }
+
+                    RaiseDatabaseChanged();
+                }
             }
         }
 
