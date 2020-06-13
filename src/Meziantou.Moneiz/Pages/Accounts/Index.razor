@@ -24,9 +24,15 @@
 
     <ItemTemplate Context="account">
         <tr>
-            <td>@account</td>
+            @if (account.Closed)
+            {
+                <td>@account (<i class="fas fa-times"></i> closed)</td>
+            }
+            else
+            {
+                <td>@account</td>
+            }
             <td>@account.CurrencyIsoCode</td>
-
             <td class="commands">
                 <Dropdown>
                     <DropdownItem><a class="view-transactions" href="/accounts/@account.Id/transactions">View Transactions</a></DropdownItem>

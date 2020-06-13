@@ -99,7 +99,7 @@
 
 @code {
     Database database;
-    EditModel model;
+    TransactionEdit model;
 
     [Parameter]
     public int? Id { get; set; }
@@ -120,7 +120,7 @@
 
         if (transaction != null)
         {
-            model = new EditModel
+            model = new TransactionEdit
             {
                 DebitedAccount = transaction.Account,
                 CreditedAccount = transaction.LinkedTransaction?.Account,
@@ -135,7 +135,7 @@
         else
         {
             var account = database.GetAccountById(NavigationManager.GetQueryStringNullableInt32("accountId"));
-            model = new EditModel()
+            model = new TransactionEdit
             {
                 DebitedAccount = account ?? database.DefaultAccount,
                 CreditedAccount = account ?? database.DefaultAccount,
@@ -147,58 +147,7 @@
 
     private async Task OnSubmit()
     {
-        Transaction transaction;
-        if (Id != null)
-        {
-            transaction = database.GetDebitedTransactionById(Id);
-        }
-        else
-        {
-            transaction = new Transaction();
-            if (model.DebitedAccount.DefaultTransactionState == TransactionState.Checked)
-            {
-                transaction.CheckedDate = DateTime.UtcNow;
-            }
-        }
-
-        if (!model.InterAccount && transaction.LinkedTransaction != null)
-        {
-            database.RemoveTransaction(transaction.LinkedTransaction);
-            transaction.LinkedTransaction = null;
-        }
-
-        transaction.Account = model.DebitedAccount;
-        transaction.Payee = database.GetOrCreatePayeeByName(model.Payee.TrimAndNullify());
-        transaction.Category = model.Category;
-        transaction.ValueDate = model.ValueDate;
-        transaction.Amount = model.InterAccount ? -Math.Abs(model.Amount) : model.Amount;
-        transaction.Comment = model.Comment;
-
-        if (model.InterAccount)
-        {
-            var creditedTransaction = transaction.LinkedTransaction;
-            if (creditedTransaction == null)
-            {
-                creditedTransaction = new Transaction();
-                if (model.CreditedAccount.DefaultTransactionState == TransactionState.Checked)
-                {
-                    creditedTransaction.CheckedDate = DateTime.UtcNow;
-                }
-            }
-
-            creditedTransaction.Payee = transaction.Payee;
-            creditedTransaction.Category = transaction.Category;
-            creditedTransaction.ValueDate = transaction.ValueDate;
-            creditedTransaction.Amount = -Math.Abs(transaction.Amount);
-            creditedTransaction.Comment = model.Comment;
-
-            creditedTransaction.LinkedTransaction = transaction;
-            transaction.LinkedTransaction = creditedTransaction;
-
-            database.SaveTransaction(creditedTransaction);
-        }
-
-        database.SaveTransaction(transaction);
+        model.Save(database, Id);
         await DatabaseProvider.Save();
         NavigationManager.NavigateToReturnUrlOrHome();
     }
@@ -213,19 +162,5 @@
                 model.Category = payee.DefaultCategory;
             }
         }
-    }
-
-    private sealed class EditModel
-    {
-        public bool InterAccount { get; set; }
-
-        [Required]
-        public Account DebitedAccount { get; set; }
-        public Account CreditedAccount { get; set; }
-        public string Payee { get; set; }
-        public Category Category { get; set; }
-        public DateTime ValueDate { get; set; }
-        public decimal Amount { get; set; }
-        public string Comment { get; set; }
     }
 }
