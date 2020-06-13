@@ -24,6 +24,9 @@ namespace Meziantou.Moneiz.Core
         public IList<Account> Accounts { get; set; } = new List<Account>();
 
         [JsonIgnore]
+        public IEnumerable<Account> VisibleAccounts => Accounts.Where(a => !a.Closed).Sort();
+
+        [JsonIgnore]
         public IReadOnlyList<Currency> Currencies { get; }
 
         [JsonPropertyName("c")]

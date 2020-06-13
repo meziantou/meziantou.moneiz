@@ -1,5 +1,4 @@
-﻿using System.IO;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace Meziantou.Moneiz.Core
 {
@@ -27,7 +26,7 @@ namespace Meziantou.Moneiz.Core
         public decimal InitialBalance { get; set; }
 
         [JsonPropertyName("h")]
-        public bool ShowOnSidebar { get; set; }
+        public bool Closed { get; set; }
 
         [JsonPropertyName("i")]
         public int SortOrder { get; set; }

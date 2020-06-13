@@ -7,7 +7,7 @@ namespace Meziantou.Moneiz.Core
     partial class Database
     {
         [JsonIgnore]
-        public Account? DefaultAccount => Accounts.Where(a => a.ShowOnSidebar).Sort().FirstOrDefault();
+        public Account? DefaultAccount => VisibleAccounts.FirstOrDefault();
 
         public Account? GetAccountById(int? id)
         {

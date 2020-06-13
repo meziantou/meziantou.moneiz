@@ -19,7 +19,7 @@ namespace Meziantou.Moneiz.Core.Analytics
 
         public string DisplayName => Name ?? "Unclassified";
         public bool IsUnclassified => Name == null;
-        public BigTableValue[] Totals { get; private set; }
+        public BigTableValue[] Totals { get; private set; } = Array.Empty<BigTableValue>();
         public BigTableValue Total => _total;
 
         public void ComputeTotals()

@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using System.Linq;
 using System.Threading.Tasks;
 using Meziantou.Framework;
 using Meziantou.Moneiz.Core;
@@ -53,7 +52,7 @@ namespace Meziantou.Moneiz.Shared
             if (_database != null)
             {
                 var i = 5;
-                foreach (var account in _database.Accounts.Sort())
+                foreach (var account in _database.VisibleAccounts)
                 {
                     builder.OpenElement(i++, "option");
                     builder.AddAttribute(i++, "value", account.Id.ToStringInvariant());

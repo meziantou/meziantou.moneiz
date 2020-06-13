@@ -3,7 +3,7 @@
 
 <aside class="site-sidebar">
     <div class="widget-accounts">
-        <Repeater Items="database?.Accounts.Where(a => a.ShowOnSidebar).Sort()">
+        <Repeater Items="database?.VisibleAccounts">
             <RepeaterContainerTemplate>
                 <ul>
                     @context

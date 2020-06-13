@@ -18,7 +18,7 @@
             <a @onclick="() => SelectByType(AccountType.Saving)">Saving</a>
         </div>
         <ul class="unstyled">
-            @foreach (var account in database.Accounts.Sort())
+            @foreach (var account in database.VisibleAccounts)
             {
                 <li><label><input name="Accounts" type="checkbox" checked="@selectedAccounts.Contains(account)" @onclick="() => Toggle(account)">@account (@account.CurrencyIsoCode)</label></li>
             }
@@ -43,12 +43,6 @@
         <input type="date" id="PeriodTo" @bind-value="@toDate" />
     </div>
 
-    <div>
-        <label>
-            <input name="ShowOnlyTotals" type="checkbox">Show Only Totals In Graph
-        </label>
-    </div>
-
     <button @onclick="() => Generate()">Generate</button>
 
     @if (model != null)
@@ -71,7 +65,7 @@
     protected override async Task OnInitializedAsync()
     {
         database = await DatabaseProvider.GetDatabase();
-        allAccounts = database.Accounts;
+        allAccounts = database.VisibleAccounts.ToList();
         selectedAccounts.AddRange(allAccounts);
     }
 

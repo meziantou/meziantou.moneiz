@@ -77,8 +77,8 @@
 
         <div class="form-group">
             <label>
-                Show On Sidebar
-                <InputCheckbox @bind-Value="model.ShowOnSidebar" />
+                Closed?
+                <InputCheckbox @bind-Value="model.Closed" />
             </label>
         </div>
 
@@ -119,7 +119,7 @@
                 AccountType = account.AccountType,
                 DefaultCashFlow = account.DefaultCashFlow,
                 DefaultTransactionState = account.DefaultTransactionState,
-                ShowOnSidebar = account.ShowOnSidebar,
+                Closed = account.Closed,
             };
         }
     }
@@ -136,7 +136,7 @@
         account.AccountType = model.AccountType;
         account.DefaultCashFlow = model.DefaultCashFlow;
         account.DefaultTransactionState = model.DefaultTransactionState;
-        account.ShowOnSidebar = model.ShowOnSidebar;
+        account.Closed = model.Closed;
 
         database.SaveAccount(account);
         await DatabaseProvider.Save();
@@ -154,6 +154,6 @@
         public AccountType AccountType { get; set; }
         public CashFlow DefaultCashFlow { get; set; }
         public TransactionState DefaultTransactionState { get; set; }
-        public bool ShowOnSidebar { get; set; } = true;
+        public bool Closed { get; set; }
     }
 }

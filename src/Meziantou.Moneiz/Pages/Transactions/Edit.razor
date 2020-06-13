@@ -10,7 +10,7 @@
         <DataAnnotationsValidator />
         <ValidationSummary />
 
-        @if (database.Accounts.Count > 1)
+        @if (database.VisibleAccounts.Skip(1).Any())
         {
             <div class="form-group">
                 <label>
