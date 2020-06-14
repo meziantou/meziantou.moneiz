@@ -4,29 +4,57 @@
 @inject IDatabaseProvider DatabaseProvider
 @inject Blazor.FileReader.IFileReaderService FileReaderService
 
-<h1>Export database</h1>
+<Loading IsLoading="databaseConfiguration == null">
+    <h1>GitHub</h1>
 
-<button @onclick="() => ExportDatabase()">Export</button>
+    <EditForm Model="databaseConfiguration">
+        <p>GitHub token (<a href="https://github.com/settings/tokens">generate</a>)</p>
+        <input type="password" @bind-value="databaseConfiguration.GitHubToken" />
 
-<h1>Import database</h1>
+        @if (githubOperation)
+        {
+            <p><i class="fas fa-spin fa-spinner"></i> processing</p>
+        }
+        else
+        {
+            <button type="button" @onclick="() => ImportDatabaseFromGitHub()">Import from GitHub</button>
+            <button type="button" @onclick="() => ExportDatabaseToGitHub()">Export to GitHub</button>
+        }
+
+    </EditForm>
+</Loading>
+
+<h1>File</h1>
+
+<p>Export</p>
+<button @onclick="() => ExportDatabaseToFile()">Export</button>
+
+<p>Import database</p>
 <form>
     <div class="form-group">
         <label>
             Database file
-            <input type="file" @ref="inputTypeFileElement" @onchange="() => ImportDatabase()" />
+            <input type="file" @ref="inputTypeFileElement" @onchange="() => ImportDatabaseFromFile()" />
         </label>
     </div>
 </form>
 
 @code {
     ElementReference inputTypeFileElement;
+    DatabaseConfiguration databaseConfiguration;
+    bool githubOperation = false;
 
-    private async Task ExportDatabase()
+    protected override async Task OnInitializedAsync()
     {
-        await DatabaseProvider.Export();
+        databaseConfiguration = await DatabaseProvider.LoadConfiguration();
     }
 
-    private async Task ImportDatabase()
+    private async Task ExportDatabaseToFile()
+    {
+        await DatabaseProvider.ExportToFile();
+    }
+
+    private async Task ImportDatabaseFromFile()
     {
         var files = await FileReaderService.CreateReference(inputTypeFileElement).EnumerateFilesAsync();
         var file = files.FirstOrDefault();
@@ -36,13 +64,42 @@
         try
         {
             await using var stream = await file.OpenReadAsync();
-            await DatabaseProvider.Import(stream);
+            var database = await Database.Load(stream);
+            await DatabaseProvider.Import(database);
             await ConfirmService.Alert("Database imported");
             NavigationManager.NavigateTo("/");
         }
         catch
         {
             await ConfirmService.Alert("Cannot import database");
+        }
+    }
+
+    private async Task ExportDatabaseToGitHub()
+    {
+        try
+        {
+            githubOperation = true;
+            await DatabaseProvider.SetConfiguration(databaseConfiguration);
+            await DatabaseProvider.ExportToGitHub();
+        }
+        finally
+        {
+            githubOperation = false;
+        }
+    }
+
+    private async Task ImportDatabaseFromGitHub()
+    {
+        try
+        {
+            githubOperation = true;
+            await DatabaseProvider.SetConfiguration(databaseConfiguration);
+            await DatabaseProvider.ImportFromGitHub(implicitLoad: false);
+        }
+        finally
+        {
+            githubOperation = false;
         }
     }
 }

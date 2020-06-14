@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -53,8 +55,11 @@ namespace Meziantou.Moneiz.Core
 
         public byte[] Export()
         {
-            using var ms = new System.IO.MemoryStream();
-            using (var compressedStream = new System.IO.Compression.GZipStream(ms, System.IO.Compression.CompressionLevel.Optimal))
+            using var ms = new MemoryStream();
+            // Write version
+            ms.WriteByte(1);
+
+            using (var compressedStream = new GZipStream(ms, CompressionLevel.Optimal))
             using (var writer = new Utf8JsonWriter(compressedStream))
             {
                 JsonSerializer.Serialize(writer, this, s_jsonOptions);
@@ -63,14 +68,20 @@ namespace Meziantou.Moneiz.Core
             return ms.ToArray();
         }
 
-        public static async Task<Database> Import(byte[] value)
+        public static async Task<Database> Load(byte[] value)
         {
-            using var ms = new System.IO.MemoryStream(value);
-            using var compressedStream = new System.IO.Compression.GZipStream(ms, System.IO.Compression.CompressionMode.Decompress);
+            using var ms = new MemoryStream(value);
+            return await Load(ms);
+        }
 
+        public static async Task<Database> Load(Stream stream)
+        {
+            var version = stream.ReadByte();
+            if (version != 1)
+                throw new Exception("database version not expected");
+            using var compressedStream = new GZipStream(stream, CompressionMode.Decompress);
             var db = await JsonSerializer.DeserializeAsync<Database>(compressedStream, s_jsonOptions);
             db.AssertNoDetachedReferences();
-
             db.ProcessScheduledTransactions();
             return db;
         }

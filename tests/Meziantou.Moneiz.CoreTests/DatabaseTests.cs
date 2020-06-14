@@ -30,7 +30,7 @@ namespace Meziantou.Moneiz.CoreTests
 
             // Act
             var str = database.Export();
-            var imported = await Database.Import(str);
+            var imported = await Database.Load(str);
             database = null; // avoid using it in the asserts
 
             // Assert

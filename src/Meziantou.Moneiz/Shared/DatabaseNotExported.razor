@@ -27,11 +27,8 @@
 
     private async Task GetState()
     {
-        var value = !(await DatabaseProvider.IsExported());
-        if (value != needExport)
-        {
-            needExport = value;
-            StateHasChanged();
-        }
+        var hasUnexportedChanges = await DatabaseProvider.HasUnexportedChanges();
+        needExport = hasUnexportedChanges;
+        StateHasChanged();
     }
 }

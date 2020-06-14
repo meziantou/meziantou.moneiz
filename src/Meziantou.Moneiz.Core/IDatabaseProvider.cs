@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Threading.Tasks;
 
 namespace Meziantou.Moneiz.Core
@@ -11,8 +10,12 @@ namespace Meziantou.Moneiz.Core
 
         Task<Database> GetDatabase();
         Task Save();
-        Task Export();
-        Task Import(Stream stream);
-        Task<bool> IsExported();
+        Task ExportToFile();
+        Task Import(Database database);
+        ValueTask<bool> HasUnexportedChanges();
+        ValueTask SetConfiguration(DatabaseConfiguration configuration);
+        ValueTask<DatabaseConfiguration> LoadConfiguration();
+        Task ExportToGitHub();
+        Task ImportFromGitHub(bool implicitLoad);
     }
 }
