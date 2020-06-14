@@ -4,14 +4,22 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <RazorLangVersion>3.0</RazorLangVersion>
     <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+    <SourceRevisionId>$(GITHUB_SHA)</SourceRevisionId>
   </PropertyGroup>
 
+  <ItemGroup Condition=" '$(Configuration)' == 'Release'">
+    <AssemblyAttribute Include="Meziantou.Moneiz.BuildDateAttribute">
+      <_Parameter1>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+  
   <ItemGroup>
+    <PackageReference Include="Meziantou.Framework.RelativeDate" Version="1.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="3.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Build" Version="3.2.0" PrivateAssets="all" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="3.2.0" PrivateAssets="all" />
     <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="2.2.0" />
-    <PackageReference Include="Tewr.Blazor.FileReader" Version="1.5.0.20109" />
+    <PackageReference Include="Tewr.Blazor.FileReader" Version="1.6.0.20166" />
   </ItemGroup>
 
   <ItemGroup>

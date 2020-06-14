@@ -4,6 +4,11 @@
 @inject IDatabaseProvider DatabaseProvider
 @inject Blazor.FileReader.IFileReaderService FileReaderService
 
+@if (database != null)
+{
+    <p>Last modification: <span title="@database.LastModifiedDate">@(RelativeDate.Get(database.LastModifiedDate))</span></p>
+}
+
 <Loading IsLoading="databaseConfiguration == null">
     <h1>GitHub</h1>
 
@@ -41,11 +46,13 @@
 
 @code {
     ElementReference inputTypeFileElement;
+    Database database;
     DatabaseConfiguration databaseConfiguration;
     bool githubOperation = false;
 
     protected override async Task OnInitializedAsync()
     {
+        database = await DatabaseProvider.GetDatabase();
         databaseConfiguration = await DatabaseProvider.LoadConfiguration();
     }
 
@@ -63,15 +70,15 @@
 
         try
         {
-            await using var stream = await file.OpenReadAsync();
-            var database = await Database.Load(stream);
+            using var ms = await file.CreateMemoryStreamAsync();
+            var database = await Database.Load(ms);
             await DatabaseProvider.Import(database);
             await ConfirmService.Alert("Database imported");
             NavigationManager.NavigateTo("/");
         }
-        catch
+        catch (Exception ex)
         {
-            await ConfirmService.Alert("Cannot import database");
+            await ConfirmService.Alert("Cannot import database:" + ex);
         }
     }
 

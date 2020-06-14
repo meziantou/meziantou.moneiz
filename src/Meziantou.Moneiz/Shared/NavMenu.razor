@@ -29,6 +29,13 @@
             <li><NavLink href="/currencies"><i class="fas fa-dollar-sign"></i><span>Currencies</span></NavLink></li>
         </ul>
     </nav>
+    <hr />
+    <nav>
+        <p>
+            <span title="@(MoneizAppContext.BuildDate)">Moneiz v@(MoneizAppContext.Version) built on @(BuildDateAttribute.Get()?.ToString("yyyy-MM-dd"))</span>
+            <a href="javascript:document.location.reload(true)">reload</a>
+        </p>
+    </nav>
 </aside>
 
 @code {

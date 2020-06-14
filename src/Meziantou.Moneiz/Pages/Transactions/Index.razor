@@ -50,7 +50,7 @@ else
     </div>
 }
 
-<Repeater Items="transactions?.OrderBy(t => t.ValueDate).ThenBy(t => t.Payee?.Name).Skip(pageIndex * pageSize).Take(pageSize)">
+<Repeater Items="transactions?.OrderByDescending(t => t.ValueDate).ThenBy(t => t.Payee?.Name).Skip(pageIndex * pageSize).Take(pageSize)">
     <RepeaterContainerTemplate>
         <table>
             <thead>

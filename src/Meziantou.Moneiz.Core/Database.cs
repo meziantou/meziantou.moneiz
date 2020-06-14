@@ -43,6 +43,9 @@ namespace Meziantou.Moneiz.Core
         [JsonPropertyName("f")]
         public IList<ScheduledTransaction> ScheduledTransactions { get; set; } = new List<ScheduledTransaction>();
 
+        [JsonPropertyName("g")]
+        public DateTime LastModifiedDate { get; set; }
+
         private static JsonSerializerOptions CreateOptions()
         {
             return new JsonSerializerOptions
@@ -76,11 +79,18 @@ namespace Meziantou.Moneiz.Core
 
         public static async Task<Database> Load(Stream stream)
         {
-            var version = stream.ReadByte();
-            if (version != 1)
+            var buffer = new byte[1];
+            var count = await stream.ReadAsync(buffer, 0, 1);
+            if (count != 1)
+                throw new Exception("Cannot read file");
+
+            if (buffer[0] != 1)
                 throw new Exception("database version not expected");
+
             using var compressedStream = new GZipStream(stream, CompressionMode.Decompress);
-            var db = await JsonSerializer.DeserializeAsync<Database>(compressedStream, s_jsonOptions);
+            using var textReader = new StreamReader(compressedStream);
+            var json = await textReader.ReadToEndAsync();
+            var db = JsonSerializer.Deserialize<Database>(json, s_jsonOptions);
             db.AssertNoDetachedReferences();
             db.ProcessScheduledTransactions();
             return db;
@@ -162,6 +172,7 @@ namespace Meziantou.Moneiz.Core
         {
             if (_deferedEventCount == 0)
             {
+                LastModifiedDate = DateTime.UtcNow;
                 DatabaseChanged?.Invoke(this, EventArgs.Empty);
                 _deferedEventCalled = false;
             }
