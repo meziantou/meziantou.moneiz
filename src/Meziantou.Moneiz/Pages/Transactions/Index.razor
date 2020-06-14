@@ -18,6 +18,16 @@ else
 <div class="toolbar">
     <div class="toolbar-left">
         <CreateTransactionLink Account="account">Create transaction</CreateTransactionLink>
+        <p>
+            @if (hideReconciled)
+            {
+                <a @onclick="() => hideReconciled = false">Show reconciled transactions</a>
+            }
+            else
+            {
+                <a @onclick="() => hideReconciled = true">Hide reconciled transactions</a>
+            }
+        </p>
     </div>
 </div>
 
@@ -50,7 +60,7 @@ else
     </div>
 }
 
-<Repeater Items="transactions?.OrderByDescending(t => t.ValueDate).ThenBy(t => t.Payee?.Name).Skip(pageIndex * pageSize).Take(pageSize)">
+<Repeater Items="transactions?.Where(FilterTransactions).Skip(pageIndex * pageSize).Take(pageSize)">
     <RepeaterContainerTemplate>
         <table>
             <thead>
@@ -122,10 +132,11 @@ else
 @code {
     Database database;
     Account account;
-    IEnumerable<Transaction> transactions;
+    IReadOnlyList<Transaction> transactions;
     int pageIndex = 0;
     int pageSize = 50;
     DateTime today = DateTime.UtcNow;
+    bool hideReconciled = false;
 
     [Parameter]
     public int? AccountId { get; set; }
@@ -143,24 +154,26 @@ else
 
     protected override void OnParametersSet()
     {
-        transactions = database.Transactions;
+        IEnumerable<Transaction> result = database.Transactions;
         if (AccountId != null)
         {
             account = database.GetAccountById(AccountId);
-            transactions = transactions.Where(t => t.Account == account);
+            result = result.Where(t => t.Account == account);
         }
 
         if (PayeeId != null)
         {
             var payee = database.GetPayeeById(PayeeId);
-            transactions = transactions.Where(t => t.Payee == payee);
+            result = result.Where(t => t.Payee == payee);
         }
 
         if (CategoryId != null)
         {
             var category = database.GetCategoryById(CategoryId);
-            transactions = transactions.Where(t => t.Category == category);
+            result = result.Where(t => t.Category == category);
         }
+
+        transactions = result.OrderByDescending(t => t.ValueDate).ThenBy(t => t.Payee?.Name).ToList();
     }
 
     private async Task Check(Transaction transaction)
@@ -186,7 +199,7 @@ else
 
     private bool HasMorePages()
     {
-        return transactions.Skip((pageIndex + 1) * pageSize).Any();
+        return transactions.Where(FilterTransactions).Skip((pageIndex + 1) * pageSize).Any();
     }
 
     private async Task Reconcile()
@@ -196,5 +209,13 @@ else
 
         database.Reconcile(account);
         await DatabaseProvider.Save();
+    }
+
+    private bool FilterTransactions(Transaction transaction)
+    {
+        if (!hideReconciled)
+            return true;
+
+        return !transaction.ReconciliationDate.HasValue;
     }
 }
