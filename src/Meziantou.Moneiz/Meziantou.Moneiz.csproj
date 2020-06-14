@@ -30,4 +30,11 @@
     <ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
   </ItemGroup>
 
+  <Target Name="CopyFiles" BeforeTargets="BeforeBuild">
+    <Copy
+        SourceFiles="wwwroot/index.html"
+        DestinationFiles="wwwroot/404.html"
+        />
+  </Target>
+
 </Project>
