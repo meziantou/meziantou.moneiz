@@ -35,11 +35,3 @@ th.bigtable-totals {
 .bigtable .details > span {
   display: block;
 }
-
-.bigtable.show-totals .details {
-  display: none;
-}
-
-.bigtable.show-details .total {
-  display: none;
-}

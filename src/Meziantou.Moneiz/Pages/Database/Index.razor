@@ -13,8 +13,26 @@
     <h1>GitHub</h1>
 
     <EditForm Model="databaseConfiguration">
-        <p>GitHub token (<a href="https://github.com/settings/tokens">generate</a>)</p>
-        <input type="password" @bind-value="databaseConfiguration.GitHubToken" />
+        <div class="form-group">
+            <label>
+                GitHub token (<a href="https://github.com/settings/tokens">generate</a>)
+                <input type="password" @bind-value="databaseConfiguration.GitHubToken" />
+            </label>
+        </div>
+
+        <div class="form-group">
+            <label>
+                GitHub repository name
+                <InputText @bind-Value="databaseConfiguration.GitHubRepository" />
+            </label>
+        </div>
+        
+        <div class="form-group">
+            <label>
+                Auto-load from GitHub repository
+                <InputCheckbox @bind-Value="databaseConfiguration.GitHubAutoLoad" />
+            </label>
+        </div>
 
         @if (githubOperation)
         {
@@ -22,6 +40,7 @@
         }
         else
         {
+            <button type="button" @onclick="() => SaveGitHubConfig()">Save configuration</button>
             <button type="button" @onclick="() => ImportDatabaseFromGitHub()">Import from GitHub</button>
             <button type="button" @onclick="() => ExportDatabaseToGitHub()">Export to GitHub</button>
         }
@@ -87,7 +106,7 @@
         try
         {
             githubOperation = true;
-            await DatabaseProvider.SetConfiguration(databaseConfiguration);
+            await SaveGitHubConfig();
             await DatabaseProvider.ExportToGitHub();
         }
         finally
@@ -101,12 +120,17 @@
         try
         {
             githubOperation = true;
-            await DatabaseProvider.SetConfiguration(databaseConfiguration);
+            await SaveGitHubConfig();
             await DatabaseProvider.ImportFromGitHub(implicitLoad: false);
         }
         finally
         {
             githubOperation = false;
         }
+    }
+
+    private async Task SaveGitHubConfig()
+    {
+        await DatabaseProvider.SetConfiguration(databaseConfiguration);
     }
 }

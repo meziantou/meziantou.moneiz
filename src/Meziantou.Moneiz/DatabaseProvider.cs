@@ -50,7 +50,7 @@ namespace Meziantou.Moneiz
                     if (_database == null)
                     {
                         var configuration = await LoadConfiguration();
-                        if (configuration?.GitHubToken != null)
+                        if (configuration.GitHubAutoLoad && !string.IsNullOrWhiteSpace(configuration?.GitHubToken))
                         {
                             await ImportFromGitHub(implicitLoad: true);
                         }

@@ -62,7 +62,7 @@ namespace Meziantou.Moneiz.Core
             // Write version
             ms.WriteByte(1);
 
-            using (var compressedStream = new GZipStream(ms, CompressionLevel.Optimal))
+            using (var compressedStream = new GZipStream(ms, CompressionLevel.Fastest))
             using (var writer = new Utf8JsonWriter(compressedStream))
             {
                 JsonSerializer.Serialize(writer, this, s_jsonOptions);
@@ -91,6 +91,9 @@ namespace Meziantou.Moneiz.Core
             using var textReader = new StreamReader(compressedStream);
             var json = await textReader.ReadToEndAsync();
             var db = JsonSerializer.Deserialize<Database>(json, s_jsonOptions);
+            if (db == null)
+                throw new Exception("database is null");
+
             db.AssertNoDetachedReferences();
             db.ProcessScheduledTransactions();
             return db;

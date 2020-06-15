@@ -19,48 +19,43 @@ else
     <div class="toolbar-left">
         <CreateTransactionLink Account="account">Create transaction</CreateTransactionLink>
         <p>
-            @if (hideReconciled)
-            {
-                <a @onclick="() => hideReconciled = false">Show reconciled transactions</a>
-            }
-            else
-            {
-                <a @onclick="() => hideReconciled = true">Hide reconciled transactions</a>
-            }
+            <label>
+                <input type="checkbox" checked="@showReconciled" @onchange="() => ToggleReconciledVisibility()" /> Show reconciled transactions
+            </label>
         </p>
     </div>
+
+    @if (account != null)
+    {
+        <div class="account-balance">
+            <div>
+                <span class="account-balance-title">On <UserDate Date="@today" />:</span>
+                <Amount value="@database.GetTodayBalance(account)" currency="@account.CurrencyIsoCode" />
+            </div>
+            <div>
+                <span class="account-balance-title">All transactions:</span>
+                <Amount value="@database.GetBalance(account)" currency="@account.CurrencyIsoCode" />
+            </div>
+            <div>
+                <span class="account-balance-title">Checked transactions:</span>
+                <span id="CheckedBalanceContainer">
+                    <Amount value="@database.GetCheckedBalance(account)" currency="@account.CurrencyIsoCode" />
+                </span>
+            </div>
+            <div>
+                <span class="account-balance-title">Reconciled transactions:</span>
+                <span>
+                    <Amount value="@database.GetReconciledBalance(account)" currency="@account.CurrencyIsoCode" />
+                </span>
+            </div>
+            <div>
+                <a class="btn btn-primary" @onclick="Reconcile">Reconcile</a>
+            </div>
+        </div>
+    }
 </div>
 
-@if (account != null)
-{
-    <div class="account-balance">
-        <div>
-            <span class="account-balance-title">On <UserDate Date="@today" />:</span>
-            <Amount value="@database.GetTodayBalance(account)" currency="@account.CurrencyIsoCode" />
-        </div>
-        <div>
-            <span class="account-balance-title">All transactions:</span>
-            <Amount value="@database.GetBalance(account)" currency="@account.CurrencyIsoCode" />
-        </div>
-        <div>
-            <span class="account-balance-title">Checked transactions:</span>
-            <span id="CheckedBalanceContainer">
-                <Amount value="@database.GetCheckedBalance(account)" currency="@account.CurrencyIsoCode" />
-            </span>
-        </div>
-        <div>
-            <span class="account-balance-title">Reconciled transactions:</span>
-            <span>
-                <Amount value="@database.GetReconciledBalance(account)" currency="@account.CurrencyIsoCode" />
-            </span>
-        </div>
-        <div>
-            <a class="btn btn-primary" @onclick="Reconcile">Reconcile</a>
-        </div>
-    </div>
-}
-
-<Repeater Items="transactions?.Where(FilterTransactions).Skip(pageIndex * pageSize).Take(pageSize)">
+<Repeater Items="transactions?.Skip(pageIndex * pageSize).Take(pageSize)">
     <RepeaterContainerTemplate>
         <table>
             <thead>
@@ -114,7 +109,7 @@ else
                 }
             </td>
             <td><UserDate Date="@transaction.ValueDate" /></td>
-            <td>@transaction.Category</td>
+            <td title="@transaction.Category">@transaction.Category?.Name</td>
             <td>@transaction.FinalTitle</td>
             <td><Amount Value="@transaction.Amount" Currency="@transaction.Account.CurrencyIsoCode" /></td>
             <td>@transaction.Comment</td>
@@ -136,7 +131,7 @@ else
     int pageIndex = 0;
     int pageSize = 50;
     DateTime today = DateTime.UtcNow;
-    bool hideReconciled = false;
+    bool showReconciled = false;
 
     [Parameter]
     public int? AccountId { get; set; }
@@ -154,26 +149,13 @@ else
 
     protected override void OnParametersSet()
     {
-        IEnumerable<Transaction> result = database.Transactions;
-        if (AccountId != null)
-        {
-            account = database.GetAccountById(AccountId);
-            result = result.Where(t => t.Account == account);
-        }
+        LoadTransactions();
+    }
 
-        if (PayeeId != null)
-        {
-            var payee = database.GetPayeeById(PayeeId);
-            result = result.Where(t => t.Payee == payee);
-        }
-
-        if (CategoryId != null)
-        {
-            var category = database.GetCategoryById(CategoryId);
-            result = result.Where(t => t.Category == category);
-        }
-
-        transactions = result.OrderByDescending(t => t.ValueDate).ThenBy(t => t.Payee?.Name).ToList();
+    private void ToggleReconciledVisibility()
+    {
+        showReconciled = !showReconciled;
+        LoadTransactions();
     }
 
     private async Task Check(Transaction transaction)
@@ -199,7 +181,7 @@ else
 
     private bool HasMorePages()
     {
-        return transactions.Where(FilterTransactions).Skip((pageIndex + 1) * pageSize).Any();
+        return transactions.Skip((pageIndex + 1) * pageSize).Any();
     }
 
     private async Task Reconcile()
@@ -211,11 +193,32 @@ else
         await DatabaseProvider.Save();
     }
 
-    private bool FilterTransactions(Transaction transaction)
+    private void LoadTransactions()
     {
-        if (!hideReconciled)
-            return true;
+        IEnumerable<Transaction> result = database.Transactions;
+        if (!showReconciled)
+        {
+            result = result.Where(t => !t.ReconciliationDate.HasValue);
+        }
 
-        return !transaction.ReconciliationDate.HasValue;
+        if (AccountId != null)
+        {
+            account = database.GetAccountById(AccountId);
+            result = result.Where(t => t.Account == account);
+        }
+
+        if (PayeeId != null)
+        {
+            var payee = database.GetPayeeById(PayeeId);
+            result = result.Where(t => t.Payee == payee);
+        }
+
+        if (CategoryId != null)
+        {
+            var category = database.GetCategoryById(CategoryId);
+            result = result.Where(t => t.Category == category);
+        }
+
+        transactions = result.OrderByDescending(t => t.ValueDate).ThenBy(t => t.Payee?.Name).ToList();
     }
 }
