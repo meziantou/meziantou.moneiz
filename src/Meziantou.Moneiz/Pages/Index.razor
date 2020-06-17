@@ -10,5 +10,9 @@
         {
             NavigationManager.NavigateToAccounts();
         }
+        else
+        {
+            NavigationManager.NavigateToAccount(db.Accounts.First());
+        }
     }
 }

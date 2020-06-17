@@ -1,4 +1,6 @@
 ﻿using System.Globalization;
+using Meziantou.Framework;
+using Meziantou.Moneiz.Core;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
 
@@ -6,6 +8,7 @@ namespace Meziantou.Moneiz.Extensions
 {
     public static class NavigationManagerExtensions
     {
+        public static void NavigateToAccount(this NavigationManager navigationManager, Account account) => navigationManager.NavigateTo("accounts/" + account.Id.ToStringInvariant() + "/transactions");
         public static void NavigateToAccounts(this NavigationManager navigationManager) => navigationManager.NavigateTo("accounts");
         public static void NavigateToCategories(this NavigationManager navigationManager) => navigationManager.NavigateTo("categories");
         public static void NavigateToPayees(this NavigationManager navigationManager) => navigationManager.NavigateTo("payees");
