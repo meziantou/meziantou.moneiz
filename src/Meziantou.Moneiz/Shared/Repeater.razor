@@ -11,10 +11,10 @@
         @: Loading...
     }
 }
-    else
+else
+{
+    if (!Items.Any() && EmptyTemplate != null)
     {
-        if (!Items.Any())
-        {
         @EmptyTemplate
     }
     else
