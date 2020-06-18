@@ -1,7 +1,7 @@
 ﻿using Microsoft.JSInterop;
 using System.Threading.Tasks;
 
-namespace Meziantou.Moneiz.Extensions
+namespace Meziantou.Moneiz.Services
 {
     public sealed class ConfirmService
     {

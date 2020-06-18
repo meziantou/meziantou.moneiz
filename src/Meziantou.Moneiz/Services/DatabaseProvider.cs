@@ -1,6 +1,7 @@
 ﻿using Meziantou.Framework;
 using Meziantou.Moneiz.Core;
 using Meziantou.Moneiz.Extensions;
+using Meziantou.Moneiz.Services;
 using Microsoft.JSInterop;
 using System;
 using System.Linq;

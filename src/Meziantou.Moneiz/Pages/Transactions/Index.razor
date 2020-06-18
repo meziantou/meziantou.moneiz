@@ -3,8 +3,8 @@
 @page "/payees/{PayeeId:int}/transactions"
 @inject IDatabaseProvider DatabaseProvider
 @inject ConfirmService ConfirmService
+@inject SettingsProvider SettingsProvider
 @inject NavigationManager NavigationManager
-
 
 @if (account != null)
 {
@@ -147,14 +147,20 @@ else
         database = await DatabaseProvider.GetDatabase();
     }
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
+        if (AccountId != null)
+        {
+            showReconciled = await SettingsProvider.GetShowReconciliatedTransactions(AccountId.Value) ?? showReconciled;
+        }
+
         LoadTransactions();
     }
 
-    private void ToggleReconciledVisibility()
+    private async Task ToggleReconciledVisibility()
     {
         showReconciled = !showReconciled;
+        await SettingsProvider.SetShowReconciliatedTransactions(AccountId.Value, showReconciled);
         LoadTransactions();
     }
 
