@@ -176,6 +176,7 @@ else
         {
             database.RemoveTransaction(transaction);
             await DatabaseProvider.Save();
+            LoadTransactions();
         }
     }
 
