@@ -92,11 +92,22 @@ namespace Meziantou.Moneiz
 
         private async Task Save(Database database, SaveOptions options)
         {
+            var stopwatch = ValueStopwatch.StartNew();
+            Console.WriteLine("Saving database to local storage");
             var bytes = database.Export();
-            await _jsRuntime.SetValue(MoneizLocalStorageDbName, bytes);
-            await _jsRuntime.SetValue(MoneizLocalStorageChangedName, options.IndicateDbChanged);
+            Console.WriteLine("Database blob generated in " + stopwatch.GetElapsedTime());
 
+            stopwatch = ValueStopwatch.StartNew();
+            await _jsRuntime.SetValue(MoneizLocalStorageDbName, bytes);
+            Console.WriteLine("Database blob saved in " + stopwatch.GetElapsedTime());
+
+            stopwatch = ValueStopwatch.StartNew();
+            await _jsRuntime.SetValue(MoneizLocalStorageChangedName, options.IndicateDbChanged);
+            Console.WriteLine("Database changed saved in " + stopwatch.GetElapsedTime());
+
+            stopwatch = ValueStopwatch.StartNew();
             RaiseDatabaseSaved();
+            Console.WriteLine("Database changed notification handled in " + stopwatch.GetElapsedTime());
         }
 
         public async Task ExportToFile()

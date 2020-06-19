@@ -14,7 +14,7 @@ namespace Meziantou.Moneiz.CoreTests
             // Arrange
             var category1 = new Category { Id = 1, Name = "c1", GroupName = "cg1" };
             var payee1 = new Payee { Id = 1, Name = "p1", DefaultCategory = category1 };
-            var account1 = new Account { Name = "a1", CurrencyIsoCode = "USD" };
+            var account1 = new Account { Id = 1, Name = "a1", CurrencyIsoCode = "USD" };
             var transaction1 = new Transaction { Account = account1, Amount = 1, Category = category1, CheckedDate = DateTime.UtcNow, Comment = "", Id = 1, Payee = payee1, ValueDate = DateTime.UtcNow, };
             var transaction2 = new Transaction { Account = account1, Amount = 1, Category = category1, CheckedDate = DateTime.UtcNow, Comment = "", Id = 2, Payee = payee1, ValueDate = DateTime.UtcNow, };
             var transaction3 = new Transaction { Account = account1, Amount = 1, Category = category1, CheckedDate = DateTime.UtcNow, Comment = "", Id = 3, Payee = payee1, ValueDate = DateTime.UtcNow, LinkedTransaction = transaction2 };
@@ -44,6 +44,12 @@ namespace Meziantou.Moneiz.CoreTests
 
             // Check references
             Assert.Same(imported.Payees.Single().DefaultCategory, imported.Categories.Single());
+
+            Assert.Same(imported.GetCategoryById(1), imported.GetTransactionById(1).Category);
+            Assert.Same(imported.GetAccountById(1), imported.GetTransactionById(1).Account);
+            Assert.Same(imported.GetPayeeById(1), imported.GetTransactionById(1).Payee);
+
+            Assert.Same(imported.GetTransactionById(2), imported.GetTransactionById(3).LinkedTransaction);
         }
 
         [Fact]

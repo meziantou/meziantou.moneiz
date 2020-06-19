@@ -84,19 +84,44 @@ namespace Meziantou.Moneiz.Core
             if (count != 1)
                 throw new Exception("Cannot read file");
 
-            if (buffer[0] != 1)
-                throw new Exception("database version not expected");
+            Database? db;
+            if (buffer[0] == 1)
+            {
+                using var compressedStream = new GZipStream(stream, CompressionMode.Decompress);
+                using var textReader = new StreamReader(compressedStream);
+                var json = await textReader.ReadToEndAsync();
+                db = JsonSerializer.Deserialize<Database>(json, s_jsonOptions);
+            }
+            else
+            {
+                throw new Exception($"database version '{buffer[0]}' not expected");
+            }
 
-            using var compressedStream = new GZipStream(stream, CompressionMode.Decompress);
-            using var textReader = new StreamReader(compressedStream);
-            var json = await textReader.ReadToEndAsync();
-            var db = JsonSerializer.Deserialize<Database>(json, s_jsonOptions);
             if (db == null)
                 throw new Exception("database is null");
 
+            db.ResolveReferences();
             db.AssertNoDetachedReferences();
             db.ProcessScheduledTransactions();
             return db;
+        }
+
+        private void ResolveReferences()
+        {
+            foreach (var payee in Payees)
+            {
+                payee.ResolveReferences(this);
+            }
+
+            foreach (var transaction in Transactions)
+            {
+                transaction.ResolveReferences(this);
+            }
+
+            foreach (var scheduledTransaction in ScheduledTransactions)
+            {
+                scheduledTransaction.ResolveReferences(this);
+            }
         }
 
         private void AssertNoDetachedReferences()
