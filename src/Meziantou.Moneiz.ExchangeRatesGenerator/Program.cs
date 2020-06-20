@@ -39,7 +39,7 @@ namespace Meziantou.Moneiz.Core
 {
     partial class Database
     {
-        private static System.Collections.Generic.IReadOnlyList<Currency> InitializeCurrencies()
+        internal static System.Collections.Generic.IReadOnlyList<Currency> InitializeCurrencies()
         {
             var result = new Currency[" + currencies.Count.ToString(CultureInfo.InvariantCulture) + @"];
 ");

@@ -33,7 +33,7 @@ namespace Meziantou.Moneiz.Core
         [JsonPropertyName("f")]
         public string? Comment { get; set; }
 
-        [JsonPropertyName("g")]
+        [JsonIgnore]
         public Account? Account
         {
             get => _account;
@@ -44,14 +44,14 @@ namespace Meziantou.Moneiz.Core
             }
         }
 
-        [JsonPropertyName("l")]
-        private int? AccountId
+        [JsonPropertyName("g")]
+        public int? AccountId
         {
             get => Account?.Id ?? _accountId;
             set => _accountId = value;
         }
 
-        [JsonPropertyName("h")]
+        [JsonIgnore]
         public Account? CreditedAccount
         {
             get => _creditedAccount;
@@ -62,14 +62,14 @@ namespace Meziantou.Moneiz.Core
             }
         }
 
-        [JsonPropertyName("m")]
-        private int? CreditedAccountId
+        [JsonPropertyName("h")]
+        public int? CreditedAccountId
         {
             get => CreditedAccount?.Id ?? _creditedAccountId;
             set => _creditedAccountId = value;
         }
 
-        [JsonPropertyName("i")]
+        [JsonIgnore]
         public Payee? Payee
         {
             get => _payee;
@@ -80,14 +80,14 @@ namespace Meziantou.Moneiz.Core
             }
         }
 
-        [JsonPropertyName("n")]
-        private int? PayeeId
+        [JsonPropertyName("i")]
+        public int? PayeeId
         {
             get => Payee?.Id ?? _payeeId;
             set => _payeeId = value;
         }
 
-        [JsonPropertyName("j")]
+        [JsonIgnore]
         public Category? Category
         {
             get => _category;
@@ -98,8 +98,8 @@ namespace Meziantou.Moneiz.Core
             }
         }
 
-        [JsonPropertyName("o")]
-        private int? CategoryId
+        [JsonPropertyName("j")]
+        public int? CategoryId
         {
             get => Category?.Id ?? _categoryId;
             set => _categoryId = value;

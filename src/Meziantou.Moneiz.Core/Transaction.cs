@@ -32,7 +32,7 @@ namespace Meziantou.Moneiz.Core
         [JsonPropertyName("f")]
         public DateTime? ReconciliationDate { get; set; }
 
-        [JsonPropertyName("g")]
+        [JsonIgnore]
         public Account? Account
         {
             get => _account;
@@ -43,14 +43,14 @@ namespace Meziantou.Moneiz.Core
             }
         }
 
-        [JsonPropertyName("k")]
-        private int? AccountId
+        [JsonPropertyName("g")]
+        public int? AccountId
         {
             get => Account?.Id ?? _accountId;
             set => _accountId = value;
         }
 
-        [JsonPropertyName("h")]
+        [JsonIgnore]
         public Payee? Payee
         {
             get => _payee;
@@ -61,14 +61,14 @@ namespace Meziantou.Moneiz.Core
             }
         }
 
-        [JsonPropertyName("l")]
-        private int? PayeeId
+        [JsonPropertyName("h")]
+        public int? PayeeId
         {
             get => Payee?.Id ?? _payeeId;
             set => _payeeId = value;
         }
 
-        [JsonPropertyName("i")]
+        [JsonIgnore]
         public Category? Category
         {
             get => _category;
@@ -79,14 +79,14 @@ namespace Meziantou.Moneiz.Core
             }
         }
 
-        [JsonPropertyName("m")]
-        private int? CategoryId
+        [JsonPropertyName("i")]
+        public int? CategoryId
         {
             get => Category?.Id ?? _categoryId;
             set => _categoryId = value;
         }
 
-        [JsonPropertyName("j")]
+        [JsonIgnore]
         public Transaction? LinkedTransaction
         {
             get => _linkedTransaction;
@@ -97,8 +97,8 @@ namespace Meziantou.Moneiz.Core
             }
         }
 
-        [JsonPropertyName("n")]
-        private int? LinkedTransactionId
+        [JsonPropertyName("j")]
+        public int? LinkedTransactionId
         {
             get => LinkedTransaction?.Id ?? _linkedTransactionId;
             set => _linkedTransactionId = value;

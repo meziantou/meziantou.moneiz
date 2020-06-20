@@ -115,7 +115,7 @@ namespace Meziantou.Moneiz
             var database = await GetDatabase();
             var bytes = database.Export();
 
-            await _jsRuntime.ExportToFile(MoneizDownloadFileName, Convert.ToBase64String(bytes));
+            await _jsRuntime.ExportToFile(MoneizDownloadFileName, bytes);
             await _jsRuntime.SetValue(MoneizLocalStorageChangedName, false);
             RaiseDatabaseSaved();
         }

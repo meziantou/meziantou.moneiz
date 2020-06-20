@@ -11,7 +11,6 @@ namespace Meziantou.Moneiz.Core
 {
     public sealed partial class Database
     {
-        private static readonly JsonSerializerOptions s_jsonOptions = CreateOptions();
         private int _deferedEventCount = 0;
         private bool _deferedEventCalled = false;
 
@@ -46,26 +45,21 @@ namespace Meziantou.Moneiz.Core
         [JsonPropertyName("g")]
         public DateTime LastModifiedDate { get; set; }
 
-        private static JsonSerializerOptions CreateOptions()
-        {
-            return new JsonSerializerOptions
-            {
-                IgnoreNullValues = true,
-                WriteIndented = false,
-                ReferenceHandling = ReferenceHandling.Preserve,
-            };
-        }
-
         public byte[] Export()
         {
             using var ms = new MemoryStream();
             // Write version
-            ms.WriteByte(1);
+            ms.WriteByte(2);
 
             using (var compressedStream = new GZipStream(ms, CompressionLevel.Fastest))
             using (var writer = new Utf8JsonWriter(compressedStream))
             {
-                JsonSerializer.Serialize(writer, this, s_jsonOptions);
+                JsonSerializer.Serialize(writer, this, new JsonSerializerOptions
+                {
+                    IgnoreNullValues = true,
+                    WriteIndented = false,
+                    ReferenceHandling = ReferenceHandling.Default,
+                });
             }
 
             return ms.ToArray();
@@ -90,7 +84,19 @@ namespace Meziantou.Moneiz.Core
                 using var compressedStream = new GZipStream(stream, CompressionMode.Decompress);
                 using var textReader = new StreamReader(compressedStream);
                 var json = await textReader.ReadToEndAsync();
-                db = JsonSerializer.Deserialize<Database>(json, s_jsonOptions);
+                var db1 = JsonSerializer.Deserialize<V1.Database>(json, new JsonSerializerOptions
+                {
+                    ReferenceHandling = ReferenceHandling.Preserve,
+                });
+
+                db = db1?.ToDatabase2();
+            }
+            else if (buffer[0] == 2)
+            {
+                using var compressedStream = new GZipStream(stream, CompressionMode.Decompress);
+                using var textReader = new StreamReader(compressedStream);
+                var json = await textReader.ReadToEndAsync();
+                db = JsonSerializer.Deserialize<Database>(json);
             }
             else
             {

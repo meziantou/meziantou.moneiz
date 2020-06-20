@@ -13,7 +13,7 @@ namespace Meziantou.Moneiz.Core
         [JsonPropertyName("b")]
         public string? Name { get; set; }
 
-        [JsonPropertyName("c")]
+        [JsonIgnore]
         public Category? DefaultCategory
         {
             get => _defaultCategory;
@@ -24,8 +24,8 @@ namespace Meziantou.Moneiz.Core
             }
         }
 
-        [JsonPropertyName("d")]
-        private int? DefaultCategoryId
+        [JsonPropertyName("c")]
+        public int? DefaultCategoryId
         {
             get => DefaultCategory?.Id ?? _defaultCategoryId;
             set => _defaultCategoryId = value;
