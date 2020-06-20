@@ -238,13 +238,25 @@ namespace Meziantou.Moneiz
                 {
                     await _confirmService.Alert("No database found on GitHub");
                 }
-
+                else
+                {
+                    Console.WriteLine("No database found on GitHub");
+                }
+                
                 return;
             }
 
             if (implicitLoad && (configuration.GitHubSha == null || file.Sha.EqualsIgnoreCase(configuration.GitHubSha)))
             {
+                Console.WriteLine("Do not import GitHub database as the sha is the same as the last imported db sha");
                 return;
+            }
+
+            if (implicitLoad)
+            {
+                Console.WriteLine($"GitHub dabatabase sha '{file.Sha}' is different from current db sha '{configuration.GitHubSha}'");
+                if (await _confirmService.Confirm("A new version of the database is available on GitHub. Do you want to load it?") == false)
+                    return;
             }
 
             // Cannot use Download url for private repository
