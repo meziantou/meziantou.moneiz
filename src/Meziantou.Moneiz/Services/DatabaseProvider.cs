@@ -242,7 +242,7 @@ namespace Meziantou.Moneiz
                 {
                     Console.WriteLine("No database found on GitHub");
                 }
-                
+
                 return;
             }
 
@@ -265,6 +265,8 @@ namespace Meziantou.Moneiz
             var data = Convert.FromBase64String(blob.Content);
             var database = await Database.Load(data);
             await Import(database);
+            configuration.GitHubSha = blob.Sha;
+            await SetConfiguration(configuration);
         }
 
         private sealed class GitHubUser
