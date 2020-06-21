@@ -1,0 +1,26 @@
+﻿@inject IDatabaseProvider DatabaseProvider
+
+@if (isLoaded)
+{
+    @ChildContent
+}
+else
+{
+    <div style="position:absolute; top:30vh; width:100%; text-align:center">
+        <h1>Moneiz</h1>
+        <p><i class="fas fa-spin fa-spinner"></i> Loading database...</p>
+    </div>
+}
+
+@code{
+    bool isLoaded;
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await DatabaseProvider.GetDatabase();
+        isLoaded = true;
+    }
+}
