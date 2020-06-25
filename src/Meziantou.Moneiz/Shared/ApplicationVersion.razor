@@ -1,0 +1,42 @@
+﻿<p style="font-size:10px">
+    <span title="@(MoneizAppContext.BuildDate)">Moneiz v@(MoneizAppContext.Version) built on @(BuildDateAttribute.Get()?.ToString("yyyy-MM-dd"))</span>
+
+    @if (!isLastVersion)
+    {
+        <a href="javascript:document.location.reload(true)"><i class="fas fa-sync"></i> Update to last version</a>
+    }
+</p>
+
+@code {
+    bool isLastVersion = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (MoneizAppContext.Hash == null)
+            return;
+
+        try
+        {
+            using var client = new HttpClient();
+            var commits = await client.GetFromJsonAsync<Commit[]>("https://api.github.com/repos/meziantou/meziantou.moneiz/commits");
+            var lastCommit = commits.FirstOrDefault();
+            if (lastCommit != null)
+            {
+                if (!lastCommit.Sha.EqualsIgnoreCase(MoneizAppContext.Hash))
+                {
+                    isLastVersion = false;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+        }
+    }
+
+    private sealed class Commit
+    {
+        [System.Text.Json.Serialization.JsonPropertyName("sha")]
+        public string Sha { get; set; }
+    }
+}

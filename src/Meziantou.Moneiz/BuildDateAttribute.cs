@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 
 namespace Meziantou.Moneiz
@@ -24,5 +25,21 @@ namespace Meziantou.Moneiz
     {
         public static string Version => typeof(MoneizAppContext).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
         public static DateTime? BuildDate => BuildDateAttribute.Get();
+
+        public static string Hash
+        {
+            get
+            {
+                var version = Version;
+                if (version != null)
+                {
+                    var splits = version.Split('+');
+                    if (splits.Length > 1)
+                        return splits[1];
+                }
+
+                return null;
+            }
+        }
     }
 }
