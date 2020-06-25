@@ -229,9 +229,8 @@ namespace Meziantou.Moneiz
 
             // https://developer.github.com/v3/repos/contents/#get-repository-content
             var url = "repos/" + currentUser.Login + "/" + configuration.GitHubRepository + "/contents/";
-            var files = await httpClient.GetFromJsonAsync<GitHubContent[]>(url);
-            var file = files.FirstOrDefault(f => f.Name == MoneizDownloadFileName);
-
+            var files = await SafeGetForJsonAsync<GitHubContent[]>(url);
+            var file = files?.FirstOrDefault(f => f.Name == MoneizDownloadFileName);
             if (file == null)
             {
                 if (!implicitLoad)
@@ -267,6 +266,18 @@ namespace Meziantou.Moneiz
             await Import(database);
             configuration.GitHubSha = blob.Sha;
             await SetConfiguration(configuration);
+
+            async Task<T> SafeGetForJsonAsync<T>(string url) where T : class
+            {
+                try
+                {
+                    return await httpClient.GetFromJsonAsync<T>(url);
+                }
+                catch (HttpRequestException)
+                {
+                    return null;
+                }
+            }
         }
 
         private sealed class GitHubUser
