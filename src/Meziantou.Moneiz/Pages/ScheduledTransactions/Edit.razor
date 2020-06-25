@@ -20,7 +20,7 @@
         <div class="form-group">
             <label>
                 Recurrence rule
-                <InputText @bind-Value="model.RecurrenceRule" readonly="@(Id != null)" list="RecurrenceRuleSamples" />
+                <InputText @bind-Value="model.RecurrenceRule" list="RecurrenceRuleSamples" />
             </label>
 
             <datalist id="RecurrenceRuleSamples">
@@ -158,11 +158,15 @@
         var scheduledTransaction = database.GetScheduledTransactionById(Id);
         if (scheduledTransaction == null)
         {
-            scheduledTransaction = new ScheduledTransaction
-            {
-                StartDate = DateTime.UtcNow,
-                RecurrenceRuleText = model.RecurrenceRule.TrimAndNullify(), // Only settable at creation
-            };
+            scheduledTransaction = new ScheduledTransaction();
+        }
+
+        var newRecurrenceRule = model.RecurrenceRule.TrimAndNullify();
+        if (scheduledTransaction.RecurrenceRuleText != newRecurrenceRule)
+        {
+            scheduledTransaction.RecurrenceRuleText = newRecurrenceRule;
+            scheduledTransaction.NextOccurenceDate = null;
+            scheduledTransaction.StartDate = DateTime.UtcNow;
         }
 
         scheduledTransaction.Name = model.Name.TrimAndNullify();
