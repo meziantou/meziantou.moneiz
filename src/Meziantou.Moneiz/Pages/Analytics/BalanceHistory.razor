@@ -17,17 +17,23 @@
                 EndBalance = group.Sum(g => g.EndBalance),
             };
 
-            <BalanceHistoryRow Entry="entry" />
-
-            @foreach (var account in group.OrderBy(e => e.Account.SortOrder))
+            if (ShowDetails || entry.StartBalance != 0 || entry.EndBalance != 0)
             {
-                <BalanceHistoryRow Entry="account" />
+                <BalanceHistoryRow Entry="entry" />
+
+                @foreach (var account in group.OrderBy(e => e.Account.SortOrder))
+                {
+                    <BalanceHistoryRow Entry="account" />
+                }
             }
         }
     </tbody>
 </table>
 
 @code{
+    [Parameter]
+    public bool ShowDetails { get; set; }
+
     [Parameter]
     public Meziantou.Moneiz.Core.Analytics.BalanceHistory Model { get; set; }
 }

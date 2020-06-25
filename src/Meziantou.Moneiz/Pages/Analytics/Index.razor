@@ -47,8 +47,9 @@
 
     @if (model != null)
     {
-        <BigTable Model="model.BigTable" />
-        <BalanceHistory Model="model.BalanceHistory" />
+        <label><input type="checkbox" @bind-value="showDetails" /> Show details</label>
+        <BigTable Model="model.BigTable" ShowDetails="showDetails" />
+        <BalanceHistory Model="model.BalanceHistory" ShowDetails="showDetails" />
     }
 </Loading>
 
@@ -60,6 +61,7 @@
     DateTime toDate = DateTime.UtcNow;
     HashSet<Account> selectedAccounts = new HashSet<Account>();
 
+    bool showDetails;
     AnalyticsModel model;
 
     protected override async Task OnInitializedAsync()
