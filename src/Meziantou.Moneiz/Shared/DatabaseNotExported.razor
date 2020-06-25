@@ -3,11 +3,22 @@
 
 @if (needExport)
 {
-    <a class="database-not-exported" href="/database"><span>Export database</span></a>
+    if (canExportToGitHub)
+    {
+        <Loading IsLoading="isExporting" LoadingText="Exporting...">
+            <button type="button" @onclick="ExportToGitHub">Export to GitHub</button>
+        </Loading>
+    }
+    else
+    {
+        <a class="database-not-exported" href="/database"><span>Export database</span></a>
+    }
 }
 
 @code {
     private bool needExport;
+    private bool canExportToGitHub;
+    private bool isExporting;
 
     protected override async Task OnInitializedAsync()
     {
@@ -28,7 +39,22 @@
     private async Task GetState()
     {
         var hasUnexportedChanges = await DatabaseProvider.HasUnexportedChanges();
+        canExportToGitHub = await DatabaseProvider.IsGitHubConfigured();
         needExport = hasUnexportedChanges;
         StateHasChanged();
+    }
+
+    private async Task ExportToGitHub()
+    {
+        isExporting = true;
+        StateHasChanged();
+        try
+        {
+            await DatabaseProvider.ExportToGitHub();
+        }
+        finally
+        {
+            isExporting = false;
+        }
     }
 }

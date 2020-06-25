@@ -193,6 +193,7 @@ namespace Meziantou.Moneiz
             // Check sha with persisted sha
             if (file != null && !configuration.GitHubSha.EqualsIgnoreCase(file.Sha))
             {
+                Console.WriteLine($"GitHub dabatabase sha '{file.Sha}' is different from current db sha '{configuration.GitHubSha}'");
                 if (await _confirmService.Confirm("The database on GitHub is not the same as the one synchronized on this machine. Do you want to overwrite it?") == false)
                     return;
             }
@@ -248,7 +249,7 @@ namespace Meziantou.Moneiz
 
             if (implicitLoad && (configuration.GitHubSha == null || file.Sha.EqualsIgnoreCase(configuration.GitHubSha)))
             {
-                Console.WriteLine("Do not import GitHub database as the sha is the same as the last imported db sha");
+                Console.WriteLine($"GitHub dabatabase sha '{file.Sha}' is different from current db sha '{configuration.GitHubSha}' => Do not import");
                 return;
             }
 
@@ -290,6 +291,12 @@ namespace Meziantou.Moneiz
 
             var url = "https://github.com/" + currentUser.Login + "/" + configuration.GitHubRepository;
             await _jsRuntime.OpenInTab(url);
+        }
+
+        public async ValueTask<bool> IsGitHubConfigured()
+        {
+            var configuration = await LoadConfiguration();
+            return configuration.IsGitHubConfigured();
         }
 
         private sealed class GitHubUser

@@ -23,7 +23,7 @@
         <div class="form-group">
             <label>
                 GitHub repository name
-                @if (!string.IsNullOrEmpty(databaseConfiguration.GitHubRepository) && !string.IsNullOrEmpty(databaseConfiguration.GitHubToken))
+                @if (databaseConfiguration.IsGitHubConfigured())
                 {
                     <span>(<a @onclick="OpenGitHubRepository">view on GitHub</a>)</span>
                 }
