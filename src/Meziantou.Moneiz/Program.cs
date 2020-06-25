@@ -3,7 +3,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Meziantou.Moneiz.Core;
 using Blazor.FileReader;
 using Meziantou.Moneiz.Services;
 
@@ -17,7 +16,7 @@ namespace Meziantou.Moneiz
             builder.RootComponents.Add<App>("app");
 
             builder.Services.AddTransient(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-            builder.Services.AddSingleton<IDatabaseProvider, DatabaseProvider>();
+            builder.Services.AddSingleton<DatabaseProvider>();
             builder.Services.AddSingleton<ConfirmService>();
             builder.Services.AddSingleton<SettingsProvider>();
             builder.Services.AddFileReaderService(options => options.UseWasmSharedBuffer = true);

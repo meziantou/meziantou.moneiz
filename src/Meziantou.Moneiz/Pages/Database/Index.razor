@@ -1,7 +1,7 @@
 ﻿@page "/database"
 @inject NavigationManager NavigationManager
 @inject ConfirmService ConfirmService
-@inject IDatabaseProvider DatabaseProvider
+@inject DatabaseProvider DatabaseProvider
 @inject Blazor.FileReader.IFileReaderService FileReaderService
 
 @if (database != null)
@@ -23,10 +23,14 @@
         <div class="form-group">
             <label>
                 GitHub repository name
+                @if (!string.IsNullOrEmpty(databaseConfiguration.GitHubRepository) && !string.IsNullOrEmpty(databaseConfiguration.GitHubToken))
+                {
+                    <span>(<a @onclick="OpenGitHubRepository">view on GitHub</a>)</span>
+                }
                 <InputText @bind-Value="databaseConfiguration.GitHubRepository" />
             </label>
         </div>
-        
+
         <div class="form-group">
             <label>
                 Auto-load from GitHub repository
@@ -132,5 +136,10 @@
     private async Task SaveGitHubConfig()
     {
         await DatabaseProvider.SetConfiguration(databaseConfiguration);
+    }
+
+    private async Task OpenGitHubRepository()
+    {
+        await DatabaseProvider.OpenGitHubRepository();
     }
 }

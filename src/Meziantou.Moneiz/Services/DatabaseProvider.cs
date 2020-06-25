@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace Meziantou.Moneiz
 {
-    public class DatabaseProvider : IDatabaseProvider, IDisposable
+    public class DatabaseProvider : IDisposable
     {
         private const string MoneizLocalStorageDbName = "moneiz.db";
         private const string MoneizLocalStorageConfigurationName = "moneiz.configuration";
@@ -164,6 +164,17 @@ namespace Meziantou.Moneiz
             return _jsRuntime.SetValue(MoneizLocalStorageConfigurationName, configuration);
         }
 
+        private static HttpClient CreateClient(DatabaseConfiguration configuration)
+        {
+            var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", configuration.GitHubToken);
+            httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "Mozilla/5.0");
+            httpClient.BaseAddress = new Uri("https://api.github.com");
+
+            return httpClient;
+        }
+
         public async Task ExportToGitHub()
         {
             var database = await GetDatabase();
@@ -171,12 +182,7 @@ namespace Meziantou.Moneiz
 
             var configuration = await LoadConfiguration();
 
-            using var httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", configuration.GitHubToken);
-            httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "Mozilla/5.0");
-            httpClient.BaseAddress = new Uri("https://api.github.com");
-
+            using var httpClient = CreateClient(configuration);
             var currentUser = await httpClient.GetFromJsonAsync<GitHubUser>("user");
 
             // https://developer.github.com/v3/repos/contents/#get-repository-content
@@ -219,12 +225,7 @@ namespace Meziantou.Moneiz
 
             var configuration = await LoadConfiguration();
 
-            using var httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", configuration.GitHubToken);
-            httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "Mozilla/5.0");
-            httpClient.BaseAddress = new Uri("https://api.github.com");
-
+            using var httpClient = CreateClient(configuration);
             var currentUser = await httpClient.GetFromJsonAsync<GitHubUser>("user");
 
             // https://developer.github.com/v3/repos/contents/#get-repository-content
@@ -278,6 +279,17 @@ namespace Meziantou.Moneiz
                     return null;
                 }
             }
+        }
+
+        public async Task OpenGitHubRepository()
+        {
+            var configuration = await LoadConfiguration();
+
+            using var httpClient = CreateClient(configuration);
+            var currentUser = await httpClient.GetFromJsonAsync<GitHubUser>("user");
+
+            var url = "https://github.com/" + currentUser.Login + "/" + configuration.GitHubRepository;
+            await _jsRuntime.OpenInTab(url);
         }
 
         private sealed class GitHubUser

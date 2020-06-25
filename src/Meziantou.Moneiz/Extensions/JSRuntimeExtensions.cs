@@ -7,6 +7,11 @@ namespace Meziantou.Moneiz.Extensions
 {
     internal static class JSRuntimeExtensions
     {
+        public static ValueTask OpenInTab(this IJSRuntime jsRuntime, string url)
+        {
+            return jsRuntime.InvokeVoidAsync("MoneizOpenInTab", url);
+        }
+        
         public static ValueTask<string> GetValue(this IJSRuntime jsRuntime, string name)
         {
             return jsRuntime.InvokeAsync<string>("MoneizGetValue", name);

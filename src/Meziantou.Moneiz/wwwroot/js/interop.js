@@ -69,3 +69,7 @@ function MoneizConfirm(message) {
 function MoneizAlert(message) {
   return alert(message);
 }
+
+function MoneizOpenInTab(url) {
+  window.open(url, '_blank');
+}

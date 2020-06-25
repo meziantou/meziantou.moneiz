@@ -14,7 +14,7 @@ namespace Meziantou.Moneiz.Shared
         private Database _database;
 
         [Inject]
-        private IDatabaseProvider DatabaseProvider { get; set; }
+        private DatabaseProvider DatabaseProvider { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
