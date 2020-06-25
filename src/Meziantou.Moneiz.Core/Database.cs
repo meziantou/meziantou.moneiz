@@ -56,9 +56,8 @@ namespace Meziantou.Moneiz.Core
             {
                 JsonSerializer.Serialize(writer, this, new JsonSerializerOptions
                 {
-                    IgnoreNullValues = true,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
                     WriteIndented = false,
-                    ReferenceHandling = ReferenceHandling.Default,
                 });
             }
 
@@ -86,7 +85,7 @@ namespace Meziantou.Moneiz.Core
                 var json = await textReader.ReadToEndAsync();
                 var db1 = JsonSerializer.Deserialize<V1.Database>(json, new JsonSerializerOptions
                 {
-                    ReferenceHandling = ReferenceHandling.Preserve,
+                    ReferenceHandler = ReferenceHandler.Preserve,
                 });
 
                 db = db1?.ToDatabase2();
