@@ -1,6 +1,11 @@
 ﻿@inject DatabaseProvider DatabaseProvider
 @implements IDisposable
 
+@if (needImport)
+{
+    <a class="database-not-exported" href="/database"><span>A new version is available</span></a>
+}
+
 @if (needExport)
 {
     if (canExportToGitHub)
@@ -16,12 +21,15 @@
 }
 
 @code {
+    private bool needImport;
     private bool needExport;
     private bool canExportToGitHub;
     private bool isExporting;
+    private System.Threading.Timer timer;
 
     protected override async Task OnInitializedAsync()
     {
+        timer = new System.Threading.Timer(CheckNewVersion, state: null, TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(60));
         DatabaseProvider.DatabaseSaved += DatabaseChanged;
         await GetState();
     }
@@ -29,6 +37,7 @@
     public void Dispose()
     {
         DatabaseProvider.DatabaseSaved -= DatabaseChanged;
+        timer?.Dispose();
     }
 
     private void DatabaseChanged(object sender, EventArgs e)
@@ -56,5 +65,17 @@
         {
             isExporting = false;
         }
+    }
+
+    private async void CheckNewVersion(object o)
+    {
+        if (needExport)
+            return;
+
+        if (!await DatabaseProvider.IsGitHubConfigured())
+            return;
+
+        needImport = await DatabaseProvider.HasNewVersionOnGitHub();
+        await InvokeAsync(() => StateHasChanged());
     }
 }

@@ -216,6 +216,25 @@ namespace Meziantou.Moneiz
             RaiseDatabaseSaved();
         }
 
+        public async Task<bool> HasNewVersionOnGitHub()
+        {
+            if (await HasUnexportedChanges())
+                return false;
+
+            var configuration = await LoadConfiguration();
+            using var httpClient = CreateClient(configuration);
+            var currentUser = await httpClient.GetFromJsonAsync<GitHubUser>("user");
+
+            // https://developer.github.com/v3/repos/contents/#get-repository-content
+            var url = "repos/" + currentUser.Login + "/" + configuration.GitHubRepository + "/contents/";
+            var files = await SafeGetForJsonAsync<GitHubContent[]>(httpClient, url);
+            var file = files?.FirstOrDefault(f => f.Name == MoneizDownloadFileName);
+            if (file != null && configuration.GitHubSha == null || !file.Sha.EqualsIgnoreCase(configuration.GitHubSha))
+                return true;
+
+            return false;
+        }
+
         public async Task ImportFromGitHub(bool implicitLoad)
         {
             if (!implicitLoad && await HasUnexportedChanges())
@@ -231,7 +250,7 @@ namespace Meziantou.Moneiz
 
             // https://developer.github.com/v3/repos/contents/#get-repository-content
             var url = "repos/" + currentUser.Login + "/" + configuration.GitHubRepository + "/contents/";
-            var files = await SafeGetForJsonAsync<GitHubContent[]>(url);
+            var files = await SafeGetForJsonAsync<GitHubContent[]>(httpClient, url);
             var file = files?.FirstOrDefault(f => f.Name == MoneizDownloadFileName);
             if (file == null)
             {
@@ -269,16 +288,17 @@ namespace Meziantou.Moneiz
             configuration.GitHubSha = blob.Sha;
             await SetConfiguration(configuration);
 
-            async Task<T> SafeGetForJsonAsync<T>(string url) where T : class
+        }
+
+        private async Task<T> SafeGetForJsonAsync<T>(HttpClient httpClient, string url) where T : class
+        {
+            try
             {
-                try
-                {
-                    return await httpClient.GetFromJsonAsync<T>(url);
-                }
-                catch (HttpRequestException)
-                {
-                    return null;
-                }
+                return await httpClient.GetFromJsonAsync<T>(url);
+            }
+            catch (HttpRequestException)
+            {
+                return null;
             }
         }
 
