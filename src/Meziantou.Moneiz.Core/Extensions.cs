@@ -7,7 +7,10 @@ namespace Meziantou.Moneiz.Core
     {
         public static IEnumerable<Account> Sort(this IEnumerable<Account> accounts)
         {
-            return accounts.OrderBy(a => a.SortOrder).ThenBy(a => a.Name);
+            return accounts
+                .OrderBy(a => a.Closed)
+                .ThenBy(a => a.SortOrder)
+                .ThenBy(a => a.Name);
         }
     }
 }
