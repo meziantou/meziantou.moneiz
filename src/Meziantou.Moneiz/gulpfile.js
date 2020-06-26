@@ -2,33 +2,21 @@
 "use strict";
 
 var gulp = require("gulp");
-var rename = require("gulp-rename");
 
 function css() {
+    var rename = require("gulp-rename");
     var postcss = require("gulp-postcss");
     var postcssimport = require("postcss-import");
-    var autoprefixer = require("autoprefixer");
-    var normalize = require("postcss-normalize");
-    var customSelectors = require("postcss-custom-selectors");
     var cssnano = require("cssnano");
-    var sourcemaps = require('gulp-sourcemaps');
 
     return gulp.src("./wwwroot/css/site.css")
-        .pipe(sourcemaps.init())
         .pipe(postcss([
             postcssimport(),
-            customSelectors(),
-            normalize(),
-            autoprefixer({
-                add: true,
-                remove: true
-            }),
             cssnano({
-                autoprefixer: false // already done
+                autoprefixer: false
             })
         ]))
         .pipe(rename({ suffix: '.min' }))
-        .pipe(sourcemaps.write("."))
         .pipe(gulp.dest("./wwwroot/css/"));
 }
 
