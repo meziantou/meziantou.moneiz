@@ -42,6 +42,12 @@
 
     private void DatabaseChanged(object sender, EventArgs e)
     {
+        if (needImport)
+        {
+            needImport = false;
+            InvokeAsync(() => StateHasChanged());
+        }
+
         InvokeAsync(() => GetState());
     }
 
