@@ -63,6 +63,8 @@
     {
         isExporting = true;
         StateHasChanged();
+        await Task.Yield();
+
         try
         {
             await DatabaseProvider.ExportToGitHub();
