@@ -130,7 +130,7 @@ else
     IReadOnlyList<Transaction> transactions;
     int pageIndex = 0;
     int pageSize = 50;
-    DateTime today = DateTime.UtcNow;
+    DateTime today;
     bool showReconciled = true;
 
     [Parameter]
@@ -145,6 +145,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         database = await DatabaseProvider.GetDatabase();
+        today = database.GetToday();
     }
 
     protected override async Task OnParametersSetAsync()

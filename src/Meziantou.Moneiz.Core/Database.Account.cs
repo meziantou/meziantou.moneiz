@@ -77,9 +77,14 @@ namespace Meziantou.Moneiz.Core
             return GetBalance(account, DateTime.MaxValue, TransactionState.Checked);
         }
 
+        public DateTime GetToday()
+        {
+            return DateTime.Now;
+        }
+
         public decimal GetTodayBalance(Account account)
         {
-            return GetBalance(account, DateTime.UtcNow, TransactionState.NotChecked);
+            return GetBalance(account, GetToday(), TransactionState.NotChecked);
         }
 
         public decimal GetBalance(Account account, DateTime date)
@@ -94,6 +99,8 @@ namespace Meziantou.Moneiz.Core
 
         private decimal GetBalance(Account account, DateTime dateTime, TransactionState transactionState)
         {
+            var date = dateTime.Date;
+
             return account.InitialBalance + Transactions.Where(IncludeTransaction).Sum(t => t.Amount);
 
             bool IncludeTransaction(Transaction transaction)
@@ -101,7 +108,7 @@ namespace Meziantou.Moneiz.Core
                 if (transaction.Account != account)
                     return false;
 
-                if (transaction.ValueDate > dateTime)
+                if (transaction.ValueDate.Date > date)
                     return false;
 
                 if (transactionState == TransactionState.Reconciliated && transaction.ReconciliationDate == null)
