@@ -194,7 +194,8 @@ else
 
     private async Task Reconcile()
     {
-        if (!await ConfirmService.Confirm($"Balance of '{account}': {account?.CurrencyIsoCode}{database.GetCheckedBalance(account)}.\nDo you confirm this balance?"))
+        var amount = database.GetCheckedBalance(account).ToString("N2", System.Globalization.CultureInfo.InvariantCulture);
+        if (!await ConfirmService.Confirm($"Balance of '{account}': {account?.CurrencyIsoCode}{amount}.\nDo you confirm this balance?"))
             return;
 
         database.Reconcile(account);
