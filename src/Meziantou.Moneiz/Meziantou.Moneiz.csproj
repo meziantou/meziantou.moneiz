@@ -6,6 +6,8 @@
     <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
     <Version>3.0.0</Version>
     <SourceRevisionId>$(GITHUB_SHA)</SourceRevisionId>
+    <!-- Not needed for GitHub Pages -->
+    <BlazorEnableCompression>False</BlazorEnableCompression>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(Configuration)' == 'Release'">
