@@ -269,7 +269,7 @@ namespace Meziantou.Moneiz
 
             if (implicitLoad && (configuration.GitHubSha == null || file.Sha.EqualsIgnoreCase(configuration.GitHubSha)))
             {
-                Console.WriteLine($"GitHub dabatabase sha '{file.Sha}' is different from current db sha '{configuration.GitHubSha}' => Do not import");
+                Console.WriteLine($"GitHub dabatabase sha '{file.Sha}' is equals to the current db sha '{configuration.GitHubSha}' => Do not import");
                 return;
             }
 
