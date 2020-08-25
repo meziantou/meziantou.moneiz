@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Meziantou.Moneiz.Core
 {
-    partial class Database
+    public partial class Database
     {
         public Transaction? GetTransactionById(int? id)
         {

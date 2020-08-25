@@ -6,7 +6,7 @@ using Meziantou.Framework;
 
 namespace Meziantou.Moneiz.Core
 {
-    partial class Database
+    public partial class Database
     {
         [JsonIgnore]
         public IEnumerable<string> CategoryGroups => Categories.Select(c => c.GroupName).WhereNotNull().Distinct();

@@ -3,7 +3,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Blazor.FileReader;
+using Tewr.Blazor.FileReader;
 using Meziantou.Moneiz.Services;
 
 namespace Meziantou.Moneiz

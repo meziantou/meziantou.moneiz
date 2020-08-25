@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace Meziantou.Moneiz
 {
-    public class DatabaseProvider : IDisposable
+    public sealed class DatabaseProvider : IDisposable
     {
         private const string MoneizLocalStorageDbName = "moneiz.db";
         private const string MoneizLocalStorageConfigurationName = "moneiz.configuration";
@@ -291,7 +291,7 @@ namespace Meziantou.Moneiz
 
         }
 
-        private async Task<T> SafeGetForJsonAsync<T>(HttpClient httpClient, string url) where T : class
+        private static async Task<T> SafeGetForJsonAsync<T>(HttpClient httpClient, string url) where T : class
         {
             try
             {

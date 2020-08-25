@@ -2,7 +2,8 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - '*'
   schedule:
     - cron: "* 0 * * *"
 
@@ -18,7 +19,7 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '5.0.100-preview.6.20318.15'
+        dotnet-version: '5.0.100-preview.8.20417.9'
       
     - name: Debug
       run: 'echo "${{ github.ref }}"'

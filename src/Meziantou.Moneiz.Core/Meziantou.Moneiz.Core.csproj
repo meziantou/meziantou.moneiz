@@ -6,11 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Meziantou.Framework" Version="2.16.2" />
+    <PackageReference Include="Meziantou.Framework" Version="2.20.5" />
     <PackageReference Include="Meziantou.Framework.Scheduling" Version="1.0.13" />
-    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0-preview.6.20305.6" />
-    <PackageReference Include="System.Text.Json" Version="5.0.0-preview.6.20305.6" />
-    <PackageReference Include="System.Net.Http.Json" Version="5.0.0-preview.6.20305.6" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0-preview.8.20407.11" />
+    <PackageReference Include="System.Text.Json" Version="5.0.0-preview.8.20407.11" />
+    <PackageReference Include="System.Net.Http.Json" Version="5.0.0-preview.8.20407.11" />
   </ItemGroup>
 
 </Project>

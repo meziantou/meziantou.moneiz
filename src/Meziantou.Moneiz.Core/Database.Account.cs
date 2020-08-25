@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Meziantou.Moneiz.Core
 {
-    partial class Database
+    public partial class Database
     {
         [JsonIgnore]
         public Account? DefaultAccount => VisibleAccounts.FirstOrDefault();
