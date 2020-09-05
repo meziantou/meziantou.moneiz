@@ -18,9 +18,18 @@
             <a @onclick="() => SelectByType(AccountType.Saving)">Saving</a>
         </div>
         <ul class="unstyled">
-            @foreach (var account in database.VisibleAccounts)
+            @foreach (var account in allAccounts)
             {
-                <li><label><input name="Accounts" type="checkbox" checked="@selectedAccounts.Contains(account)" @onclick="() => Toggle(account)">@account (@account.CurrencyIsoCode)</label></li>
+                <li>
+                    <label>
+                        <input name="Accounts" type="checkbox" checked="@selectedAccounts.Contains(account)" @onclick="() => Toggle(account)">
+                        <span>@account (@account.CurrencyIsoCode)</span>
+                        @if (account.Closed)
+                        {
+                            <span> (closed)</span>
+                        }
+                    </label>
+                </li>
             }
         </ul>
     </div>
@@ -67,8 +76,8 @@
     protected override async Task OnInitializedAsync()
     {
         database = await DatabaseProvider.GetDatabase();
-        allAccounts = database.VisibleAccounts.ToList();
-        selectedAccounts.AddRange(allAccounts);
+        allAccounts = database.VisibleAccounts.Concat(database.ClosedAccounts).ToList();
+        selectedAccounts.AddRange(allAccounts.Where(account => !account.Closed));
     }
 
     private void SelectByCurrency(string currency)
