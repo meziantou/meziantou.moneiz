@@ -7,7 +7,7 @@ namespace Meziantou.Moneiz.Core
     [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Property)]
     public sealed class RecurrenceRuleValidationAttribute : ValidationAttribute
     {
-        public override bool IsValid(object value)
+        public override bool IsValid(object? value)
         {
             if (value == null)
                 return true;

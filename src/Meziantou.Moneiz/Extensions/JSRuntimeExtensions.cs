@@ -22,9 +22,10 @@ namespace Meziantou.Moneiz.Extensions
             return jsRuntime.InvokeVoidAsync("MoneizSetValue", name, value);
         }
 
-        public static ValueTask ExportToFile(this IJSRuntime jsRuntime, string filename, byte[] content)
+        public static ValueTask ExportToFile(this IJSUnmarshalledRuntime jsRuntime, string filename, byte[] content)
         {
-            return jsRuntime.InvokeVoidAsync("MoneizDownloadFile", filename, content);
+            jsRuntime.InvokeUnmarshalled<string, byte[], bool>("MoneizDownloadFile", filename, content);
+            return ValueTask.CompletedTask;
         }
 
         public static ValueTask SetValue<T>(this IJSRuntime jsRuntime, string name, T value)

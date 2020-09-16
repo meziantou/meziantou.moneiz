@@ -2,7 +2,6 @@
 @inject NavigationManager NavigationManager
 @inject ConfirmService ConfirmService
 @inject DatabaseProvider DatabaseProvider
-@inject Tewr.Blazor.FileReader.IFileReaderService FileReaderService
 
 @if (database != null)
 {
@@ -62,13 +61,12 @@
     <div class="form-group">
         <label>
             Database file
-            <input type="file" @ref="inputTypeFileElement" @onchange="() => ImportDatabaseFromFile()" />
+            <InputFile OnChange="ImportDatabaseFromFile" />
         </label>
     </div>
 </form>
 
 @code {
-    ElementReference inputTypeFileElement;
     Database database;
     DatabaseConfiguration databaseConfiguration;
     bool githubOperation = false;
@@ -84,16 +82,16 @@
         await DatabaseProvider.ExportToFile();
     }
 
-    private async Task ImportDatabaseFromFile()
+    private async Task ImportDatabaseFromFile(InputFileChangeEventArgs e)
     {
-        var files = await FileReaderService.CreateReference(inputTypeFileElement).EnumerateFilesAsync();
+        var files = e.GetMultipleFiles();
         var file = files.FirstOrDefault();
         if (file == null)
             return;
 
         try
         {
-            using var ms = await file.CreateMemoryStreamAsync();
+            using var ms = file.OpenReadStream();
             var database = await Database.Load(ms);
             await DatabaseProvider.Import(database);
             await ConfirmService.Alert("Database imported");

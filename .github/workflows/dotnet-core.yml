@@ -15,18 +15,18 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-      
+
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '5.0.100-preview.8.20417.9'
-      
+        dotnet-version: '5.0.100-rc.1.20452.10'
+
     - name: Debug
       run: 'echo "${{ github.ref }}"'
-      
+
     - name: Exchange rates
       run: 'dotnet run --project src/Meziantou.Moneiz.ExchangeRatesGenerator -- src/Meziantou.Moneiz.Core/Database.Currencies.generated.cs "${{ secrets.OPENEXCHANGERATES_APIKEY }}"'
-            
+
     - name: Test
       run: dotnet test
       
@@ -39,7 +39,7 @@ jobs:
       with:
         github_token: ${{ secrets.PUBLISH_TOKEN }}
         publish_branch: gh-pages
-        publish_dir: src/Meziantou.Moneiz/bin/Release/net5.0/browser-wasm/publish/wwwroot
+        publish_dir: src/Meziantou.Moneiz/bin/Release/net5.0/publish/wwwroot
         allow_empty_commit: false
         keep_files: false
         force_orphan: true

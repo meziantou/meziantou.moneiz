@@ -22,13 +22,10 @@ namespace Meziantou.Moneiz.Core.Analytics
             }
         }
 
-        public static BigTableValue operator +(BigTableValue a, BigTableValue b)
+        public static BigTableValue operator +(BigTableValue a, BigTableValue b) => new BigTableValue
         {
-            return new BigTableValue
-            {
-                Incomes = a.Incomes + b.Incomes,
-                Expenses = a.Expenses + b.Expenses,
-            };
-        }
+            Incomes = a.Incomes + b.Incomes,
+            Expenses = a.Expenses + b.Expenses,
+        };
     }
 }
