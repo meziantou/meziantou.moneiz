@@ -77,7 +77,7 @@ namespace Meziantou.Moneiz.Core
             return GetBalance(account, DateTime.MaxValue, TransactionState.Checked);
         }
 
-        public DateTime GetToday()
+        public static DateTime GetToday()
         {
             return DateTime.Now;
         }

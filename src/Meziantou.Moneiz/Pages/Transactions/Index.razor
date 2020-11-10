@@ -145,7 +145,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         database = await DatabaseProvider.GetDatabase();
-        today = database.GetToday();
+        today = Database.GetToday();
     }
 
     protected override async Task OnParametersSetAsync()

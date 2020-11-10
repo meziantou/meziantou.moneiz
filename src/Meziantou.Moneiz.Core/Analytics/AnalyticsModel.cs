@@ -108,14 +108,14 @@ namespace Meziantou.Moneiz.Core.Analytics
         {
             public static NameComparer Instance { get; } = new NameComparer();
 
-            public int Compare(BigTableCategoryGroup x, BigTableCategoryGroup y)
+            public int Compare(BigTableCategoryGroup? x, BigTableCategoryGroup? y)
             {
-                return Compare(x.Name, y.Name);
+                return Compare(x?.Name, y?.Name);
             }
 
-            public int Compare(BigTableCategory x, BigTableCategory y)
+            public int Compare(BigTableCategory? x, BigTableCategory? y)
             {
-                return Compare(x.Name, y.Name);
+                return Compare(x?.Name, y?.Name);
             }
 
             public int Compare(string? x, string? y)
