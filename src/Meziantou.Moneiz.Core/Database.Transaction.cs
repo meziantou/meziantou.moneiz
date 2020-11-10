@@ -19,12 +19,14 @@ namespace Meziantou.Moneiz.Core
                 return null;
 
             var transaction = Transactions.FirstOrDefault(item => item.Id == id);
+            if (transaction == null)
+                return null;
+
             if (transaction.Amount > 0 && transaction.LinkedTransaction != null)
                 return transaction.LinkedTransaction;
 
             return transaction;
         }
-
 
         public void SaveTransaction(Transaction transaction)
         {

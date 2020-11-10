@@ -54,7 +54,7 @@ namespace Meziantou.Moneiz.Core
             return Id;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is Account a && a.Id == Id;
         }

@@ -76,7 +76,7 @@ namespace Meziantou.Moneiz.Core
         public static async Task<Database> Load(Stream stream)
         {
             var buffer = new byte[1];
-            var count = await stream.ReadAsync(buffer, 0, 1);
+            var count = await stream.ReadAsync(buffer.AsMemory());
             if (count != 1)
                 throw new Exception("Cannot read file");
 
