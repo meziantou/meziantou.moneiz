@@ -46,7 +46,7 @@ namespace Meziantou.Moneiz.Core
         public IList<ScheduledTransaction> ScheduledTransactions { get; set; } = new List<ScheduledTransaction>();
 
         [JsonPropertyName("g")]
-        public DateTime LastModifiedDate { get; set; }
+        public DateTime LastModifiedDate { get; set; } = DateTime.UtcNow;
 
         public byte[] Export()
         {
