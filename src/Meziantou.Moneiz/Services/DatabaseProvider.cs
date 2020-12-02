@@ -1,10 +1,4 @@
-﻿using Meziantou.Framework;
-using Meziantou.Moneiz.Core;
-using Meziantou.Moneiz.Extensions;
-using Meziantou.Moneiz.Services;
-using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.JSInterop;
-using System;
+﻿using System;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -12,6 +6,13 @@ using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Meziantou.AspNetCore.Components.WebAssembly;
+using Meziantou.Framework;
+using Meziantou.Moneiz.Core;
+using Meziantou.Moneiz.Extensions;
+using Meziantou.Moneiz.Services;
+using Microsoft.AspNetCore.Components.WebAssembly.Http;
+using Microsoft.JSInterop;
 
 namespace Meziantou.Moneiz
 {
@@ -25,7 +26,7 @@ namespace Meziantou.Moneiz
 
         private readonly IJSRuntime _jsRuntime;
         private readonly ConfirmService _confirmService;
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+        private readonly SemaphoreSlim _semaphore = new(1, 1);
         private Database _database;
 
         public event EventHandler DatabaseChanged;
@@ -168,7 +169,13 @@ namespace Meziantou.Moneiz
 
         private static HttpClient CreateClient(DatabaseConfiguration configuration)
         {
-            var httpClient = new HttpClient();
+            var handler = new DefaultBrowserOptionsMessageHandler(new HttpClientHandler())
+            {
+                DefaultBrowserRequestCache = BrowserRequestCache.NoStore,
+                DefaultBrowserRequestMode = BrowserRequestMode.Cors,
+                DefaultBrowserRequestCredentials = BrowserRequestCredentials.Omit,
+            };
+            var httpClient = new HttpClient(handler, disposeHandler: true);
             httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", configuration.GitHubToken);
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "Mozilla/5.0");
@@ -185,11 +192,11 @@ namespace Meziantou.Moneiz
             var configuration = await LoadConfiguration();
 
             using var httpClient = CreateClient(configuration);
-            var currentUser = await httpClient.GetFromJsonAsync<GitHubUser>(CacheBuster("user"));
+            var currentUser = await httpClient.GetFromJsonAsync<GitHubUser>("user");
 
             // https://developer.github.com/v3/repos/contents/#get-repository-content
             var url = "repos/" + currentUser.Login + "/" + configuration.GitHubRepository + "/contents/";
-            var files = await httpClient.GetFromJsonAsync<GitHubContent[]>(CacheBuster(url));
+            var files = await httpClient.GetFromJsonAsync<GitHubContent[]>(url);
             var file = files.FirstOrDefault(f => f.Name == MoneizDownloadFileName);
 
             // Check sha with persisted sha
@@ -207,7 +214,7 @@ namespace Meziantou.Moneiz
                 sha = file?.Sha,
             });
 
-            files = await httpClient.GetFromJsonAsync<GitHubContent[]>(CacheBuster(url));
+            files = await httpClient.GetFromJsonAsync<GitHubContent[]>(url);
             file = files.First(f => f.Name == MoneizDownloadFileName);
 
             // Save the blob sha
@@ -225,11 +232,11 @@ namespace Meziantou.Moneiz
 
             var configuration = await LoadConfiguration();
             using var httpClient = CreateClient(configuration);
-            var currentUser = await httpClient.GetFromJsonAsync<GitHubUser>(CacheBuster("user"));
+            var currentUser = await httpClient.GetFromJsonAsync<GitHubUser>("user");
 
             // https://developer.github.com/v3/repos/contents/#get-repository-content
             var url = "repos/" + currentUser.Login + "/" + configuration.GitHubRepository + "/contents/";
-            var files = await SafeGetForJsonAsync<GitHubContent[]>(httpClient, CacheBuster(url));
+            var files = await SafeGetForJsonAsync<GitHubContent[]>(httpClient, url);
             var file = files?.FirstOrDefault(f => f.Name == MoneizDownloadFileName);
             if (file != null && configuration.GitHubSha == null || !file.Sha.EqualsIgnoreCase(configuration.GitHubSha))
                 return true;
@@ -248,11 +255,11 @@ namespace Meziantou.Moneiz
             var configuration = await LoadConfiguration();
 
             using var httpClient = CreateClient(configuration);
-            var currentUser = await httpClient.GetFromJsonAsync<GitHubUser>(CacheBuster("user"));
+            var currentUser = await httpClient.GetFromJsonAsync<GitHubUser>("user");
 
             // https://developer.github.com/v3/repos/contents/#get-repository-content
             var url = "repos/" + currentUser.Login + "/" + configuration.GitHubRepository + "/contents/";
-            var files = await SafeGetForJsonAsync<GitHubContent[]>(httpClient, CacheBuster(url));
+            var files = await SafeGetForJsonAsync<GitHubContent[]>(httpClient, url);
             var file = files?.FirstOrDefault(f => f.Name == MoneizDownloadFileName);
             if (file == null)
             {
@@ -283,7 +290,7 @@ namespace Meziantou.Moneiz
 
             // Cannot use Download url for private repository
             // /repos/:owner/:repo/git/blobs/:file_sha
-            var blob = await httpClient.GetFromJsonAsync<GitHubBlob>(CacheBuster("repos/" + currentUser.Login + "/" + configuration.GitHubRepository + "/git/blobs/" + file.Sha));
+            var blob = await httpClient.GetFromJsonAsync<GitHubBlob>("repos/" + currentUser.Login + "/" + configuration.GitHubRepository + "/git/blobs/" + file.Sha);
             var data = Convert.FromBase64String(blob.Content);
             var database = await Database.Load(data);
             await Import(database);
@@ -319,11 +326,6 @@ namespace Meziantou.Moneiz
         {
             var configuration = await LoadConfiguration();
             return configuration.IsGitHubConfigured();
-        }
-
-        private static string CacheBuster(string url)
-        {
-            return QueryHelpers.AddQueryString(url, "z", new Random().Next().ToStringInvariant());
         }
 
         private sealed class GitHubUser
