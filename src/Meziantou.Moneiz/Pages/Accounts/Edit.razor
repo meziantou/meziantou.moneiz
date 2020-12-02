@@ -5,7 +5,7 @@
 
 <h1>Create Account</h1>
 
-<Loading IsLoading="database == null">
+<LoadingIndicator IsLoading="database == null">
     <EditForm Model="@model" OnValidSubmit="OnSubmit">
         <DataAnnotationsValidator />
         <ValidationSummary />
@@ -84,7 +84,7 @@
 
         <button type="submit">Submit</button>
     </EditForm>
-</Loading>
+</LoadingIndicator>
 
 @code {
     Database database;

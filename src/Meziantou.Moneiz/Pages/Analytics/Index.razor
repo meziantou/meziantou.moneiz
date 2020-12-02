@@ -4,7 +4,7 @@
 
 <h1>Analytics</h1>
 
-<Loading IsLoading="database == null">
+<LoadingIndicator IsLoading="database == null">
     <h2>Accounts</h2>
     <div class="form-group">
         <div>
@@ -60,7 +60,7 @@
         <BigTable Model="model.BigTable" ShowDetails="showDetails" />
         <BalanceHistory Model="model.BalanceHistory" ShowDetails="showDetails" />
     }
-</Loading>
+</LoadingIndicator>
 
 @code {
     Database database;
