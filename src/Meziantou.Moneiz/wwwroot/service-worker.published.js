@@ -43,6 +43,9 @@ async function onFetch(event) {
     if (event.request.url.startsWith('https://moneiz2.meziantou.net/')) {
       const cache = await caches.open(cacheName);
       cachedResponse = await cache.match(request);
+      if (cachedResponse) {
+        console.log("Serving from cache: " + event.request.url);
+      }
     }
   }
 

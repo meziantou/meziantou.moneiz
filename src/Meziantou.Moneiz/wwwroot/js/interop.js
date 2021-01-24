@@ -37,6 +37,13 @@ function MoneizOpenInTab(url) {
   window.open(url, '_blank');
 }
 
+async function MoneizUpdate() {
+  const serviceWorker = await navigator.serviceWorker.ready;
+  await serviceWorker.update();
+  await serviceWorker.unregister();
+  location.reload(true);
+}
+
 (function () {
   let state = false;
 
