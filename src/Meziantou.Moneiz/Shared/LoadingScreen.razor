@@ -1,6 +1,12 @@
 ﻿@inject DatabaseProvider DatabaseProvider
 
-@if (isLoaded)
+@if (!string.IsNullOrWhiteSpace(error))
+{
+    <h1>Moneiz</h1>
+    <h2>An error occured while loading the database</h2>
+    <pre>@error</pre>
+}
+else if (isLoaded)
 {
     @ChildContent
 }
@@ -14,13 +20,21 @@ else
 
 @code{
     bool isLoaded;
+    string error;
 
     [Parameter]
     public RenderFragment ChildContent { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        await DatabaseProvider.GetDatabase();
-        isLoaded = true;
+        try
+        {
+            await DatabaseProvider.GetDatabase();
+            isLoaded = true;
+        }
+        catch (Exception ex)
+        {
+            error = ex.ToString();
+        }
     }
 }
