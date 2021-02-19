@@ -3,15 +3,15 @@
 
     @if (!isLastVersion)
     {
-        <a href="javascript:document.location.reload(true)" class="new-version-available"><i class="fas fa-sync"></i> Update to the lastest version</a>
+        <a href="javascript:MoneizUpdate()" class="new-version-available"><i class="fas fa-sync"></i> Update to the lastest version</a>
     }
     else
     {
-        <a href="javascript:document.location.reload(true)"><i class="fas fa-sync"></i> Force update</a>
-        }
-    </p>
+        <a href="javascript:MoneizUpdate()"><i class="fas fa-sync"></i> Force update</a>
+    }
+</p>
 
-    @code {
+@code {
     bool isLastVersion = true;
 
     protected override async Task OnInitializedAsync()
