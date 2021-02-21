@@ -169,12 +169,12 @@ namespace Meziantou.Moneiz
 
         private static HttpClient CreateClient(DatabaseConfiguration configuration)
         {
-            var handler = new DefaultBrowserOptionsMessageHandler(new HttpClientHandler())
+            var handler = new CacheBusterHandler(new DefaultBrowserOptionsMessageHandler(new HttpClientHandler())
             {
                 DefaultBrowserRequestCache = BrowserRequestCache.NoStore,
                 DefaultBrowserRequestMode = BrowserRequestMode.Cors,
                 DefaultBrowserRequestCredentials = BrowserRequestCredentials.Omit,
-            };
+            });
             var httpClient = new HttpClient(handler, disposeHandler: true);
             httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", configuration.GitHubToken);
@@ -359,6 +359,35 @@ namespace Meziantou.Moneiz
 
             [JsonPropertyName("sha")]
             public string Sha { get; set; }
+        }
+
+        private sealed class CacheBusterHandler : DelegatingHandler
+        {
+
+            public CacheBusterHandler()
+            {
+            }
+
+            public CacheBusterHandler(HttpMessageHandler innerHandler)
+            {
+                InnerHandler = innerHandler;
+            }
+
+            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            {
+                var uri = request.RequestUri.ToString();
+                if (uri.IndexOf('?') >= 0)
+                {
+                    uri = uri.ToString() + "&z=" + Uri.EscapeDataString(DateTime.UtcNow.Ticks.ToStringInvariant());
+                }
+                else
+                {
+                    uri = uri.ToString() + "?z=" + Uri.EscapeDataString(DateTime.UtcNow.Ticks.ToStringInvariant());
+                }
+
+                request.RequestUri = new Uri(uri, UriKind.RelativeOrAbsolute);
+                return base.SendAsync(request, cancellationToken);
+            }
         }
     }
 }
