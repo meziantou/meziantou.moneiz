@@ -376,7 +376,7 @@ namespace Meziantou.Moneiz
             protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
             {
                 var uri = request.RequestUri.ToString();
-                if (uri.IndexOf('?') >= 0)
+                if (uri.Contains('?'))
                 {
                     uri = uri.ToString() + "&z=" + Uri.EscapeDataString(DateTime.UtcNow.Ticks.ToStringInvariant());
                 }

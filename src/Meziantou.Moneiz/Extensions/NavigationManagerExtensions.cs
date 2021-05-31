@@ -2,7 +2,6 @@
 using Meziantou.Framework;
 using Meziantou.Moneiz.Core;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.WebUtilities;
 
 namespace Meziantou.Moneiz.Extensions
 {

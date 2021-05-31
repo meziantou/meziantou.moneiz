@@ -10,7 +10,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5E0B03C3-A926-4CAC-976A-136738891F4B}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
-		.github\workflows\dotnet-core.yml = .github\workflows\dotnet-core.yml
+		global.json = global.json
+		.github\workflows\publish-site.yml = .github\workflows\publish-site.yml
+		.github\workflows\swa-stop.yml = .github\workflows\swa-stop.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{FF1F5957-AD48-4C6A-ABB5-233E04911A45}"
@@ -19,7 +21,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{2BB5C7BE
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Meziantou.Moneiz.CoreTests", "tests\Meziantou.Moneiz.CoreTests\Meziantou.Moneiz.CoreTests.csproj", "{5D7D69B1-CBD0-4A08-A80A-11C2ACD124DC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Meziantou.Moneiz.ExchangeRatesGenerator", "src\Meziantou.Moneiz.ExchangeRatesGenerator\Meziantou.Moneiz.ExchangeRatesGenerator.csproj", "{E85F9048-4EC0-4D4D-B019-6B90C07130F9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Meziantou.Moneiz.ExchangeRatesGenerator", "src\Meziantou.Moneiz.ExchangeRatesGenerator\Meziantou.Moneiz.ExchangeRatesGenerator.csproj", "{E85F9048-4EC0-4D4D-B019-6B90C07130F9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

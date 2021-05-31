@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '*'
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+  DOTNET_NOLOGO: true
+  OUTPUT: output
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      DOTNET_NOLOGO: true
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+
+    # - name: Install Blazor AOT workload
+    #   run: dotnet workload install microsoft-net-sdk-blazorwebassembly-aot
+
+    - name: Debug
+      run: 'echo "${{ github.ref }}"'
+
+    - name: Exchange rates
+      run: 'dotnet run --project src/Meziantou.Moneiz.ExchangeRatesGenerator -- src/Meziantou.Moneiz.Core/Database.Currencies.generated.cs "${{ secrets.OPENEXCHANGERATES_APIKEY }}"'
+
+    - name: Test
+      run: dotnet test
+
+    - name: Publish
+      run: dotnet publish src/Meziantou.Moneiz/Meziantou.Moneiz.csproj --configuration Release --output ${{ env.OUTPUT }}
+      
+    - name: Copy staticwebapp.config.json file
+      run: cp src/Meziantou.Moneiz/staticwebapp.config.json ${{ env.OUTPUT }}/wwwroot/staticwebapp.config.json
+      
+    - name: Build And Deploy
+      if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+      id: builddeploy
+      uses: Azure/static-web-apps-deploy@v1
+      with:
+        azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        action: "upload"
+        app_location: "${{ env.OUTPUT }}/wwwroot/"
+        output_location: ''
+        skip_app_build: true
