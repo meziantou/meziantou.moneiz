@@ -18,12 +18,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Meziantou.AspNetCore.Components" Version="1.0.7" />
-    <PackageReference Include="Meziantou.AspNetCore.Components.WebAssembly" Version="1.0.1" />
-    <PackageReference Include="Meziantou.Framework.RelativeDate" Version="1.3.2" />
-    <PackageReference Include="Meziantou.Framework.ValueStopwatch" Version="1.0.2" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.0-preview.5.21301.17" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.0-preview.5.21301.17" PrivateAssets="all" />
+    <PackageReference Include="Meziantou.AspNetCore.Components" Version="1.0.9" />
+    <PackageReference Include="Meziantou.AspNetCore.Components.WebAssembly" Version="1.0.2" />
+    <PackageReference Include="Meziantou.Framework.RelativeDate" Version="1.3.3" />
+    <PackageReference Include="Meziantou.Framework.ValueStopwatch" Version="1.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.0-preview.6.21355.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.0-preview.6.21355.2" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
