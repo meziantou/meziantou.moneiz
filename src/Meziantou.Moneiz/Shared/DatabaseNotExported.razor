@@ -10,9 +10,14 @@
 {
     if (canExportToGitHub)
     {
-        <LoadingIndicator IsLoading="isExporting" LoadingText="Exporting...">
-            <button type="button" @onclick="ExportToGitHub">Export to GitHub</button>
-        </LoadingIndicator>
+		@if (isExporting)
+		{
+			<span class="exporting">Exporting...</span>
+		}
+		else
+		{
+		    <button type="button" @onclick="ExportToGitHub">Export to GitHub</button>
+		}
     }
     else
     {
