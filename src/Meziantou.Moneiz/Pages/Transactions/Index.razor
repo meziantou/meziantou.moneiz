@@ -55,7 +55,7 @@ else
     }
 </div>
 
-<Repeater Items="transactions?.Skip(pageIndex * pageSize).Take(pageSize)">
+<Repeater Items="transactions?.Skip(pageIndex * displaySettings.PageSize).Take(displaySettings.PageSize)">
     <RepeaterContainerTemplate>
         <table>
             <thead>
@@ -74,7 +74,7 @@ else
             {
                 <tr>
                     <td colspan="7" class="row-navigation">
-                        <a @onclick="() => pageIndex--">Newer transactions</a>
+                        <a @onclick="() => pageIndex--" style="cursor: pointer">Newer transactions</a>
                     </td>
                 </tr>
             }
@@ -85,7 +85,7 @@ else
             {
                 <tr>
                     <td colspan="7" class="row-navigation">
-                        <a @onclick="() => pageIndex++">Older transactions</a>
+                        <a @onclick="() => pageIndex++" style="cursor: pointer">Older transactions</a>
                     </td>
                 </tr>
             }
@@ -125,11 +125,11 @@ else
 </Repeater>
 
 @code {
+    MoneizDisplaySettings displaySettings;
     Database database;
     Account account;
     IReadOnlyList<Transaction> transactions;
     int pageIndex = 0;
-    int pageSize = 200;
     DateTime today;
     bool showReconciled = true;
 
@@ -144,6 +144,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        displaySettings = await SettingsProvider.GetDisplaySettings();
         database = await DatabaseProvider.GetDatabase();
         today = Database.GetToday();
     }
@@ -189,7 +190,7 @@ else
 
     private bool HasMorePages()
     {
-        return transactions.Skip((pageIndex + 1) * pageSize).Any();
+        return transactions.Skip((pageIndex + 1) * displaySettings.PageSize).Any();
     }
 
     private async Task Reconcile()

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Meziantou.Framework;
 using Meziantou.Moneiz.Extensions;
 using Microsoft.JSInterop;
@@ -32,6 +33,19 @@ namespace Meziantou.Moneiz.Services
         public ValueTask SetShowReconciliatedTransactions(int accountId, bool value)
         {
             return SetValue("account:" + accountId.ToStringInvariant() + ":ShowReconciled", value);
+        }
+
+        public async ValueTask<MoneizDisplaySettings> GetDisplaySettings()
+        {
+            var result = await GetValue<MoneizDisplaySettings>("displaySettings");
+            result ??= new MoneizDisplaySettings();
+            result.PageSize = Math.Clamp(result.PageSize, 10, int.MaxValue);
+            return result;
+        }
+
+        public ValueTask SetDisplaySettings(MoneizDisplaySettings value)
+        {
+            return SetValue("displaySettings", value);
         }
     }
 }

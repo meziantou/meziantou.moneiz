@@ -26,10 +26,6 @@
             color: #fff;
         }
 
-    .navbar .exporting {
-        color: #fff;
-    }
-
     .navbar .navbar-brand {
         padding-left: 0;
         font-size: 18px;
@@ -38,6 +34,10 @@
 .navbar-brand-img {
     display: inline-block;
     vertical-align: top;
+}
+
+.exporting {
+    color: #fff !important;
 }
 
 .navbar-nav {
@@ -71,4 +71,6 @@
     color: #58585a;
     display: inline;
 }
+
+
 

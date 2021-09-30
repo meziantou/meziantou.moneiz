@@ -1,0 +1,28 @@
+﻿@page "/settings"
+@inject SettingsProvider SettingsProvider
+
+<h1>Settings</h1>
+
+<EditForm Model="displaySettings" OnValidSubmit="Save">
+    <div class="form-group">
+        <label>
+            Page Size
+            <InputNumber @bind-Value="displaySettings.PageSize" />
+        </label>
+    </div>
+    <button type="submit">Save</button>
+</EditForm>
+
+@code {
+    MoneizDisplaySettings displaySettings = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        displaySettings = await SettingsProvider.GetDisplaySettings();
+    }
+
+    private async Task Save()
+    {
+        await SettingsProvider.SetDisplaySettings(displaySettings);
+    }
+}
