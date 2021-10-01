@@ -1,4 +1,5 @@
-﻿@page "/accounts/{AccountId:int}/transactions"
+﻿@page "/transactions"
+@page "/accounts/{AccountId:int}/transactions"
 @page "/categories/{CategoryId:int}/transactions"
 @page "/payees/{PayeeId:int}/transactions"
 @inject DatabaseProvider DatabaseProvider
@@ -55,6 +56,10 @@ else
     }
 </div>
 
+<div class="input-group mb-3">
+    <input type="text" value="@Search" @oninput="OnSearch" class="form-control" placeholder="🔍 Search">
+</div>
+
 <Repeater Items="transactions?.Skip(pageIndex * displaySettings.PageSize).Take(displaySettings.PageSize)">
     <RepeaterContainerTemplate>
         <table>
@@ -62,6 +67,10 @@ else
                 <tr>
                     <th></th>
                     <th>Operation Date</th>
+                    @if (AccountId == null)
+                    {
+                        <th>Account</th>
+                    }
                     <th>Category</th>
                     <th>Title</th>
                     <th>Amount</th>
@@ -109,15 +118,29 @@ else
                 }
             </td>
             <td><UserDate Date="@transaction.ValueDate" /></td>
+            @if (AccountId == null)
+            {
+                <td>@transaction.Account.Name</td>
+            }
             <td title="@transaction.Category">@transaction.Category?.Name</td>
             <td>@transaction.FinalTitle</td>
             <td><Amount Value="@transaction.Amount" Currency="@transaction.Account.CurrencyIsoCode" /></td>
             <td>@transaction.Comment</td>
             <td class="commands">
                 <Dropdown>
-                    <DropdownItem><CreateTransactionLink DuplicatedTransaction="transaction" class="duplicate">Duplicate</CreateTransactionLink></DropdownItem>
-                    <DropdownItem><CreateTransactionLink Transaction="transaction" class="view-transactions">Edit</CreateTransactionLink></DropdownItem>
-                    <DropdownItem><button type="button" class="btn-link" @onclick="() => Delete(transaction)">Delete</button></DropdownItem>
+                    <DropdownItem><CreateTransactionLink DuplicatedTransaction="transaction" class="duplicate"><i class="fas fa-copy"></i> Duplicate</CreateTransactionLink></DropdownItem>
+                    <DropdownItem><CreateTransactionLink Transaction="transaction" class="view-transactions"><i class="fas fa-pencil-alt"></i> Edit</CreateTransactionLink></DropdownItem>
+                    <DropdownItem><button type="button" class="btn-link" @onclick="() => Delete(transaction)"><i class="fas fa-trash" style="color: red"></i> Delete</button></DropdownItem>
+
+                    @if (transaction.Payee != null)
+                    {
+                        <DropdownItem><a class="view-transactions" href="/payees/@(transaction.Payee.Id)/transactions"><i class="fas fa-search"></i> View Transactions with payee '@transaction.Payee.Name'</a></DropdownItem>
+                    }
+
+                    @if (transaction.Category != null)
+                    {
+                        <DropdownItem><a class="view-transactions" href="/categories/@(transaction.Category.Id)/transactions"><i class="fas fa-search"></i> View Transactions with category '@transaction.Category.Name'</a></DropdownItem>
+                    }
                 </Dropdown>
             </td>
         </tr>
@@ -141,6 +164,9 @@ else
 
     [Parameter]
     public int? PayeeId { get; set; }
+
+    [Parameter, SupplyParameterFromQuery(Name = "search")]
+    public string Search { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -207,6 +233,12 @@ else
         }
     }
 
+    private async Task OnSearch(ChangeEventArgs e)
+    {
+        Search = (string)e.Value;
+        LoadTransactions();
+    }
+
     private void LoadTransactions()
     {
         IEnumerable<Transaction> result = database.Transactions;
@@ -231,6 +263,31 @@ else
         {
             var category = database.GetCategoryById(CategoryId);
             result = result.Where(t => t.Category == category);
+        }
+
+        if (!string.IsNullOrEmpty(Search))
+        {
+            result = result.Where(t => FilterTransaction(t));
+
+            bool FilterTransaction(Transaction transaction)
+            {
+                if (transaction.FinalTitle?.Contains(Search, StringComparison.OrdinalIgnoreCase) == true)
+                    return true;
+
+                if (transaction.Payee?.Name?.Contains(Search, StringComparison.OrdinalIgnoreCase) == true)
+                    return true;
+
+                if (transaction.Category?.Name?.Contains(Search, StringComparison.OrdinalIgnoreCase) == true)
+                    return true;
+
+                if (transaction.Category?.GroupName?.Contains(Search, StringComparison.OrdinalIgnoreCase) == true)
+                    return true;
+
+                if (transaction.Comment?.Contains(Search, StringComparison.OrdinalIgnoreCase) == true)
+                    return true;
+
+                return false;
+            }
         }
 
         transactions = result.OrderByDescending(t => t.ValueDate).ThenBy(t => t.Payee?.Name).ToList();

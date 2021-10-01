@@ -28,9 +28,9 @@
             <td>@payee.DefaultCategory</td>
             <td class="commands">
                 <Dropdown>
-                    <DropdownItem><a class="view-transactions" href="/payees/@payee.Id/transactions">View Transactions</a></DropdownItem>
-                    <DropdownItem><a class="edit" href="/payees/@payee.Id/edit">Edit</a></DropdownItem>
-                    <DropdownItem><button type="button" class="btn-link" @onclick="() => Delete(payee)">Delete</button></DropdownItem>
+                    <DropdownItem><a class="view-transactions" href="/payees/@payee.Id/transactions"><i class="fas fa-search"></i> View Transactions</a></DropdownItem>
+                    <DropdownItem><a class="edit" href="/payees/@payee.Id/edit"><i class="fas fa-pencil-alt"></i> Edit</a></DropdownItem>
+                    <DropdownItem><button type="button" class="btn-link" @onclick="() => Delete(payee)"><i class="fas fa-trash" style="color: red"></i> Delete</button></DropdownItem>
                 </Dropdown>
             </td>
         </tr>
