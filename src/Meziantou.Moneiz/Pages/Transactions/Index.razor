@@ -179,7 +179,7 @@ else
     {
         if (AccountId != null)
         {
-            showReconciled = await SettingsProvider.GetShowReconciliatedTransactions(AccountId.Value) ?? showReconciled;
+            showReconciled = await SettingsProvider.GetShowReconciliatedTransactions(AccountId ?? -1) ?? showReconciled;
         }
 
         LoadTransactions();
@@ -188,7 +188,7 @@ else
     private async Task ToggleReconciledVisibility()
     {
         showReconciled = !showReconciled;
-        await SettingsProvider.SetShowReconciliatedTransactions(AccountId.Value, showReconciled);
+        await SettingsProvider.SetShowReconciliatedTransactions(AccountId ?? -1, showReconciled);
         LoadTransactions();
     }
 
