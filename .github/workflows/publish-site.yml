@@ -26,6 +26,10 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
 
+    - uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+
     # - name: Install Blazor AOT workload
     #   run: dotnet workload install microsoft-net-sdk-blazorwebassembly-aot
 

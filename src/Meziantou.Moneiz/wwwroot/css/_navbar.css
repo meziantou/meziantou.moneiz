@@ -37,7 +37,7 @@
 }
 
 .exporting {
-    color: #fff !important;
+    color: #fff;
 }
 
 .navbar-nav {
@@ -71,6 +71,7 @@
     color: #58585a;
     display: inline;
 }
+
 
 
 
