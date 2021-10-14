@@ -233,7 +233,7 @@ else
         }
     }
 
-    private async Task OnSearch(ChangeEventArgs e)
+    private void OnSearch(ChangeEventArgs e)
     {
         Search = (string)e.Value;
         LoadTransactions();
