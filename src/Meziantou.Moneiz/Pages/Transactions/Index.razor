@@ -2,6 +2,7 @@
 @page "/accounts/{AccountId:int}/transactions"
 @page "/categories/{CategoryId:int}/transactions"
 @page "/payees/{PayeeId:int}/transactions"
+@using System.Globalization
 @inject DatabaseProvider DatabaseProvider
 @inject ConfirmService ConfirmService
 @inject SettingsProvider SettingsProvider
@@ -117,15 +118,54 @@ else
                     <div class="btn-transaction-status far fa-square" title="@transaction.State" @onclick="() => Check(transaction)"></div>
                 }
             </td>
-            <td><UserDate Date="@transaction.ValueDate" /></td>
+            <td @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Date)">
+                @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Date)
+                {
+                    <input type="date" @ref="inlineEditorInput"
+                       value="@BindConverter.FormatValue(currentEdit.ValueDate, "yyyy-MM-dd", CultureInfo.InvariantCulture)"
+                       @oninput="e => currentEdit.ValueDate = ParseDate((string)e.Value, currentEdit.ValueDate)"
+                       @onkeydown="e => InlineEditorKeyDown(e)"
+                       @onblur="e => EndInlineEdit()" />
+                }
+                else
+                {
+                    <UserDate Date="@transaction.ValueDate" />
+                }
+            </td>
             @if (AccountId == null)
             {
                 <td>@transaction.Account.Name</td>
             }
             <td title="@transaction.Category">@transaction.Category?.Name</td>
             <td>@transaction.FinalTitle</td>
-            <td><Amount Value="@transaction.Amount" Currency="@transaction.Account.CurrencyIsoCode" /></td>
-            <td>@transaction.Comment</td>
+            <td @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Amount)">
+                @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Amount)
+                {
+                    <input type="number" @ref="inlineEditorInput"
+                       value="@currentEdit.Amount"
+                       @oninput="e => currentEdit.Amount = Convert.ToDecimal(e.Value)"
+                       @onkeydown="e => InlineEditorKeyDown(e)"
+                       @onblur="e => EndInlineEdit()" />
+                }
+                else
+                {
+                    <Amount Value="@transaction.Amount" Currency="@transaction.Account.CurrencyIsoCode" />
+                }
+            </td>
+            <td @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Comment)">
+                @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Comment)
+                {
+                    <input type="text" @ref="inlineEditorInput"
+                       value="@currentEdit.Comment"
+                       @oninput="e => currentEdit.Comment = (string)e.Value"
+                       @onkeydown="e => InlineEditorKeyDown(e)"
+                       @onblur="e => EndInlineEdit()" />
+                }
+                else
+                {
+                    @transaction.Comment
+                }
+            </td>
             <td class="commands">
                 <Dropdown>
                     <DropdownItem><CreateTransactionLink DuplicatedTransaction="transaction" class="duplicate"><i class="fas fa-copy"></i> Duplicate</CreateTransactionLink></DropdownItem>
@@ -155,6 +195,9 @@ else
     int pageIndex = 0;
     DateTime today;
     bool showReconciled = true;
+    TransactionEdit currentEdit = null;
+    EditColumn editColumn;
+    ElementReference inlineEditorInput;
 
     [Parameter]
     public int? AccountId { get; set; }
@@ -183,6 +226,14 @@ else
         }
 
         LoadTransactions();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (currentEdit != null && inlineEditorInput.Id != null)
+        {
+            await inlineEditorInput.FocusAsync();
+        }
     }
 
     private async Task ToggleReconciledVisibility()
@@ -291,5 +342,49 @@ else
         }
 
         transactions = result.OrderByDescending(t => t.ValueDate).ThenBy(t => t.Payee?.Name).ToList();
+    }
+
+    private void BeginInlineEdit(Transaction transaction, EditColumn column)
+    {
+        currentEdit = TransactionEdit.FromTransaction(transaction);
+        editColumn = column;
+    }
+
+    private async Task InlineEditorKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await EndInlineEdit();
+        }
+        else if (e.Key == "Escape")
+        {
+            currentEdit = null;
+        }
+    }
+
+    private async Task EndInlineEdit()
+    {
+        if (currentEdit != null)
+        {
+            currentEdit.Save(database);
+            await DatabaseProvider.Save();
+            currentEdit = null;
+            LoadTransactions();
+        }
+    }
+
+    private DateTime ParseDate(string value, DateTime defaultValue)
+    {
+        if (BindConverter.TryConvertTo(value, CultureInfo.InvariantCulture, out DateTime result))
+            return result;
+
+        return defaultValue;
+    }
+
+    enum EditColumn
+    {
+        Amount,
+        Comment,
+        Date,
     }
 }

@@ -120,34 +120,18 @@
 
         if (transaction != null)
         {
-            model = new TransactionEdit
-            {
-                DebitedAccount = transaction.Account,
-                CreditedAccount = transaction.LinkedTransaction?.Account,
-                InterAccount = transaction.LinkedTransaction != null,
-                Amount = transaction.LinkedTransaction != null ? Math.Abs(transaction.Amount) : transaction.Amount,
-                Category = transaction.Category,
-                Comment = transaction.Comment,
-                Payee = transaction.Payee?.Name,
-                ValueDate = transaction.ValueDate,
-            };
+            model = TransactionEdit.FromTransaction(transaction);
         }
         else
         {
             var account = database.GetAccountById(NavigationManager.GetQueryStringNullableInt32("accountId"));
-            model = new TransactionEdit
-            {
-                DebitedAccount = account ?? database.DefaultAccount,
-                CreditedAccount = account ?? database.DefaultAccount,
-                ValueDate = DateTime.Now, // We want the local user date
-                Amount = account?.DefaultCashFlow == CashFlow.Expense ? -1m : 1m,
-            };
+            model = TransactionEdit.FromAccount(account ?? database.DefaultAccount);
         }
     }
 
     private async Task OnSubmit()
     {
-        model.Save(database, Id);
+        model.Save(database);
         await DatabaseProvider.Save();
         NavigationManager.NavigateToReturnUrlOrHome();
     }

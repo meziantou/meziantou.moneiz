@@ -119,7 +119,7 @@ namespace Meziantou.Moneiz.Extensions
             if (anchorIndex != -1)
             {
                 anchorText = uri[anchorIndex..];
-                uriToBeAppended = uri.Substring(0, anchorIndex);
+                uriToBeAppended = uri[..anchorIndex];
             }
 
             var queryIndex = uriToBeAppended.IndexOf('?', StringComparison.Ordinal);

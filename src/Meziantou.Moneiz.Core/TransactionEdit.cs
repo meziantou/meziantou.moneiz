@@ -1,11 +1,11 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
-
 namespace Meziantou.Moneiz.Core
 {
     public sealed class TransactionEdit
     {
+        public int? Id { get; set; }
         public bool InterAccount { get; set; }
         [Required]
         public Account? DebitedAccount { get; set; }
@@ -16,13 +16,40 @@ namespace Meziantou.Moneiz.Core
         public decimal Amount { get; set; }
         public string? Comment { get; set; }
 
-        public void Save(Database database, int? id)
+        public static TransactionEdit FromTransaction(Transaction transaction)
+        {
+            return new TransactionEdit
+            {
+                Id = transaction.Id,
+                DebitedAccount = transaction.Account,
+                CreditedAccount = transaction.LinkedTransaction?.Account,
+                InterAccount = transaction.LinkedTransaction != null,
+                Amount = transaction.LinkedTransaction != null ? Math.Abs(transaction.Amount) : transaction.Amount,
+                Category = transaction.Category,
+                Comment = transaction.Comment,
+                Payee = transaction.Payee?.Name,
+                ValueDate = transaction.ValueDate,
+            };
+        }
+
+        public static TransactionEdit FromAccount(Account? account)
+        {
+            return new TransactionEdit
+            {
+                DebitedAccount = account,
+                CreditedAccount = account,
+                ValueDate = DateTime.Now, // We want the local user date
+                Amount = account?.DefaultCashFlow == CashFlow.Expense ? -1m : 1m,
+            };
+        }
+
+        public void Save(Database database)
         {
             using (database.DeferEvents())
             {
                 Debug.Assert(DebitedAccount != null);
 
-                var transaction = database.GetDebitedTransactionById(id);
+                var transaction = database.GetDebitedTransactionById(Id);
                 if (transaction == null)
                 {
                     transaction = new Transaction();
