@@ -120,7 +120,8 @@
 
         if (transaction != null)
         {
-            model = TransactionEdit.FromTransaction(transaction);
+            var createNewTransaction = Id == null; // Ensure we do not edit a transaction instead of duplicating it
+            model = TransactionEdit.FromTransaction(transaction, createNewTransaction);
         }
         else
         {

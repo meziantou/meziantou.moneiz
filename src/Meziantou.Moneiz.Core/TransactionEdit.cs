@@ -16,11 +16,11 @@ namespace Meziantou.Moneiz.Core
         public decimal Amount { get; set; }
         public string? Comment { get; set; }
 
-        public static TransactionEdit FromTransaction(Transaction transaction)
+        public static TransactionEdit FromTransaction(Transaction transaction, bool createNewTransaction = false)
         {
             return new TransactionEdit
             {
-                Id = transaction.Id,
+                Id = createNewTransaction ? null : transaction.Id,
                 DebitedAccount = transaction.Account,
                 CreditedAccount = transaction.LinkedTransaction?.Account,
                 InterAccount = transaction.LinkedTransaction != null,
