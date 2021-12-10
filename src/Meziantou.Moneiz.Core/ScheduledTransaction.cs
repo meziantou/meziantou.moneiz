@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 using Meziantou.Framework.Scheduling;
 
@@ -118,6 +120,14 @@ namespace Meziantou.Moneiz.Core
 
                 return null;
             }
+        }
+
+        public IEnumerable<DateTime> GetNextOccurences()
+        {
+            if (RecurrenceRule == null || NextOccurenceDate == null)
+                return Enumerable.Empty<DateTime>();
+
+            return RecurrenceRule.GetNextOccurrences(NextOccurenceDate.Value);
         }
 
         internal void ResolveReferences(Database database)

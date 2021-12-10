@@ -33,7 +33,17 @@
             <td>@scheduledTransaction.Account</td>
             <td><Amount Value="scheduledTransaction.Amount" Currency="@scheduledTransaction.Account?.CurrencyIsoCode" /></td>
             <td>@scheduledTransaction.RecurrenceRule.GetHumanText()</td>
-            <td><UserDate Date="@scheduledTransaction.NextOccurenceDate" /></td>
+            <td>
+                <details>
+                    <summary><UserDate Date="@scheduledTransaction.NextOccurenceDate" /></summary>
+                    <ul>
+                        @foreach (var occurrence in scheduledTransaction.GetNextOccurences().Take(10))
+                        {
+                            <li><UserDate Date="@occurrence" /></li>
+                        }
+                    </ul>
+                </details>
+            </td>
             <td class="commands">
                 <Dropdown>
                     <DropdownItem><a class="edit" href="/scheduler/@scheduledTransaction.Id/edit">Edit</a></DropdownItem>
