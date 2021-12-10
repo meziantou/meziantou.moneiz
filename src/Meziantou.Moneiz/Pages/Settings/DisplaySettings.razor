@@ -16,9 +16,10 @@
             Date format
             <InputSelect @bind-Value="displaySettings.DateFormat">
                 <option value="">(default)</option>
-                <option value="yyyy/MM/dd">@format.ToString("yyyy/MM/dd")</option>
-                <option value="dd/MM/yyyy">@format.ToString("dd/MM/yyyy")</option>
-                <option value="MM/dd/yyyy">@format.ToString("MM/dd/yyyy")</option>
+                @foreach(var format in formats)
+                {
+                    <option value="@format">@sampleDate.ToString(format)</option>    
+                }
             </InputSelect>
         </label>
     </div>
@@ -27,13 +28,15 @@
 </EditForm>
 
 @code {
-    DateTime format;
+    DateTime sampleDate;
     MoneizDisplaySettings displaySettings = new();
+
+    string[] formats = { "yyyy/MM/dd", "dd/MM/yyyy", "MM/dd/yyyy", "dd MMM yyyy" };
 
     protected override async Task OnInitializedAsync()
     {
         DateTime now = DateTime.Now;
-        format = new DateTime(now.Year, 1, DateTime.DaysInMonth(now.Year, 1));
+        sampleDate = new DateTime(now.Year, 1, DateTime.DaysInMonth(now.Year, 1));
         displaySettings = await SettingsProvider.GetDisplaySettings();
     }
 
