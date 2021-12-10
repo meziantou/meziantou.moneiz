@@ -10,14 +10,30 @@
             <InputNumber @bind-Value="displaySettings.PageSize" />
         </label>
     </div>
+
+    <div class="form-group">
+        <label>
+            Date format
+            <InputSelect @bind-Value="displaySettings.DateFormat">
+                <option value="">(default)</option>
+                <option value="yyyy/MM/dd">@format.ToString("yyyy/MM/dd")</option>
+                <option value="dd/MM/yyyy">@format.ToString("dd/MM/yyyy")</option>
+                <option value="MM/dd/yyyy">@format.ToString("MM/dd/yyyy")</option>
+            </InputSelect>
+        </label>
+    </div>
+
     <button type="submit">Save</button>
 </EditForm>
 
 @code {
+    DateTime format;
     MoneizDisplaySettings displaySettings = new();
 
     protected override async Task OnInitializedAsync()
     {
+        DateTime now = DateTime.Now;
+        format = new DateTime(now.Year, 1, DateTime.DaysInMonth(now.Year, 1));
         displaySettings = await SettingsProvider.GetDisplaySettings();
     }
 

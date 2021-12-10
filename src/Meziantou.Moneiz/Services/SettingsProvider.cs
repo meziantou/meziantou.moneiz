@@ -40,6 +40,11 @@ namespace Meziantou.Moneiz.Services
             var result = await GetValue<MoneizDisplaySettings>("displaySettings");
             result ??= new MoneizDisplaySettings();
             result.PageSize = Math.Clamp(result.PageSize, 10, int.MaxValue);
+            if (string.IsNullOrWhiteSpace(result.DateFormat))
+            {
+                result.DateFormat = null;
+            }
+
             return result;
         }
 
