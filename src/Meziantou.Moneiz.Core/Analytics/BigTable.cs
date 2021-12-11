@@ -6,7 +6,7 @@ namespace Meziantou.Moneiz.Core.Analytics
 {
     public sealed class BigTable
     {
-        public DateTime[] Dates { get; set; } = Array.Empty<DateTime>();
+        public DateOnly[] Dates { get; set; } = Array.Empty<DateOnly>();
         public List<BigTableCategoryGroup> CategoryGroups { get; } = new List<BigTableCategoryGroup>();
 
         public BigTableValue[] Totals { get; private set; } = Array.Empty<BigTableValue>();

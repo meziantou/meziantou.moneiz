@@ -15,10 +15,10 @@ namespace Meziantou.Moneiz.Core.V1
         public string? Comment { get; set; }
 
         [JsonPropertyName("d")]
-        public DateTime ValueDate { get; set; }
+        public DateOnly ValueDate { get; set; }
 
         [JsonPropertyName("e")]
-        public DateTime? CheckedDate { get; set; }
+        public DateOnly? CheckedDate { get; set; }
 
         [JsonPropertyName("f")]
         public DateTime? ReconciliationDate { get; set; }

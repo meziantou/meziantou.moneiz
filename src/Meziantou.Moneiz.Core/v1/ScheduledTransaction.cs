@@ -15,7 +15,7 @@ namespace Meziantou.Moneiz.Core.V1
         public string? RecurrenceRuleText { get; set; }
 
         [JsonPropertyName("d")]
-        public DateTime StartDate { get; set; }
+        public DateOnly StartDate { get; set; }
 
         [JsonPropertyName("e")]
         public decimal Amount { get; set; }
@@ -36,6 +36,6 @@ namespace Meziantou.Moneiz.Core.V1
         public Category? Category { get; set; }
 
         [JsonPropertyName("k")]
-        public DateTime? NextOccurenceDate { get; set; }
+        public DateOnly? NextOccurenceDate { get; set; }
     }
 }

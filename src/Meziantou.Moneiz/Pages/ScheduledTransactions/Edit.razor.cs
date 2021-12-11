@@ -46,7 +46,7 @@ namespace Meziantou.Moneiz.Pages.ScheduledTransactions
                     Payee = scheduledTransaction.Payee?.Name,
                     Name = scheduledTransaction.Name,
                     RecurrenceRule = scheduledTransaction.RecurrenceRuleText,
-                    StartDate = DateOnly.FromDateTime(Id == null ? DateTime.Now : scheduledTransaction.StartDate),
+                    StartDate = Id == null ? Database.GetToday() : scheduledTransaction.StartDate,
                 };
             }
             else
@@ -55,7 +55,7 @@ namespace Meziantou.Moneiz.Pages.ScheduledTransactions
                 {
                     DebitedAccount = database.DefaultAccount,
                     CreditedAccount = database.DefaultAccount,
-                    StartDate = DateOnly.FromDateTime(DateTime.Now),
+                    StartDate = Database.GetToday(),
                 };
             }
         }
@@ -70,9 +70,9 @@ namespace Meziantou.Moneiz.Pages.ScheduledTransactions
 
             // Reset the schedule if StartDate or RRule changed
             var newRecurrenceRule = model.RecurrenceRule.TrimAndNullify();
-            if (scheduledTransaction.RecurrenceRuleText != newRecurrenceRule || DateOnly.FromDateTime(scheduledTransaction.StartDate) != model.StartDate)
+            if (scheduledTransaction.RecurrenceRuleText != newRecurrenceRule || scheduledTransaction.StartDate != model.StartDate)
             {
-                if (model.StartDate < DateOnly.FromDateTime(DateTime.Now))
+                if (model.StartDate < Database.GetToday())
                 {
                     if (!await ConfirmService.Confirm("The schedule starts in the past. Are you sure?"))
                         return;
@@ -80,7 +80,7 @@ namespace Meziantou.Moneiz.Pages.ScheduledTransactions
 
                 scheduledTransaction.RecurrenceRuleText = newRecurrenceRule;
                 scheduledTransaction.NextOccurenceDate = null;
-                scheduledTransaction.StartDate = model.StartDate.ToDateTime(TimeOnly.MinValue);
+                scheduledTransaction.StartDate = model.StartDate;
             }
 
             scheduledTransaction.Name = model.Name.TrimAndNullify();

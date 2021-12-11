@@ -39,7 +39,7 @@
                     <ul>
                         @foreach (var occurrence in scheduledTransaction.GetNextOccurences().Take(10))
                         {
-                            <li><UserDate Date="@occurrence" /></li>
+                            <li><UserDate DateTime="@occurrence" /></li>
                         }
                     </ul>
                 </details>

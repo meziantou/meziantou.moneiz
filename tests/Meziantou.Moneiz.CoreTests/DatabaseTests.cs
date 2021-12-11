@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Meziantou.Moneiz.Core;
 using Xunit;
@@ -12,12 +13,13 @@ namespace Meziantou.Moneiz.CoreTests
         public async Task ImportExport()
         {
             // Arrange
+            var today = Database.GetToday();
             var category1 = new Category { Id = 1, Name = "c1", GroupName = "cg1" };
             var payee1 = new Payee { Id = 1, Name = "p1", DefaultCategory = category1 };
             var account1 = new Account { Id = 1, Name = "a1", CurrencyIsoCode = "USD" };
-            var transaction1 = new Transaction { Account = account1, Amount = 1, Category = category1, CheckedDate = DateTime.UtcNow, Comment = "", Id = 1, Payee = payee1, ValueDate = DateTime.UtcNow, };
-            var transaction2 = new Transaction { Account = account1, Amount = 1, Category = category1, CheckedDate = DateTime.UtcNow, Comment = "", Id = 2, Payee = payee1, ValueDate = DateTime.UtcNow, };
-            var transaction3 = new Transaction { Account = account1, Amount = 1, Category = category1, CheckedDate = DateTime.UtcNow, Comment = "", Id = 3, Payee = payee1, ValueDate = DateTime.UtcNow, LinkedTransaction = transaction2 };
+            var transaction1 = new Transaction { Account = account1, Amount = 1, Category = category1, CheckedDate = today, Comment = "", Id = 1, Payee = payee1, ValueDate = today, };
+            var transaction2 = new Transaction { Account = account1, Amount = 1, Category = category1, CheckedDate = today, Comment = "", Id = 2, Payee = payee1, ValueDate = today, };
+            var transaction3 = new Transaction { Account = account1, Amount = 1, Category = category1, CheckedDate = today, Comment = "", Id = 3, Payee = payee1, ValueDate = today, LinkedTransaction = transaction2 };
             transaction2.LinkedTransaction = transaction3;
 
             var database = new Database()
@@ -65,7 +67,7 @@ namespace Meziantou.Moneiz.CoreTests
                 Amount = 1,
                 RecurrenceRuleText = "FREQ=daily",
                 Name = "test",
-                StartDate = DateTime.UtcNow,
+                StartDate = Database.GetToday(),
             };
 
             // Act
@@ -73,6 +75,28 @@ namespace Meziantou.Moneiz.CoreTests
 
             // Assert
             Assert.Equal(5, db.Transactions.Count);
+        }
+
+        [Fact]
+        public void DateOnlyJsonConverter()
+        {
+            var options = new JsonSerializerOptions
+            {
+                Converters = { new DateOnlyJsonConverter() }
+            };
+            var date = System.Text.Json.JsonSerializer.Deserialize<DateOnly>("\"2022-01-02T04:11:43.888Z\"", options);
+            Assert.Equal(new DateOnly(2022, 01, 02), date);
+        }
+
+        [Fact]
+        public void NullableDateOnlyJsonConverter()
+        {
+            var options = new JsonSerializerOptions
+            {
+                Converters = { new NullableDateOnlyJsonConverter() }
+            };
+            var date = System.Text.Json.JsonSerializer.Deserialize<DateOnly?>("\"2022-01-02T04:11:43.888Z\"", options);
+            Assert.Equal(new DateOnly(2022, 01, 02), date);
         }
     }
 }

@@ -66,8 +66,8 @@
     Database database;
     IList<Account> allAccounts;
 
-    DateTime fromDate = DateTime.UtcNow.AddDays(-30);
-    DateTime toDate = DateTime.UtcNow;
+    DateOnly fromDate = Database.GetToday().AddDays(-30);
+    DateOnly toDate = Database.GetToday();
     HashSet<Account> selectedAccounts = new HashSet<Account>();
 
     bool showDetails;
@@ -114,20 +114,20 @@
 
     private void SelectCurrentYear()
     {
-        toDate = DateTime.UtcNow;
-        fromDate = new DateTime(DateTime.UtcNow.Year, 1, 1);
+        toDate = Database.GetToday();
+        fromDate = new DateOnly(toDate.Year, 1, 1);
     }
 
     private void SelectCurrentMonth()
     {
-        toDate = DateTime.UtcNow;
-        fromDate = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+        toDate = Database.GetToday();
+        fromDate = new DateOnly(toDate.Year, toDate.Month, 1);
     }
 
     private void SelectLastXDays(int days)
     {
-        toDate = DateTime.UtcNow;
-        fromDate = DateTime.UtcNow.AddDays(-days);
+        toDate = Database.GetToday();
+        fromDate = toDate.AddDays(-days);
     }
 
     private void Toggle(Account account)

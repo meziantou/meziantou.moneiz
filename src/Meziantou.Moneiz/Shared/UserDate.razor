@@ -1,22 +1,42 @@
 ﻿@inject SettingsProvider SettingsProvider
-@if (Date.HasValue)
+@if (Date.HasValue || DateTime.HasValue)
 {
-    <span title="@Date.Value.ToLongDateString()">@FormatDate(Date.Value)</span>
+    <span title="@FormattedLongDate()">@FormattedShortDate()</span>
 }
 
 @code {
     MoneizDisplaySettings displaySettings;
 
     [Parameter]
-    public DateTime? Date { get; set; }
+    public DateOnly? Date { get; set; }
+
+    [Parameter]
+    public DateTime? DateTime { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         displaySettings = await SettingsProvider.GetDisplaySettings();
     }
 
-    private string FormatDate(DateTime dateTime)
+    private string FormattedLongDate()
     {
-        return displaySettings?.DateFormat == null ? dateTime.ToShortDateString() : dateTime.ToString(displaySettings.DateFormat);
+        if (Date != null)
+            return Date.Value.ToLongDateString();
+
+        if (DateTime != null)
+            return DateTime.Value.ToLongDateString();
+
+        return "";
+    }
+
+    private string FormattedShortDate()
+    {
+        if (Date != null)
+            return displaySettings?.DateFormat == null ? Date.Value.ToShortDateString() : Date.Value.ToString(displaySettings.DateFormat);
+
+        if (DateTime != null)
+            return displaySettings?.DateFormat == null ? DateTime.Value.ToShortDateString() : DateTime.Value.ToString(displaySettings.DateFormat);
+
+        return "";
     }
 }

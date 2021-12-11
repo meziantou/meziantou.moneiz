@@ -28,7 +28,7 @@
 </EditForm>
 
 @code {
-    DateTime sampleDate;
+    DateOnly sampleDate;
     MoneizDisplaySettings displaySettings = new();
 
     string[] formats = { "yyyy/MM/dd", "dd/MM/yyyy", "MM/dd/yyyy", "dd MMM yyyy" };
@@ -36,7 +36,7 @@
     protected override async Task OnInitializedAsync()
     {
         DateTime now = DateTime.Now;
-        sampleDate = new DateTime(now.Year, 1, DateTime.DaysInMonth(now.Year, 1));
+        sampleDate = new DateOnly(now.Year, 1, DateTime.DaysInMonth(now.Year, 1));
         displaySettings = await SettingsProvider.GetDisplaySettings();
     }
 

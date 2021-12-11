@@ -70,7 +70,7 @@ namespace Meziantou.Moneiz.Core
         {
             if (transaction.CheckedDate == null)
             {
-                transaction.CheckedDate = DateTime.UtcNow;
+                transaction.CheckedDate = GetToday();
                 RaiseDatabaseChanged();
             }
         }

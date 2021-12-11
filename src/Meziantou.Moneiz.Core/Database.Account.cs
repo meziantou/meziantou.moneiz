@@ -69,17 +69,17 @@ namespace Meziantou.Moneiz.Core
 
         public decimal GetReconciledBalance(Account account)
         {
-            return GetBalance(account, DateTime.MaxValue, TransactionState.Reconciliated);
+            return GetBalance(account, DateOnly.MaxValue, TransactionState.Reconciliated);
         }
 
         public decimal GetCheckedBalance(Account account)
         {
-            return GetBalance(account, DateTime.MaxValue, TransactionState.Checked);
+            return GetBalance(account, DateOnly.MaxValue, TransactionState.Checked);
         }
 
-        public static DateTime GetToday()
+        public static DateOnly GetToday()
         {
-            return DateTime.Now;
+            return DateOnly.FromDateTime(DateTime.Now);
         }
 
         public decimal GetTodayBalance(Account account)
@@ -87,20 +87,18 @@ namespace Meziantou.Moneiz.Core
             return GetBalance(account, GetToday(), TransactionState.NotChecked);
         }
 
-        public decimal GetBalance(Account account, DateTime date)
+        public decimal GetBalance(Account account, DateOnly date)
         {
             return GetBalance(account, date, TransactionState.NotChecked);
         }
 
         public decimal GetBalance(Account account)
         {
-            return GetBalance(account, DateTime.MaxValue, TransactionState.NotChecked);
+            return GetBalance(account, DateOnly.MaxValue, TransactionState.NotChecked);
         }
 
-        private decimal GetBalance(Account account, DateTime dateTime, TransactionState transactionState)
+        private decimal GetBalance(Account account, DateOnly date, TransactionState transactionState)
         {
-            var date = dateTime.Date;
-
             return account.InitialBalance + Transactions.Where(IncludeTransaction).Sum(t => t.Amount);
 
             bool IncludeTransaction(Transaction transaction)
@@ -108,7 +106,7 @@ namespace Meziantou.Moneiz.Core
                 if (transaction.Account != account)
                     return false;
 
-                if (transaction.ValueDate.Date > date)
+                if (transaction.ValueDate > date)
                     return false;
 
                 if (transactionState == TransactionState.Reconciliated && transaction.ReconciliationDate == null)

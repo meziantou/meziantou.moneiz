@@ -75,8 +75,8 @@
                 <InputDate @bind-Value="model.ValueDate" />
             </label>
 
-            <button type="button" tabindex="-1" class="btn-link" @onclick="() => model.ValueDate = DateTime.Now">Today</button>
-            <button type="button" tabindex="-1" class="btn-link" @onclick="() => model.ValueDate = DateTime.Now.AddDays(-1)">Yesterday</button>
+            <button type="button" tabindex="-1" class="btn-link" @onclick="() => model.ValueDate = Database.GetToday()">Today</button>
+            <button type="button" tabindex="-1" class="btn-link" @onclick="() => model.ValueDate = Database.GetToday().AddDays(-1)">Yesterday</button>
         </div>
 
         <div class="form-group">

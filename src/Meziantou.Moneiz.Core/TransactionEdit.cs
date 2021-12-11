@@ -12,7 +12,7 @@ namespace Meziantou.Moneiz.Core
         public Account? CreditedAccount { get; set; }
         public string? Payee { get; set; }
         public Category? Category { get; set; }
-        public DateTime ValueDate { get; set; }
+        public DateOnly ValueDate { get; set; }
         public decimal Amount { get; set; }
         public string? Comment { get; set; }
 
@@ -38,7 +38,7 @@ namespace Meziantou.Moneiz.Core
             {
                 DebitedAccount = account,
                 CreditedAccount = account,
-                ValueDate = DateTime.Now, // We want the local user date
+                ValueDate = Database.GetToday(), // We want the local user date
                 Amount = account?.DefaultCashFlow == CashFlow.Expense ? -1m : 1m,
             };
         }
@@ -55,7 +55,7 @@ namespace Meziantou.Moneiz.Core
                     transaction = new Transaction();
                     if (DebitedAccount.DefaultTransactionState == TransactionState.Checked)
                     {
-                        transaction.CheckedDate = DateTime.UtcNow;
+                        transaction.CheckedDate = Database.GetToday();
                     }
                 }
 
@@ -82,7 +82,7 @@ namespace Meziantou.Moneiz.Core
                         creditedTransaction = new Transaction();
                         if (CreditedAccount.DefaultTransactionState == TransactionState.Checked)
                         {
-                            creditedTransaction.CheckedDate = DateTime.UtcNow;
+                            creditedTransaction.CheckedDate = Database.GetToday();
                         }
                     }
 

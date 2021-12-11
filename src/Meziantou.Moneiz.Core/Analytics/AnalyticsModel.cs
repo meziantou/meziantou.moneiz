@@ -7,13 +7,13 @@ namespace Meziantou.Moneiz.Core.Analytics
     public sealed class AnalyticsModel
     {
         public IReadOnlyList<Account> Accounts { get; set; } = Array.Empty<Account>();
-        public DateTime? PeriodFrom { get; set; }
-        public DateTime? PeriodTo { get; set; }
+        public DateOnly? PeriodFrom { get; set; }
+        public DateOnly? PeriodTo { get; set; }
 
         public BalanceHistory? BalanceHistory { get; set; }
         public BigTable? BigTable { get; set; }
 
-        public static AnalyticsModel Build(Database database, IReadOnlyList<Account> accounts, DateTime fromDate, DateTime toDate)
+        public static AnalyticsModel Build(Database database, IReadOnlyList<Account> accounts, DateOnly fromDate, DateOnly toDate)
         {
             return new AnalyticsModel
             {
@@ -25,7 +25,7 @@ namespace Meziantou.Moneiz.Core.Analytics
             };
         }
 
-        private static BalanceHistory BuildBalanceHistory(Database database, IReadOnlyList<Account> accounts, DateTime fromDate, DateTime toDate)
+        private static BalanceHistory BuildBalanceHistory(Database database, IReadOnlyList<Account> accounts, DateOnly fromDate, DateOnly toDate)
         {
             var result = new BalanceHistory();
 
@@ -45,7 +45,7 @@ namespace Meziantou.Moneiz.Core.Analytics
             return result;
         }
 
-        private static BigTable BuildBigTable(Database database, IEnumerable<Account> accounts, DateTime fromDate, DateTime toDate)
+        private static BigTable BuildBigTable(Database database, IEnumerable<Account> accounts, DateOnly fromDate, DateOnly toDate)
         {
             var transactionGroups = database.Transactions
                 .Where(t => accounts.Contains(t.Account) && t.ValueDate >= fromDate && t.ValueDate <= toDate)
@@ -53,7 +53,7 @@ namespace Meziantou.Moneiz.Core.Analytics
 
             var bigTable = new BigTable
             {
-                Dates = new DateTime[(toDate.Year - fromDate.Year) * 12 + (toDate.Month - fromDate.Month) + 1],
+                Dates = new DateOnly[(toDate.Year - fromDate.Year) * 12 + (toDate.Month - fromDate.Month) + 1],
             };
             for (var i = 0; i < bigTable.Dates.Length; i++)
             {

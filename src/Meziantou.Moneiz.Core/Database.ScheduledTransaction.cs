@@ -46,7 +46,7 @@ namespace Meziantou.Moneiz.Core
         {
             using (DeferEvents())
             {
-                var utcNow = DateTime.UtcNow.Date;
+                var utcNow = GetToday();
                 var date = utcNow.AddDays(5);
 
                 foreach (var scheduledTransaction in ScheduledTransactions.ToList())
@@ -56,7 +56,7 @@ namespace Meziantou.Moneiz.Core
             }
         }
 
-        private void ProcessScheduledTransaction(ScheduledTransaction scheduledTransaction, DateTime createUntil)
+        private void ProcessScheduledTransaction(ScheduledTransaction scheduledTransaction, DateOnly createUntil)
         {
             using (DeferEvents())
             {
@@ -70,7 +70,7 @@ namespace Meziantou.Moneiz.Core
 
                 if (scheduledTransaction.NextOccurenceDate == null)
                 {
-                    var recurrenceDate = reccurenceRule.GetNextOccurrence(scheduledTransaction.StartDate);
+                    DateOnly? recurrenceDate = reccurenceRule.GetNextOccurrence(scheduledTransaction.StartDate.ToDateTime(TimeOnly.MinValue)) is DateTime nextDateTime ? DateOnly.FromDateTime(nextDateTime) : null;
                     scheduledTransaction.NextOccurenceDate = recurrenceDate;
                     if (scheduledTransaction.NextOccurenceDate == null)
                     {
@@ -114,7 +114,7 @@ namespace Meziantou.Moneiz.Core
                         SaveTransaction(creditedTransaction);
                     }
 
-                    var newRecurrenceDate = reccurenceRule.GetNextOccurrence(scheduledTransaction.NextOccurenceDate.Value.AddDays(1));
+                    DateOnly? newRecurrenceDate = reccurenceRule.GetNextOccurrence(scheduledTransaction.NextOccurenceDate.Value.AddDays(1).ToDateTime(TimeOnly.MinValue)) is DateTime nextDateTime ? DateOnly.FromDateTime(nextDateTime) : null;
                     if (scheduledTransaction.NextOccurenceDate == newRecurrenceDate)
                     {
                         // Infinite loop, remove the transaction

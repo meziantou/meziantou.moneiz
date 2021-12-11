@@ -10,4 +10,8 @@
     <PackageReference Include="Meziantou.Framework.Scheduling" Version="2.0.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Meziantou.Moneiz.CoreTests" />
+  </ItemGroup>
+
 </Project>

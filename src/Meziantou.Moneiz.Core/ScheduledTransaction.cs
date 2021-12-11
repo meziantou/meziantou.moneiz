@@ -27,7 +27,8 @@ namespace Meziantou.Moneiz.Core
         public string? RecurrenceRuleText { get; set; }
 
         [JsonPropertyName("d")]
-        public DateTime StartDate { get; set; }
+        [JsonConverter(typeof(DateOnlyJsonConverter))]
+        public DateOnly StartDate { get; set; }
 
         [JsonPropertyName("e")]
         public decimal Amount { get; set; }
@@ -108,7 +109,8 @@ namespace Meziantou.Moneiz.Core
         }
 
         [JsonPropertyName("k")]
-        public DateTime? NextOccurenceDate { get; set; }
+        [JsonConverter(typeof(NullableDateOnlyJsonConverter))]
+        public DateOnly? NextOccurenceDate { get; set; }
 
         [JsonIgnore]
         public RecurrenceRule? RecurrenceRule
@@ -127,7 +129,7 @@ namespace Meziantou.Moneiz.Core
             if (RecurrenceRule == null || NextOccurenceDate == null)
                 return Enumerable.Empty<DateTime>();
 
-            return RecurrenceRule.GetNextOccurrences(NextOccurenceDate.Value);
+            return RecurrenceRule.GetNextOccurrences(NextOccurenceDate.Value.ToDateTime(TimeOnly.MinValue));
         }
 
         internal void ResolveReferences(Database database)

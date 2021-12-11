@@ -193,7 +193,7 @@ else
     Account account;
     IReadOnlyList<Transaction> transactions;
     int pageIndex = 0;
-    DateTime today;
+    DateOnly today;
     bool showReconciled = true;
     TransactionEdit currentEdit = null;
     EditColumn editColumn;
@@ -373,9 +373,9 @@ else
         }
     }
 
-    private DateTime ParseDate(string value, DateTime defaultValue)
+    private DateOnly ParseDate(string value, DateOnly defaultValue)
     {
-        if (BindConverter.TryConvertTo(value, CultureInfo.InvariantCulture, out DateTime result))
+        if (BindConverter.TryConvertTo(value, CultureInfo.InvariantCulture, out DateOnly result))
             return result;
 
         return defaultValue;

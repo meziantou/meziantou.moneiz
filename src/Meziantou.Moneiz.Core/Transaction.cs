@@ -24,10 +24,12 @@ namespace Meziantou.Moneiz.Core
         public string? Comment { get; set; }
 
         [JsonPropertyName("d")]
-        public DateTime ValueDate { get; set; }
+        [JsonConverter(typeof(DateOnlyJsonConverter))]
+        public DateOnly ValueDate { get; set; }
 
         [JsonPropertyName("e")]
-        public DateTime? CheckedDate { get; set; }
+        [JsonConverter(typeof(NullableDateOnlyJsonConverter))]
+        public DateOnly? CheckedDate { get; set; }
 
         [JsonPropertyName("f")]
         public DateTime? ReconciliationDate { get; set; }
