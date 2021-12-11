@@ -32,7 +32,7 @@
             <td>@scheduledTransaction.Name</td>
             <td>@scheduledTransaction.Account</td>
             <td><Amount Value="scheduledTransaction.Amount" Currency="@scheduledTransaction.Account?.CurrencyIsoCode" /></td>
-            <td>@scheduledTransaction.RecurrenceRule.GetHumanText()</td>
+            <td title="@scheduledTransaction.RecurrenceRuleText">@scheduledTransaction.RecurrenceRule.GetHumanText()</td>
             <td>
                 <details>
                     <summary><UserDate Date="@scheduledTransaction.NextOccurenceDate" /></summary>
@@ -46,8 +46,9 @@
             </td>
             <td class="commands">
                 <Dropdown>
-                    <DropdownItem><a class="edit" href="/scheduler/@scheduledTransaction.Id/edit">Edit</a></DropdownItem>
-                    <DropdownItem><button type="button" class="btn-link" @onclick="() => Delete(scheduledTransaction)">Delete</button></DropdownItem>
+                    <DropdownItem><a class="duplicate" href="/scheduler/create?DuplicatedScheduleTransactionId=@scheduledTransaction.Id"><i class="fas fa-copy"></i> Duplicate</a></DropdownItem>
+                    <DropdownItem><a class="edit" href="/scheduler/@scheduledTransaction.Id/edit"><i class="fas fa-pencil-alt"></i> Edit</a></DropdownItem>
+                    <DropdownItem><button type="button" class="btn-link" @onclick="() => Delete(scheduledTransaction)"><i class="fas fa-trash" style="color: red"></i> Delete</button></DropdownItem>
                 </Dropdown>
             </td>
         </tr>

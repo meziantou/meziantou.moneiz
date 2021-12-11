@@ -16,6 +16,9 @@ namespace Meziantou.Moneiz.Pages.ScheduledTransactions
         [Parameter]
         public int? Id { get; set; }
 
+        [Parameter, SupplyParameterFromQuery]
+        public int? DuplicatedScheduleTransactionId { get; set; }
+
         protected override async Task OnInitializedAsync()
         {
             database = await DatabaseProvider.GetDatabase();
@@ -23,7 +26,7 @@ namespace Meziantou.Moneiz.Pages.ScheduledTransactions
 
         protected override void OnParametersSet()
         {
-            var scheduledTransaction = database.GetScheduledTransactionById(Id);
+            var scheduledTransaction = database.GetScheduledTransactionById(Id ?? DuplicatedScheduleTransactionId);
             if (scheduledTransaction == null && Id != null)
             {
                 NavigationManager.NavigateToScheduler();
@@ -43,7 +46,7 @@ namespace Meziantou.Moneiz.Pages.ScheduledTransactions
                     Payee = scheduledTransaction.Payee?.Name,
                     Name = scheduledTransaction.Name,
                     RecurrenceRule = scheduledTransaction.RecurrenceRuleText,
-                    StartDate = DateOnly.FromDateTime(scheduledTransaction.StartDate),
+                    StartDate = DateOnly.FromDateTime(Id == null ? DateTime.Now : scheduledTransaction.StartDate),
                 };
             }
             else
