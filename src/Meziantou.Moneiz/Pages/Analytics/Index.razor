@@ -1,4 +1,4 @@
-﻿@page "/analytics"
+@page "/analytics"
 @using Meziantou.Moneiz.Core.Analytics
 @inject DatabaseProvider DatabaseProvider
 
@@ -7,13 +7,13 @@
 <LoadingIndicator IsLoading="database == null">
     <h2>Accounts</h2>
     <div class="form-group">
-        <div>
+        <div style="display: flex; gap: 12px">
             @foreach (var currency in allAccounts.Select(a => a.CurrencyIsoCode).Distinct().OrderBy(c => c))
             {
                 <a @onclick="() => SelectByCurrency(currency)">@currency</a>
             }
         </div>
-        <div>
+        <div style="display: flex; gap: 12px">
             <a @onclick="() => SelectByType(AccountType.Current)">Current</a>
             <a @onclick="() => SelectByType(AccountType.Saving)">Saving</a>
         </div>
