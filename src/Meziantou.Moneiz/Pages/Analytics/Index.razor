@@ -1,4 +1,4 @@
-@page "/analytics"
+﻿@page "/analytics"
 @using Meziantou.Moneiz.Core.Analytics
 @inject DatabaseProvider DatabaseProvider
 
@@ -59,6 +59,7 @@
         <label><input type="checkbox" @bind-value="showDetails" /> Show details</label>
         <BigTable Model="model.BigTable" ShowDetails="showDetails" />
         <BalanceHistory Model="model.BalanceHistory" ShowDetails="showDetails" />
+        <BalanceHistoryChart Model="model.BalanceHistory" />
     }
 </LoadingIndicator>
 

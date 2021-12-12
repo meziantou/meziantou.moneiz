@@ -27,16 +27,42 @@ namespace Meziantou.Moneiz.Core.Analytics
 
         private static BalanceHistory BuildBalanceHistory(Database database, IReadOnlyList<Account> accounts, DateOnly fromDate, DateOnly toDate)
         {
-            var result = new BalanceHistory();
+            var result = new BalanceHistory()
+            {
+                StartDate = fromDate,
+                EndDate = toDate,
+            };
 
             foreach (var account in accounts)
             {
+                var balances = new decimal[(int)(toDate.ToDateTime(TimeOnly.MinValue) - fromDate.ToDateTime(TimeOnly.MinValue)).TotalDays + 1];
+
+                balances[0] = database.GetBalance(account, fromDate.AddDays(-1));
+                var transactions = database.Transactions.Where(t => t.Account == account && t.ValueDate >= fromDate && t.ValueDate <= toDate).OrderBy(t => t.ValueDate);
+                var currentIndex = 0;
+                foreach (var transaction in transactions)
+                {
+                    var index = (int)(transaction.ValueDate.ToDateTime(TimeOnly.MinValue) - fromDate.ToDateTime(TimeOnly.MinValue)).TotalDays;
+                    if (currentIndex < index)
+                    {
+
+                        balances.AsSpan(currentIndex + 1, index - currentIndex).Fill(balances[currentIndex]);
+                        currentIndex = index;
+                    }
+
+                    currentIndex = index;
+                    balances[currentIndex] += transaction.Amount;
+                }
+
+                balances.AsSpan(currentIndex + 1).Fill(balances[currentIndex]);
+
                 var entry = new BalanceHistoryEntry
                 {
                     Account = account,
                     Currency = account.CurrencyIsoCode,
-                    StartBalance = database.GetBalance(account, fromDate),
-                    EndBalance = database.GetBalance(account, toDate),
+                    StartBalance = balances[0],
+                    EndBalance = balances[^1],
+                    Balances = balances,
                 };
 
                 result.BalancesByAccount.Add(entry);
@@ -136,6 +162,9 @@ namespace Meziantou.Moneiz.Core.Analytics
 
     public sealed class BalanceHistory
     {
+        public DateOnly StartDate { get; set; }
+        public DateOnly EndDate { get; set; }
+
         public IList<BalanceHistoryEntry> BalancesByAccount { get; } = new List<BalanceHistoryEntry>();
     }
 
@@ -143,6 +172,8 @@ namespace Meziantou.Moneiz.Core.Analytics
     {
         public Account? Account { get; set; }
         public string? Currency { get; set; }
+
+        public decimal[]? Balances { get; set; }
 
         public decimal StartBalance { get; set; }
         public decimal EndBalance { get; set; }

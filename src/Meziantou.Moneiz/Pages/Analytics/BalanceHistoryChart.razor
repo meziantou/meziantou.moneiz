@@ -1,0 +1,63 @@
+﻿@inject SettingsProvider SettingsProvider
+<div>
+    @foreach (var chart in Series)
+    {
+        <h2>@chart.Name</h2>
+        <MudChart ChartType="ChartType.Line" ChartSeries="@chart.Series" XAxisLabels="@xAxis" Width="100%" Height="350px" />
+    }
+</div>
+
+@code {
+
+    [Parameter]
+    public Meziantou.Moneiz.Core.Analytics.BalanceHistory Model { get; set; }
+
+    MoneizDisplaySettings displaySettings = new();
+    private string[] xAxis = Array.Empty<string>();
+    private List<(string Name, List<ChartSeries> Series)> Series = new();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        displaySettings = await SettingsProvider.GetDisplaySettings();
+    }
+
+    protected override void OnParametersSet()
+    {
+        Series.Clear();
+
+        if (Model != null && Model.BalancesByAccount.Count > 0)
+        {
+            var currencySeries = new List<ChartSeries>();
+            Series.Add(("Balance by currencies", currencySeries));
+
+            var length = Model.BalancesByAccount.First().Balances.Length;
+
+            xAxis = new string[length];
+            Array.Fill(xAxis, "");
+            var xAxisCount = 7;
+            for (var i = 0; i <= xAxisCount; i++)
+            {
+                xAxis[i * (xAxis.Length / xAxisCount)] = displaySettings.FormatDate(Model.StartDate.AddDays(i * xAxisCount));
+            }
+
+            foreach (var group in Model.BalancesByAccount.GroupBy(i => i.Currency))
+            {
+                var currencySerie = new ChartSeries { Name = group.Key, Data = new double[length] };
+                currencySeries.Add(currencySerie);
+
+                var series = new List<ChartSeries>();
+                foreach (var balanceHistory in group)
+                {
+                    series.Add(new() { Name = balanceHistory.Account.ToString(), Data = balanceHistory.Balances.Select(value => (double)value).ToArray() });
+
+                    for (var i = 0; i < balanceHistory.Balances.Length; i++)
+                    {
+                        currencySerie.Data[i] += (double)balanceHistory.Balances[i];
+                    }
+                }
+
+                Series.Add(($"Balance - {group.Key}", series));
+            }
+        }
+    }
+}

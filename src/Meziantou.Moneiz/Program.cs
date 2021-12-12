@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Meziantou.Moneiz.Services;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using MudBlazor.Services;
 
 namespace Meziantou.Moneiz
 {
@@ -18,6 +19,7 @@ namespace Meziantou.Moneiz
             builder.Services.AddSingleton<DatabaseProvider>();
             builder.Services.AddSingleton<ConfirmService>();
             builder.Services.AddSingleton<SettingsProvider>();
+            builder.Services.AddMudServices();
 
             await builder.Build().RunAsync();
         }
