@@ -15,7 +15,7 @@
     MoneizDisplaySettings displaySettings = new();
     private string[] xAxis = Array.Empty<string>();
     private List<(string Name, List<ChartSeries> Series)> Series = new();
-    
+
     protected override async Task OnInitializedAsync()
     {
         displaySettings = await SettingsProvider.GetDisplaySettings();
@@ -37,7 +37,8 @@
             var xAxisCount = 7;
             for (var i = 0; i <= xAxisCount; i++)
             {
-                xAxis[i * (xAxis.Length / xAxisCount)] = displaySettings.FormatDate(Model.StartDate.AddDays(i * xAxisCount));
+                var index = i * (xAxis.Length / xAxisCount);
+                xAxis[index] = displaySettings.FormatDate(Model.StartDate.AddDays(index));
             }
 
             foreach (var group in Model.BalancesByAccount.GroupBy(i => i.Currency))
