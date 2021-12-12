@@ -30,8 +30,8 @@ jobs:
       with:
         node-version: '16'
 
-    # - name: Install Blazor AOT workload
-    #   run: dotnet workload install microsoft-net-sdk-blazorwebassembly-aot
+    - name: Install WASM workload
+      run: dotnet workload install wasm-tools
 
     - name: Debug
       run: 'echo "${{ github.ref }}"'
