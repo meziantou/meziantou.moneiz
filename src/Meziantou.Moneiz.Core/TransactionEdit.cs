@@ -5,6 +5,8 @@ namespace Meziantou.Moneiz.Core
 {
     public sealed class TransactionEdit
     {
+        private bool _editCurrentTransaction;
+
         public int? Id { get; set; }
         public bool InterAccount { get; set; }
         [Required]
@@ -16,7 +18,7 @@ namespace Meziantou.Moneiz.Core
         public decimal Amount { get; set; }
         public string? Comment { get; set; }
 
-        public static TransactionEdit FromTransaction(Transaction transaction, bool createNewTransaction = false)
+        public static TransactionEdit FromTransaction(Transaction transaction, bool createNewTransaction = false, bool editCurrentTransaction = false)
         {
             return new TransactionEdit
             {
@@ -24,11 +26,12 @@ namespace Meziantou.Moneiz.Core
                 DebitedAccount = transaction.Account,
                 CreditedAccount = transaction.LinkedTransaction?.Account,
                 InterAccount = transaction.LinkedTransaction != null,
-                Amount = transaction.LinkedTransaction != null ? Math.Abs(transaction.Amount) : transaction.Amount,
+                Amount = !editCurrentTransaction && transaction.LinkedTransaction != null ? Math.Abs(transaction.Amount) : transaction.Amount,
                 Category = transaction.Category,
                 Comment = transaction.Comment,
                 Payee = transaction.Payee?.Name,
                 ValueDate = transaction.ValueDate,
+                _editCurrentTransaction = editCurrentTransaction,
             };
         }
 
@@ -69,7 +72,7 @@ namespace Meziantou.Moneiz.Core
                 transaction.Payee = database.GetOrCreatePayeeByName(Payee.TrimAndNullify());
                 transaction.Category = Category;
                 transaction.ValueDate = ValueDate;
-                transaction.Amount = InterAccount ? -Math.Abs(Amount) : Amount;
+                transaction.Amount = !_editCurrentTransaction && InterAccount ? -Math.Abs(Amount) : Amount;
                 transaction.Comment = Comment;
 
                 if (InterAccount)
@@ -90,7 +93,7 @@ namespace Meziantou.Moneiz.Core
                     creditedTransaction.Payee = transaction.Payee;
                     creditedTransaction.Category = transaction.Category;
                     creditedTransaction.ValueDate = transaction.ValueDate;
-                    creditedTransaction.Amount = Math.Abs(transaction.Amount);
+                    creditedTransaction.Amount = -transaction.Amount;
                     creditedTransaction.Comment = Comment;
 
                     creditedTransaction.LinkedTransaction = transaction;

@@ -38,6 +38,10 @@
   text-align: center;
 }
 
+.amount-value {
+  font-variant-numeric:tabular-nums;
+}
+
 .amount-currency ~ .amount-value {
   margin-left: 3px;
 }

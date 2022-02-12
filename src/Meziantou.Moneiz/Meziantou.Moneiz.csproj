@@ -9,7 +9,7 @@
 
     <!--<InvariantGlobalization>true</InvariantGlobalization>-->
     <BlazorEnableCompression>False</BlazorEnableCompression>
-    <RunAOTCompilation>true</RunAOTCompilation>
+    <RunAOTCompilation Condition="$(Configuration) == 'Release'">true</RunAOTCompilation>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(Configuration)' == 'Release'">

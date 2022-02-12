@@ -346,7 +346,7 @@ else
 
     private void BeginInlineEdit(Transaction transaction, EditColumn column)
     {
-        currentEdit = TransactionEdit.FromTransaction(transaction);
+        currentEdit = TransactionEdit.FromTransaction(transaction, editCurrentTransaction: true);
         editColumn = column;
     }
 
