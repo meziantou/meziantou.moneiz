@@ -19,7 +19,9 @@ else
 
 <div class="toolbar">
     <div class="toolbar-left">
-        <CreateTransactionLink Account="account">Create transaction</CreateTransactionLink>
+        <p style="margin-top: 0.5rem; margin-bottom: 0.5rem">
+            <CreateTransactionLink Account="account"><i class="fa fa-plus-circle"></i> Create transaction</CreateTransactionLink>
+        </p>
         <p>
             <label>
                 <input type="checkbox" checked="@showReconciled" @onchange="() => ToggleReconciledVisibility()" /> Show reconciled transactions
@@ -38,19 +40,19 @@ else
                 <span class="account-balance-title">All transactions:</span>
                 <Amount value="@database.GetBalance(account)" currency="@account.CurrencyIsoCode" />
             </div>
-            <div>
-                <span class="account-balance-title">Checked transactions:</span>
-                <span id="CheckedBalanceContainer">
-                    <Amount value="@database.GetCheckedBalance(account)" currency="@account.CurrencyIsoCode" />
-                </span>
-            </div>
-            <div>
+             <div>
                 <span class="account-balance-title">Reconciled transactions:</span>
                 <span>
                     <Amount value="@database.GetReconciledBalance(account)" currency="@account.CurrencyIsoCode" />
                 </span>
             </div>
             <div>
+                <span class="account-balance-title">Checked transactions:</span>
+                <span id="CheckedBalanceContainer">
+                    <Amount value="@database.GetCheckedBalance(account)" currency="@account.CurrencyIsoCode" />
+                </span>
+            </div>           
+            <div class="account-balance-actions">
                 <a class="btn btn-primary" @onclick="Reconcile">Reconcile</a>
             </div>
         </div>

@@ -1,55 +1,53 @@
 ﻿.transaction-state {
-  padding-left: 0;
-  padding-right: 0;
-  text-align: center;
+    padding-left: 0;
+    padding-right: 0;
+    text-align: center;
 }
 
 .btn-transaction-status {
-  font-size: 16px;
-  cursor: pointer;
+    font-size: 16px;
+    cursor: pointer;
 }
 
 .toolbar-left {
-  float: left;
+    flex-grow: 1;
 }
 
-.account-balance {
-  float: right;
-}
-
-  .account-balance > div {
+.account-balance > div {
     display: flex;
     margin-bottom: 4px;
-  }
-
-.account-balance-title {
-  font-weight: bold;
-  margin-right: 5px;
-  flex-grow: 1;
 }
 
-.toolbar:after {
-  content: "";
-  display: table;
-  clear: both;
+.account-balance-title {
+    font-weight: bold;
+    margin-right: 5px;
+    flex-grow: 1;
+}
+
+.account-balance-actions {
+    justify-content: flex-end;
+}
+
+.toolbar {
+    display: flex;
 }
 
 .row-navigation {
-  text-align: center;
+    text-align: center;
 }
 
 .amount-value {
-  font-variant-numeric:tabular-nums;
+    font-variant-numeric: tabular-nums;
 }
 
 .amount-currency ~ .amount-value {
-  margin-left: 3px;
+    margin-left: 3px;
 }
 
 .amount-positive {
-  color: green;
+    color: green;
 }
 
 .amount-negative {
-  color: red;
+    color: red;
 }

@@ -1,7 +1,7 @@
 ﻿:root {
     --container-width: 1200px;
     --navbar-height: 50px;
-    --navbar-margin: 0px;
+    --navbar-margin: 15px;
     --navbar-padding: calc(var(--navbar-height) + var(--navbar-margin));
     --color-error: #a94442;
     --font-size: 14px;
