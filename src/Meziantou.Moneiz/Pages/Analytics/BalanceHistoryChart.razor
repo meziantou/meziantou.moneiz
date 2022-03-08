@@ -3,7 +3,7 @@
     @foreach (var chart in Series)
     {
         <h2>@chart.Name</h2>
-        <MudChart ChartType="ChartType.Line" ChartSeries="@chart.Series" XAxisLabels="@xAxis" Width="100%" Height="350px" />
+        <MudChart ChartType="ChartType.Line" ChartSeries="@chart.Series" XAxisLabels="@xAxis" Width="100%" Height="350px" ChartOptions="new() { LineStrokeWidth = 2 }" />
     }
 </div>
 
@@ -38,6 +38,7 @@
             for (var i = 0; i <= xAxisCount; i++)
             {
                 var index = i * (xAxis.Length / xAxisCount);
+                index = Math.Clamp(index, 0, xAxis.Length - 1);
                 xAxis[index] = displaySettings.FormatDate(Model.StartDate.AddDays(index));
             }
 
