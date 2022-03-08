@@ -8,6 +8,7 @@ namespace Meziantou.Moneiz.Services
     {
         public int PageSize { get; set; } = 150;
         public string? DateFormat { get; set; }
+        public bool FullWidth { get; set; }
 
         public string FormatDate(DateOnly date) => DateFormat == null ? date.ToShortDateString() : date.ToString(DateFormat);
         public string? FormatDate(DateOnly? date) => DateFormat == null ? date?.ToShortDateString() : date?.ToString(DateFormat);

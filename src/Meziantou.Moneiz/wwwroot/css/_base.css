@@ -8,6 +8,10 @@
     --font-size-small: 12px;
 }
 
+.full-width{
+    --container-width: 100%;
+}
+
 body {
     background: #fafafa;
     font-family: 'Roboto', sans-serif;

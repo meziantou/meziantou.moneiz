@@ -1,37 +1,59 @@
 ﻿@inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
+@inject SettingsProvider SettingsProvider
 
-<header class="site-header">
-    <div class="container">
-        <nav class="navbar">
-            <a class="navbar-brand" href="/">
-                <img class="navbar-brand-img" alt="Logo" src="images/moneiz_24x24.png" asp-append-version="true" />
-                <span>Moneiz</span>
-                <span class="beta">beta</span>
-            </a>
+<div class="@(fullWidth ? "full-width" : "")">
+    <header class="site-header">
+        <div class="container">
+            <nav class="navbar">
+                <a class="navbar-brand" href="/">
+                    <img class="navbar-brand-img" alt="Logo" src="images/moneiz_24x24.png" asp-append-version="true" />
+                    <span>Moneiz</span>
+                    <span class="beta">beta</span>
+                </a>
 
-            <ul class="navbar-nav">
-                <li><CreateTransactionLink><i class="fa fa-plus-circle"></i> Create a transaction</CreateTransactionLink></li>
-            </ul>
+                <ul class="navbar-nav">
+                    <li><CreateTransactionLink><i class="fa fa-plus-circle"></i> Create a transaction</CreateTransactionLink></li>
+                </ul>
 
-            <ul class="navbar-nav navbar-nav-right">
-                <li><DatabaseNotExported /></li>
-                <li>
-                    <Dropdown MenuText="My account" MenuIcon="fa-caret-down">
-                        <DropdownItem><a href="/database">Import/Export database</a></DropdownItem>
-                        <DropdownItem><a href="/settings">Display settings</a></DropdownItem>
-                    </Dropdown>
-                </li>
-            </ul>
+                <ul class="navbar-nav navbar-nav-right">
+                    <li><DatabaseNotExported /></li>
+                    <li><a @onclick="() => ToggleFullWidth()"><i class="fas @(fullWidth ? "fa-compress-alt" : "fa-expand-alt")"></i></a></li>
+                    <li>
+                        <Dropdown MenuText="My account" MenuIcon="fa-caret-down">
+                            <DropdownItem><a href="/database">Import/Export database</a></DropdownItem>
+                            <DropdownItem><a href="/settings">Display settings</a></DropdownItem>
+                        </Dropdown>
+                    </li>
+                </ul>
 
-        </nav>
+            </nav>
+        </div>
+    </header>
+
+    <div class="grid-container container">
+        <NavMenu />
+
+        <main class="site-main">
+            @Body
+        </main>
     </div>
-</header>
-
-<div class="grid-container container">
-    <NavMenu />
-
-    <main class="site-main">
-        @Body
-    </main>
 </div>
+
+@code {
+    bool fullWidth;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var settings = await SettingsProvider.GetDisplaySettings();
+        fullWidth = settings.FullWidth;
+    }
+
+    private async Task ToggleFullWidth()
+    {
+        fullWidth = !fullWidth;
+        var settings = await SettingsProvider.GetDisplaySettings();
+        settings.FullWidth = fullWidth;
+        await SettingsProvider.SetDisplaySettings(settings);
+    }
+}
