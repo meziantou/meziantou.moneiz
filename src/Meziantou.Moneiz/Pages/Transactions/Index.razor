@@ -3,6 +3,7 @@
 @page "/categories/{CategoryId:int}/transactions"
 @page "/payees/{PayeeId:int}/transactions"
 @using System.Globalization
+@using System.Diagnostics.CodeAnalysis
 @inject DatabaseProvider DatabaseProvider
 @inject ConfirmService ConfirmService
 @inject SettingsProvider SettingsProvider
@@ -24,7 +25,7 @@ else
         </p>
         <p>
             <label>
-                <input type="checkbox" checked="@showReconciled" @onchange="() => ToggleReconciledVisibility()" /> Show reconciled transactions
+                <input type="checkbox" inert="@HasSearch()" checked="@ShowReconciledTransactions()" @onchange="() => ToggleReconciledVisibility()" /> Show reconciled transactions
             </label>
         </p>
     </div>
@@ -40,7 +41,7 @@ else
                 <span class="account-balance-title">All transactions:</span>
                 <Amount value="@database.GetBalance(account)" currency="@account.CurrencyIsoCode" />
             </div>
-             <div>
+            <div>
                 <span class="account-balance-title">Reconciled transactions:</span>
                 <span>
                     <Amount value="@database.GetReconciledBalance(account)" currency="@account.CurrencyIsoCode" />
@@ -51,7 +52,7 @@ else
                 <span id="CheckedBalanceContainer">
                     <Amount value="@database.GetCheckedBalance(account)" currency="@account.CurrencyIsoCode" />
                 </span>
-            </div>           
+            </div>
             <div class="account-balance-actions">
                 <a class="btn btn-primary" @onclick="Reconcile">Reconcile</a>
             </div>
@@ -238,6 +239,11 @@ else
         }
     }
 
+    [MemberNotNullWhen(true, "Search")]
+    private bool HasSearch() => !string.IsNullOrWhiteSpace(Search);
+
+    private bool ShowReconciledTransactions() => showReconciled || HasSearch();
+
     private async Task ToggleReconciledVisibility()
     {
         showReconciled = !showReconciled;
@@ -295,7 +301,7 @@ else
     private void LoadTransactions()
     {
         IEnumerable<Transaction> result = database.Transactions;
-        if (!showReconciled)
+        if (!ShowReconciledTransactions())
         {
             result = result.Where(t => !t.ReconciliationDate.HasValue);
         }
@@ -318,7 +324,7 @@ else
             result = result.Where(t => t.Category == category);
         }
 
-        if (!string.IsNullOrEmpty(Search))
+        if (!string.IsNullOrWhiteSpace(Search))
         {
             result = result.Where(t => FilterTransaction(t));
 
