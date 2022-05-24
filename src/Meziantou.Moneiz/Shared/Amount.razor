@@ -1,5 +1,5 @@
 ﻿<span class="amount-currency">@Currency</span>
-<span class="@GetClassName()">@Value.ToString("N2", System.Globalization.CultureInfo.InvariantCulture)</span>
+<span class="@GetClassName()">@AmountUtilities.FormatAmount(Value)</span>
 
 @code {
     [Parameter]

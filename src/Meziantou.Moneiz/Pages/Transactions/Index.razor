@@ -280,7 +280,7 @@ else
 
     private async Task Reconcile()
     {
-        var amount = database.GetCheckedBalance(account).ToString("N2", System.Globalization.CultureInfo.InvariantCulture);
+        var amount = AmountUtilities.FormatAmount(database.GetCheckedBalance(account));
         if (!await ConfirmService.Confirm($"Balance of '{account}': {account?.CurrencyIsoCode}{amount}.\nDo you confirm this balance?"))
             return;
 
@@ -326,6 +326,7 @@ else
 
         if (!string.IsNullOrWhiteSpace(Search))
         {
+            var amount = ExtractDecimalValues(Search)?.LastOrDefault();
             result = result.Where(t => FilterTransaction(t));
 
             bool FilterTransaction(Transaction transaction)
@@ -345,11 +346,29 @@ else
                 if (transaction.Comment?.Contains(Search, StringComparison.OrdinalIgnoreCase) == true)
                     return true;
 
+                if (amount.HasValue)
+                {
+                    if (transaction.Amount == amount)
+                        return true;
+                }
+
                 return false;
             }
         }
 
         transactions = result.OrderByDescending(t => t.ValueDate).ThenBy(t => t.Payee?.Name).ToList();
+
+        IEnumerable<decimal> ExtractDecimalValues(string text)
+        {
+            var parts = text.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            foreach (var part in parts)
+            {
+                // Ensure the value is formatted as it is displayed (12.00 instead of 12)
+                // Use same format as in Amount.razor
+                if (decimal.TryParse(part, NumberStyles.Any, CultureInfo.InvariantCulture, out var result) && part == AmountUtilities.FormatAmount(result))
+                    yield return result;
+            }
+        }
     }
 
     private void BeginInlineEdit(Transaction transaction, EditColumn column)
