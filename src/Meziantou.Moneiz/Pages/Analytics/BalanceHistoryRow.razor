@@ -2,6 +2,8 @@
 
 <tr class="@(Entry.Account == null ? "balancehistory-currency" : "")">
     <td>@(Entry.Account?.ToString() ?? Entry.Currency)</td>
+    <td><Amount Value="Entry.MinBalance" /></td>
+    <td><Amount Value="Entry.MaxBalance" /></td>
     <td><Amount Value="Entry.StartBalance" /></td>
     <td><Amount Value="Entry.EndBalance" /></td>
     <td><Amount Value="Entry.Difference" /> (@Entry.DifferencePercentage.ToString("+#0.0;-#0.0")%)</td>

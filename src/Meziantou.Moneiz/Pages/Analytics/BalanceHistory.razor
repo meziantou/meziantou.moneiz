@@ -2,6 +2,8 @@
     <thead>
         <tr>
             <th>Account</th>
+            <th>Minimum</th>
+            <th>Maximum</th>
             <th>Start balance</th>
             <th>End balance</th>
             <th>Diff</th>
@@ -15,6 +17,8 @@
                 Currency = group.Key,
                 StartBalance = group.Sum(g => g.StartBalance),
                 EndBalance = group.Sum(g => g.EndBalance),
+                MinBalance = group.Min(g => g.MinBalance),
+                MaxBalance = group.Max(g => g.MaxBalance),
             };
 
             if (ShowDetails || entry.StartBalance != 0 || entry.EndBalance != 0)

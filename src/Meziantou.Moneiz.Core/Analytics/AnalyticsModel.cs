@@ -62,6 +62,8 @@ namespace Meziantou.Moneiz.Core.Analytics
                     Currency = account.CurrencyIsoCode,
                     StartBalance = balances[0],
                     EndBalance = balances[^1],
+                    MinBalance = balances.Min(),
+                    MaxBalance = balances.Max(),
                     Balances = balances,
                 };
 
@@ -177,6 +179,8 @@ namespace Meziantou.Moneiz.Core.Analytics
 
         public decimal StartBalance { get; set; }
         public decimal EndBalance { get; set; }
+        public decimal MinBalance { get; set; }
+        public decimal MaxBalance { get; set; }
 
         public decimal Difference => EndBalance - StartBalance;
         public decimal DifferencePercentage => StartBalance != 0 ? (Difference / StartBalance * 100m) : 0m;
