@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Meziantou.Framework" Version="3.0.21" />
+    <PackageReference Include="Meziantou.Framework" Version="3.0.28" />
     <PackageReference Include="Meziantou.Framework.Scheduling" Version="2.0.3" />
   </ItemGroup>
 

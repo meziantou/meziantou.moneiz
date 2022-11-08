@@ -13,24 +13,21 @@ async function MoneizSetValue(name, value) {
   await localforage.setItem(name, value);
 }
 
-async function MoneizDownloadFile(name, content) {
-  // Convert the parameters to actual JS types
-  const nameStr = BINDING.conv_string(name);
-  const contentTypeStr = "application/octet-stream";
-  const contentArray = Blazor.platform.toUint8Array(content);
-
+function MoneizDownloadFile(name, content) {
+  const contentType = "application/octet-stream";
+  
   // Create the URL
-  const file = new File([contentArray], nameStr, { type: contentTypeStr });
+  const file = new File([content], name, { type: contentType });
   const exportUrl = URL.createObjectURL(file);
 
   // Create the <a> element and click on it
   const a = document.createElement("a");
   document.body.appendChild(a);
   a.href = exportUrl;
-  a.download = nameStr;
+  a.download = name;
   a.target = "_self";
   a.click();
-  //URL.revokeObjectURL(exportUrl); doesn't work with Safari
+  URL.revokeObjectURL(exportUrl);
 }
 
 function MoneizOpenInTab(url) {

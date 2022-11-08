@@ -66,10 +66,7 @@ namespace Meziantou.Moneiz
                                 _database = await Database.Load(result);
                             }
 
-                            if (_database == null)
-                            {
-                                _database = new Database();
-                            }
+                            _database ??= new Database();
                         }
 
                         _database.DatabaseChanged += Database_DatabaseChanged;
@@ -117,8 +114,7 @@ namespace Meziantou.Moneiz
             var database = await GetDatabase();
             var bytes = database.Export();
 
-            var runtime = (IJSUnmarshalledRuntime)_jsRuntime;
-            await runtime.ExportToFile(MoneizDownloadFileName, bytes);
+            await _jsRuntime.ExportToFile(MoneizDownloadFileName, bytes);
             await _jsRuntime.SetValue(MoneizLocalStorageChangedName, false);
             RaiseDatabaseSaved();
         }

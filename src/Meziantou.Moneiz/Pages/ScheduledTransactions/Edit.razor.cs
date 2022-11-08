@@ -63,10 +63,7 @@ namespace Meziantou.Moneiz.Pages.ScheduledTransactions
         private async Task OnSubmit()
         {
             var scheduledTransaction = database.GetScheduledTransactionById(Id);
-            if (scheduledTransaction == null)
-            {
-                scheduledTransaction = new ScheduledTransaction();
-            }
+            scheduledTransaction ??= new ScheduledTransaction();
 
             // Reset the schedule if StartDate or RRule changed
             var newRecurrenceRule = model.RecurrenceRule.TrimAndNullify();
