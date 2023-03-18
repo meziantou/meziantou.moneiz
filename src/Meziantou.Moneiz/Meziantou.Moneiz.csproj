@@ -20,14 +20,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Meziantou.AspNetCore.Components" Version="2.0.4" />
+    <PackageReference Include="Meziantou.AspNetCore.Components" Version="2.0.9" />
     <PackageReference Include="Meziantou.AspNetCore.Components.WebAssembly" Version="1.0.2" />
     <PackageReference Include="Meziantou.Framework.RelativeDate" Version="2.0.0" />
     <PackageReference Include="Meziantou.Framework.SimpleQueryLanguage" Version="1.0.0" />
     <PackageReference Include="Meziantou.Framework.ValueStopwatch" Version="1.0.3" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="7.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="7.0.0" PrivateAssets="all" />
-    <PackageReference Include="MudBlazor" Version="6.0.17" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="7.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="7.0.4" PrivateAssets="all" />
+    <PackageReference Include="MudBlazor" Version="6.2.0" />
   </ItemGroup>
 
   <ItemGroup>
