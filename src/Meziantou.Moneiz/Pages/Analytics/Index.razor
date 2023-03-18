@@ -52,11 +52,11 @@
         <input type="date" id="PeriodTo" @bind-value="@toDate" />
     </div>
 
-    <button @onclick="() => Generate()">Generate</button>
+    <button type="button" @onclick="() => Generate()">Generate</button>
 
     @if (model != null)
     {
-        <label><input type="checkbox" @bind-value="showDetails" /> Show details</label>
+        <label style="margin-top: 1rem"><input type="checkbox" @bind-value="showDetails" /> Show details</label>
         <BigTable Model="model.BigTable" ShowDetails="showDetails" />
         <BalanceHistory Model="model.BalanceHistory" ShowDetails="showDetails" />
         <BalanceHistoryChart Model="model.BalanceHistory" />
