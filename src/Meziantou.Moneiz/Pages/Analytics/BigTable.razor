@@ -31,7 +31,7 @@
                         <td class="bigtable-categoryname">@category.DisplayName</td>
                         @foreach (var total in category.Totals)
                         {
-                            <td><BigTableCell Cell="total" /></td>
+                            <td><BigTableCell Cell="total" ShowDetails="ShowDetails" /></td>
                         }
                         <td class="bigtable-totals"><BigTableCell Cell="category.Total" ShowDetails="ShowDetails" /></td>
                     </tr>
@@ -43,9 +43,9 @@
             <td class="bigtable-name">Total</td>
             @foreach (var total in Model.Totals)
             {
-                <td><BigTableCell Cell="total" /></td>
+                <td><BigTableCell Cell="total" ShowDetails="ShowDetails" /></td>
             }
-            <td class="bigtable-totals"><BigTableCell Cell="Model.Total" /></td>
+            <td class="bigtable-totals"><BigTableCell Cell="Model.Total" ShowDetails="ShowDetails" /></td>
         </tr>
     </tbody>
 </table>
