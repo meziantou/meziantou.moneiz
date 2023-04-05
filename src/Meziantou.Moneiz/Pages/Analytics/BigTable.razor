@@ -4,6 +4,7 @@
     <thead>
         <tr>
             <th></th>
+            <th></th>
             @foreach (var date in Model.Dates)
             {
                 <th>@date.ToString("MMM yy")</th>
@@ -14,7 +15,8 @@
     <tbody>
         @foreach (var group in Model.CategoryGroups)
         {
-            <tr class="bigtable-categorygroup">
+            <tr class="bigtable-categorygroup @(!Options.IsGroupEnabled(group.Name) ? "bigtable-disabled" : "")">
+                <td class="bigtable-checkbox"><label><input type="checkbox" @onclick="() => Options.ToggleDisabledCategoryGroup(group.Name)" checked="@Options.IsGroupEnabled(group.Name)" /></label></td>
                 <td class="bigtable-categorygroupname">@group.DisplayName</td>
                 @foreach (var total in group.Totals)
                 {
@@ -27,7 +29,8 @@
             {
                 @foreach (var category in group.Categories)
                 {
-                    <tr class="bigtable-category">
+                    <tr class="bigtable-category @(!Options.IsGroupEnabled(group.Name) || !Options.IsCategoryEnabled(category.CategoryId) ? "bigtable-disabled" : "")">
+                        <td class="bigtable-checkbox"><label><input type="checkbox" @onclick="() => Options.ToggleDisabledCategory(category.CategoryId)" checked="@(Options.IsCategoryEnabled(category.CategoryId) && Options.IsGroupEnabled(group.Name))" /></label></td>
                         <td class="bigtable-categoryname">@category.DisplayName</td>
                         @foreach (var total in category.Totals)
                         {
@@ -40,6 +43,7 @@
         }
 
         <tr class="bigtable-totals">
+            <td class="bigtable-checkbox"></td>
             <td class="bigtable-name">Total</td>
             @foreach (var total in Model.Totals)
             {
@@ -50,10 +54,13 @@
     </tbody>
 </table>
 
-@code{
+@code {
     [Parameter]
     public bool ShowDetails { get; set; }
 
     [Parameter]
     public Meziantou.Moneiz.Core.Analytics.BigTable Model { get; set; }
+
+    [CascadingParameter]
+    public Meziantou.Moneiz.Core.Analytics.AnalyticsOptions Options { get; set; }
 }

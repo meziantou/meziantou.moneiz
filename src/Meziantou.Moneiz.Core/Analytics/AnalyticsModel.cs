@@ -13,15 +13,16 @@ namespace Meziantou.Moneiz.Core.Analytics
         public BalanceHistory? BalanceHistory { get; set; }
         public BigTable? BigTable { get; set; }
 
-        public static AnalyticsModel Build(Database database, IReadOnlyList<Account> accounts, DateOnly fromDate, DateOnly toDate)
+        public static AnalyticsModel Build(Database database, AnalyticsOptions options)
         {
+            var accounts = options.SelectedAccounts.ToArray();
             return new AnalyticsModel
             {
                 Accounts = accounts,
-                PeriodFrom = fromDate,
-                PeriodTo = toDate,
-                BalanceHistory = BuildBalanceHistory(database, accounts, fromDate, toDate),
-                BigTable = BuildBigTable(database, accounts, fromDate, toDate),
+                PeriodFrom = options.FromDate,
+                PeriodTo = options.ToDate,
+                BalanceHistory = BuildBalanceHistory(database, accounts, options.FromDate, options.ToDate),
+                BigTable = BuildBigTable(database, options),
             };
         }
 
@@ -73,10 +74,13 @@ namespace Meziantou.Moneiz.Core.Analytics
             return result;
         }
 
-        private static BigTable BuildBigTable(Database database, IEnumerable<Account> accounts, DateOnly fromDate, DateOnly toDate)
+        private static BigTable BuildBigTable(Database database, AnalyticsOptions options)
         {
+            var fromDate = options.FromDate;
+            var toDate = options.ToDate;
+
             var transactionGroups = database.Transactions
-                .Where(t => accounts.Contains(t.Account) && t.ValueDate >= fromDate && t.ValueDate <= toDate)
+                .Where(t => t.Account != null && options.SelectedAccounts.Contains(t.Account) && t.ValueDate >= fromDate && t.ValueDate <= toDate)
                 .GroupBy(c => c.Category);
 
             var bigTable = new BigTable
@@ -90,11 +94,13 @@ namespace Meziantou.Moneiz.Core.Analytics
 
             foreach (var group in transactionGroups)
             {
+                var categoryId = -1;
                 string? categoryName = null;
                 string? categoryGroupName = null;
                 if (group.Key != null)
                 {
                     var category = group.Key;
+                    categoryId = category.Id;
                     categoryName = category.Name;
                     categoryGroupName = category.GroupName;
                 }
@@ -109,7 +115,7 @@ namespace Meziantou.Moneiz.Core.Analytics
                     bigTable.CategoryGroups.Add(bigTableGroup);
                 }
 
-                var bigTableCategory = new BigTableCategory(bigTableGroup)
+                var bigTableCategory = new BigTableCategory(bigTableGroup, categoryId)
                 {
                     Name = categoryName,
                 };
@@ -117,8 +123,11 @@ namespace Meziantou.Moneiz.Core.Analytics
 
                 foreach (var transaction in group)
                 {
-                    var index = (transaction.ValueDate.Year - fromDate.Year) * 12 + (transaction.ValueDate.Month - fromDate.Month);
-                    bigTableCategory.Totals[index].Add(transaction.Amount);
+                    if (options.IsCategoryEnabled(transaction.CategoryId ?? -1) && options.IsGroupEnabled(transaction.Category?.GroupName ?? ""))
+                    {
+                        var index = (transaction.ValueDate.Year - fromDate.Year) * 12 + (transaction.ValueDate.Month - fromDate.Month);
+                        bigTableCategory.Totals[index].Add(transaction.Amount);
+                    }
                 }
             }
 

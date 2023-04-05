@@ -1,75 +1,73 @@
 ﻿@page "/analytics"
 @using Meziantou.Moneiz.Core.Analytics
 @inject DatabaseProvider DatabaseProvider
+@implements IDisposable
 
 <h1>Analytics</h1>
-
-<LoadingIndicator IsLoading="database == null">
-    <h2>Accounts</h2>
-    <div class="form-group">
-        <div style="display: flex; gap: 12px">
-            @foreach (var currency in allAccounts.Select(a => a.CurrencyIsoCode).Distinct().OrderBy(c => c))
-            {
-                <a @onclick="() => SelectByCurrency(currency)">@currency</a>
-            }
+<CascadingValue Value="options" IsFixed="true">
+    <LoadingIndicator IsLoading="database == null">
+        <h2>Accounts</h2>
+        <div class="form-group">
+            <div style="display: flex; gap: 12px">
+                @foreach (var currency in allAccounts.Select(a => a.CurrencyIsoCode).Distinct().OrderBy(c => c))
+                {
+                    <a @onclick="() => SelectByCurrency(currency)">@currency</a>
+                }
+            </div>
+            <div style="display: flex; gap: 12px">
+                <a @onclick="() => SelectByType(AccountType.Current)">Current</a>
+                <a @onclick="() => SelectByType(AccountType.Saving)">Saving</a>
+            </div>
+            <ul class="unstyled">
+                @foreach (var account in allAccounts)
+                {
+                    <li>
+                        <label>
+                            <input name="Accounts" type="checkbox" checked="@options.SelectedAccounts.Contains(account)" @onclick="() => Toggle(account)">
+                            <span>@account (@account.CurrencyIsoCode)</span>
+                            @if (account.Closed)
+                            {
+                                <span> (closed)</span>
+                            }
+                        </label>
+                    </li>
+                }
+            </ul>
         </div>
-        <div style="display: flex; gap: 12px">
-            <a @onclick="() => SelectByType(AccountType.Current)">Current</a>
-            <a @onclick="() => SelectByType(AccountType.Saving)">Saving</a>
+
+        <h2>Period</h2>
+        <div class="form-group">
+            <a @onclick="()=>SelectCurrentMonth()">This month</a> -
+            <a @onclick="()=>SelectCurrentYear()">This year</a> -
+            <a @onclick="()=> SelectLastXDays(30)">Last 30 days</a> -
+            <a @onclick="()=>SelectLastXDays(365)">Last 365 days</a>
         </div>
-        <ul class="unstyled">
-            @foreach (var account in allAccounts)
-            {
-                <li>
-                    <label>
-                        <input name="Accounts" type="checkbox" checked="@selectedAccounts.Contains(account)" @onclick="() => Toggle(account)">
-                        <span>@account (@account.CurrencyIsoCode)</span>
-                        @if (account.Closed)
-                        {
-                            <span> (closed)</span>
-                        }
-                    </label>
-                </li>
-            }
-        </ul>
-    </div>
 
-    <h2>Period</h2>
-    <div class="form-group">
-        <a @onclick="()=>SelectCurrentMonth()">This month</a> -
-        <a @onclick="()=>SelectCurrentYear()">This year</a> -
-        <a @onclick="()=> SelectLastXDays(30)">Last 30 days</a> -
-        <a @onclick="()=>SelectLastXDays(365)">Last 365 days</a>
-    </div>
+        <div class="form-group">
+            <label for="PeriodFrom">From</label>
+            <input type="date" id="PeriodFrom" @bind-value="@options.FromDate" />
+        </div>
 
-    <div class="form-group">
-        <label for="PeriodFrom">From</label>
-        <input type="date" id="PeriodFrom" @bind-value="@fromDate" />
-    </div>
+        <div class="form-group">
+            <label for="PeriodTo">To</label>
+            <input type="date" id="PeriodTo" @bind-value="@options.ToDate" />
+        </div>
 
-    <div class="form-group">
-        <label for="PeriodTo">To</label>
-        <input type="date" id="PeriodTo" @bind-value="@toDate" />
-    </div>
+        <button type="button" @onclick="() => Generate()">Generate</button>
 
-    <button type="button" @onclick="() => Generate()">Generate</button>
-
-    @if (model != null)
-    {
-        <label style="margin-top: 1rem"><input type="checkbox" @bind-value="showDetails" /> Show details</label>
-        <BigTable Model="model.BigTable" ShowDetails="showDetails" />
-        <BalanceHistory Model="model.BalanceHistory" ShowDetails="showDetails" />
-        <BalanceHistoryChart Model="model.BalanceHistory" />
-    }
-</LoadingIndicator>
-
+        @if (model != null)
+        {
+            <label style="margin-top: 1rem"><input type="checkbox" @bind-value="showDetails" /> Show details</label>
+            <BigTable Model="model.BigTable" ShowDetails="showDetails" />
+            <BalanceHistory Model="model.BalanceHistory" ShowDetails="showDetails" />
+            <BalanceHistoryChart Model="model.BalanceHistory" />
+        }
+    </LoadingIndicator>
+</CascadingValue>
 @code {
     Database database;
     IList<Account> allAccounts;
-
-    DateOnly fromDate = Database.GetToday().AddDays(-30);
-    DateOnly toDate = Database.GetToday();
-    HashSet<Account> selectedAccounts = new HashSet<Account>();
+    AnalyticsOptions options = new();
 
     bool showDetails;
     AnalyticsModel model;
@@ -78,21 +76,29 @@
     {
         database = await DatabaseProvider.GetDatabase();
         allAccounts = database.VisibleAccounts.Concat(database.ClosedAccounts).ToList();
-        selectedAccounts.AddRange(allAccounts.Where(account => !account.Closed));
+        options.SelectedAccounts.AddRange(allAccounts.Where(account => !account.Closed));
+
+        options.OptionChanged += OnOptionsChanged;
+    }
+
+    private void OnOptionsChanged(object sender, EventArgs e)
+    {
+        Generate();
+        InvokeAsync(StateHasChanged);
     }
 
     private void SelectByCurrency(string currency)
     {
         var accounts = allAccounts.Where(a => a.CurrencyIsoCode == currency);
-        if (selectedAccounts.Intersect(accounts).Count() != accounts.Count())
+        if (options.SelectedAccounts.Intersect(accounts).Count() != accounts.Count())
         {
-            selectedAccounts.AddRange(accounts);
+            options.SelectedAccounts.AddRange(accounts);
         }
         else
         {
             foreach (var account in accounts)
             {
-                selectedAccounts.Remove(account);
+                options.SelectedAccounts.Remove(account);
             }
         }
     }
@@ -100,47 +106,52 @@
     private void SelectByType(AccountType accountType)
     {
         var accounts = allAccounts.Where(a => a.AccountType == accountType);
-        if (selectedAccounts.Intersect(accounts).Count() != accounts.Count())
+        if (options.SelectedAccounts.Intersect(accounts).Count() != accounts.Count())
         {
-            selectedAccounts.AddRange(accounts);
+            options.SelectedAccounts.AddRange(accounts);
         }
         else
         {
             foreach (var account in accounts)
             {
-                selectedAccounts.Remove(account);
+                options.SelectedAccounts.Remove(account);
             }
         }
     }
 
     private void SelectCurrentYear()
     {
-        toDate = Database.GetToday();
-        fromDate = new DateOnly(toDate.Year, 1, 1);
+        options.ToDate = Database.GetToday();
+        options.FromDate = new DateOnly(options.ToDate.Year, 1, 1);
     }
 
     private void SelectCurrentMonth()
     {
-        toDate = Database.GetToday();
-        fromDate = new DateOnly(toDate.Year, toDate.Month, 1);
+        options.ToDate = Database.GetToday();
+        options.FromDate = new DateOnly(options.ToDate.Year, options.ToDate.Month, 1);
     }
 
     private void SelectLastXDays(int days)
     {
-        toDate = Database.GetToday();
-        fromDate = toDate.AddDays(-days);
+        options.ToDate = Database.GetToday();
+        options.FromDate = options.ToDate.AddDays(-days);
     }
 
     private void Toggle(Account account)
     {
-        if (!selectedAccounts.Remove(account))
+        if (!options.SelectedAccounts.Remove(account))
         {
-            selectedAccounts.Add(account);
+            options.SelectedAccounts.Add(account);
         }
     }
 
     private void Generate()
     {
-        model = AnalyticsModel.Build(database, selectedAccounts.ToArray(), fromDate, toDate);
+        model = AnalyticsModel.Build(database, options);
+    }
+
+    public void Dispose()
+    {
+        options.OptionChanged -= OnOptionsChanged;
     }
 }
