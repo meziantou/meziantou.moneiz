@@ -78,6 +78,10 @@ else
                     <th>Category</th>
                     <th>Title</th>
                     <th>Amount</th>
+                    @if (CanShowAccountBalanceOnTransaction())
+                    {
+                        <th>Balance</th>
+                    }
                     <th>Comment</th>
                     <th></th>
                 </tr>
@@ -105,7 +109,10 @@ else
         </table>
     </RepeaterContainerTemplate>
 
-    <ItemTemplate Context="transaction">
+    <ItemTemplate Context="transactionWithAccountBalance">
+        @{
+            var (transaction, accountBalance) = transactionWithAccountBalance;
+        }
         <tr>
             <td class="transaction-state">
                 @if (transaction.State == TransactionState.Reconciliated)
@@ -125,10 +132,10 @@ else
                 @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Date)
                 {
                     <input type="date" @ref="inlineEditorInput"
-                       value="@BindConverter.FormatValue(currentEdit.ValueDate, "yyyy-MM-dd", CultureInfo.InvariantCulture)"
-                       @oninput="e => currentEdit.ValueDate = ParseDate((string)e.Value, currentEdit.ValueDate)"
-                       @onkeydown="e => InlineEditorKeyDown(e)"
-                       @onblur="e => EndInlineEdit()" />
+                           value="@BindConverter.FormatValue(currentEdit.ValueDate, "yyyy-MM-dd", CultureInfo.InvariantCulture)"
+                    @oninput="e => currentEdit.ValueDate = ParseDate((string)e.Value, currentEdit.ValueDate)"
+                    @onkeydown="e => InlineEditorKeyDown(e)"
+                    @onblur="e => EndInlineEdit()" />
                 }
                 else
                 {
@@ -145,24 +152,28 @@ else
                 @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Amount)
                 {
                     <input type="number" @ref="inlineEditorInput"
-                       value="@currentEdit.Amount"
-                       @oninput="e => currentEdit.Amount = Convert.ToDecimal(e.Value)"
-                       @onkeydown="e => InlineEditorKeyDown(e)"
-                       @onblur="e => EndInlineEdit()" />
+                           value="@currentEdit.Amount"
+                    @oninput="e => currentEdit.Amount = Convert.ToDecimal(e.Value)"
+                    @onkeydown="e => InlineEditorKeyDown(e)"
+                    @onblur="e => EndInlineEdit()" />
                 }
                 else
                 {
                     <Amount Value="@transaction.Amount" Currency="@transaction.Account.CurrencyIsoCode" />
                 }
             </td>
+            @if (CanShowAccountBalanceOnTransaction())
+            {
+                <td><Amount Value="@accountBalance" Currency="@transaction.Account.CurrencyIsoCode" /></td>
+            }
             <td @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Comment)">
                 @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Comment)
                 {
                     <input type="text" @ref="inlineEditorInput"
-                       value="@currentEdit.Comment"
-                       @oninput="e => currentEdit.Comment = (string)e.Value"
-                       @onkeydown="e => InlineEditorKeyDown(e)"
-                       @onblur="e => EndInlineEdit()" />
+                           value="@currentEdit.Comment"
+                    @oninput="e => currentEdit.Comment = (string)e.Value"
+                    @onkeydown="e => InlineEditorKeyDown(e)"
+                    @onblur="e => EndInlineEdit()" />
                 }
                 else
                 {
@@ -194,7 +205,7 @@ else
     MoneizDisplaySettings displaySettings;
     Database database;
     Account account;
-    IReadOnlyList<Transaction> transactions;
+    IReadOnlyList<TransactionWithAccountBalance> transactions;
     int pageIndex = 0;
     DateOnly today;
     bool showReconciled = true;
@@ -239,7 +250,10 @@ else
         }
     }
 
-    [MemberNotNullWhen(true, "Search")]
+    [MemberNotNullWhen(true, nameof(AccountId))]
+    private bool CanShowAccountBalanceOnTransaction() => AccountId != null && CategoryId == null && PayeeId == null && !HasSearch();
+
+    [MemberNotNullWhen(true, nameof(Search))]
     private bool HasSearch() => !string.IsNullOrWhiteSpace(Search);
 
     private bool ShowReconciledTransactions() => showReconciled || HasSearch();
@@ -311,6 +325,10 @@ else
             account = database.GetAccountById(AccountId);
             result = result.Where(t => t.Account == account);
         }
+        else
+        {
+            account = null;
+        }
 
         if (PayeeId != null)
         {
@@ -330,7 +348,24 @@ else
             result = result.Where(t => query.Evaluate(t));
         }
 
-        transactions = result.OrderByDescending(t => t.ValueDate).ThenBy(t => t.Payee?.Name).ToList();
+        result = result.OrderByDescending(t => t.ValueDate).ThenBy(t => t.Payee?.Name);
+
+        if (CanShowAccountBalanceOnTransaction())
+        {
+            var balance = database.GetBalance(account);
+            var list = new List<TransactionWithAccountBalance>(capacity: 200);
+            foreach (var transaction in result)
+            {
+                list.Add(new(transaction, balance));
+                balance -= transaction.Amount;
+            }
+
+            transactions = list;
+        }
+        else
+        {
+            transactions = result.Select(t => new TransactionWithAccountBalance(t, 0m)).ToArray();
+        }
     }
 
     private void BeginInlineEdit(Transaction transaction, EditColumn column)
@@ -370,10 +405,12 @@ else
         return defaultValue;
     }
 
-    enum EditColumn
+    private enum EditColumn
     {
         Amount,
         Comment,
         Date,
     }
+
+    private record struct TransactionWithAccountBalance(Transaction Transaction, decimal AccountBalanceAfterTransaction);
 }
