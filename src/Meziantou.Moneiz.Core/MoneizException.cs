@@ -16,9 +16,5 @@ namespace Meziantou.Moneiz.Core
         public MoneizException(string message, Exception innerException) : base(message, innerException)
         {
         }
-
-        protected MoneizException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-        }
     }
 }
