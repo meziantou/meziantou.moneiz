@@ -8,7 +8,7 @@ namespace Meziantou.Moneiz.Core.Analytics
         public decimal Incomes { get; set; }
         public decimal Expenses { get; set; }
 
-        public decimal Total => Incomes + Expenses;
+        public readonly decimal Total => Incomes + Expenses;
 
         public void Add(decimal amount)
         {
