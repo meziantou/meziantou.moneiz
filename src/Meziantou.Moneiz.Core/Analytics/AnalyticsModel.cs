@@ -38,7 +38,8 @@ namespace Meziantou.Moneiz.Core.Analytics
             {
                 var balances = new decimal[(int)(toDate.ToDateTime(TimeOnly.MinValue) - fromDate.ToDateTime(TimeOnly.MinValue)).TotalDays + 1];
 
-                balances[0] = database.GetBalance(account, fromDate.AddDays(-1));
+                var initialBalance = database.GetBalance(account, fromDate.AddDays(-1));
+                balances[0] = initialBalance;
                 var transactions = database.Transactions.Where(t => t.Account == account && t.ValueDate >= fromDate && t.ValueDate <= toDate).OrderBy(t => t.ValueDate);
                 var currentIndex = 0;
                 foreach (var transaction in transactions)
@@ -46,7 +47,6 @@ namespace Meziantou.Moneiz.Core.Analytics
                     var index = (int)(transaction.ValueDate.ToDateTime(TimeOnly.MinValue) - fromDate.ToDateTime(TimeOnly.MinValue)).TotalDays;
                     if (currentIndex < index)
                     {
-
                         balances.AsSpan(currentIndex + 1, index - currentIndex).Fill(balances[currentIndex]);
                         currentIndex = index;
                     }
@@ -61,7 +61,7 @@ namespace Meziantou.Moneiz.Core.Analytics
                 {
                     Account = account,
                     Currency = account.CurrencyIsoCode,
-                    StartBalance = balances[0],
+                    StartBalance = initialBalance,
                     EndBalance = balances[^1],
                     MinBalance = balances.Min(),
                     MaxBalance = balances.Max(),
