@@ -84,7 +84,7 @@ namespace Meziantou.Moneiz.CoreTests
             {
                 Converters = { new DateOnlyJsonConverter() }
             };
-            var date = System.Text.Json.JsonSerializer.Deserialize<DateOnly>("\"2022-01-02T04:11:43.888Z\"", options);
+            var date = JsonSerializer.Deserialize<DateOnly>("\"2022-01-02T04:11:43.888Z\"", options);
             Assert.Equal(new DateOnly(2022, 01, 02), date);
         }
 
@@ -95,7 +95,7 @@ namespace Meziantou.Moneiz.CoreTests
             {
                 Converters = { new NullableDateOnlyJsonConverter() }
             };
-            var date = System.Text.Json.JsonSerializer.Deserialize<DateOnly?>("\"2022-01-02T04:11:43.888Z\"", options);
+            var date = JsonSerializer.Deserialize<DateOnly?>("\"2022-01-02T04:11:43.888Z\"", options);
             Assert.Equal(new DateOnly(2022, 01, 02), date);
         }
     }
