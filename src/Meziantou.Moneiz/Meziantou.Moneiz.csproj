@@ -25,9 +25,9 @@
     <PackageReference Include="Meziantou.Framework.RelativeDate" Version="2.0.0" />
     <PackageReference Include="Meziantou.Framework.SimpleQueryLanguage" Version="1.0.1" />
     <PackageReference Include="Meziantou.Framework.ValueStopwatch" Version="1.0.3" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.0-preview.6.23329.11" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.0-preview.6.23329.11" PrivateAssets="all" />
-    <PackageReference Include="MudBlazor" Version="6.7.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.0-preview.7.23375.9" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.0-preview.7.23375.9" PrivateAssets="all" />
+    <PackageReference Include="MudBlazor" Version="6.9.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Meziantou.Framework" Version="3.0.35" />
+    <PackageReference Include="Meziantou.Framework" Version="3.0.38" />
     <PackageReference Include="Meziantou.Framework.Scheduling" Version="2.0.3" />
   </ItemGroup>
 

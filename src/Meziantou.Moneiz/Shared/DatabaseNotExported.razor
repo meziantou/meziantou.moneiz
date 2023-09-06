@@ -58,7 +58,7 @@
 
     private async Task GetState()
     {
-        var hasUnexportedChanges = await DatabaseProvider.HasUnexportedChanges();
+        var hasUnexportedChanges = await DatabaseProvider.HasLocalChanges();
         canExportToGitHub = await DatabaseProvider.IsGitHubConfigured();
         needExport = hasUnexportedChanges;
         StateHasChanged();

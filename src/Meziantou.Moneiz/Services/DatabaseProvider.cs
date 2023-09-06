@@ -148,7 +148,7 @@ namespace Meziantou.Moneiz
             DatabaseChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        public async ValueTask<bool> HasUnexportedChanges()
+        public async ValueTask<bool> HasLocalChanges()
         {
             return (await _jsRuntime.GetValue<bool?>(MoneizLocalStorageChangedName)) ?? false;
         }
@@ -198,7 +198,7 @@ namespace Meziantou.Moneiz
             // Check sha with persisted sha
             if (file != null && !configuration.GitHubSha.EqualsIgnoreCase(file.Sha))
             {
-                Console.WriteLine($"GitHub dabatabase sha '{file.Sha}' is different from current db sha '{configuration.GitHubSha}'");
+                Console.WriteLine($"GitHub database sha '{file.Sha}' is different from current db sha '{configuration.GitHubSha}'");
                 if (await _confirmService.Confirm("The database on GitHub is not the same as the one synchronized on this machine. Do you want to overwrite it?") == false)
                     return;
             }
@@ -223,7 +223,7 @@ namespace Meziantou.Moneiz
 
         public async Task<bool> HasNewVersionOnGitHub()
         {
-            if (await HasUnexportedChanges())
+            if (await HasLocalChanges())
                 return false;
 
             var configuration = await LoadConfiguration();
@@ -242,9 +242,9 @@ namespace Meziantou.Moneiz
 
         public async Task ImportFromGitHub(bool implicitLoad)
         {
-            if (!implicitLoad && await HasUnexportedChanges())
+            if (!implicitLoad && await HasLocalChanges())
             {
-                if (await _confirmService.Confirm("You have unexported changes. Importing the database will destroy them. Do you want to proceed?") == false)
+                if (await _confirmService.Confirm("You have local changes. Importing the database will destroy them. Do you want to proceed?") == false)
                     return;
             }
 
@@ -273,13 +273,13 @@ namespace Meziantou.Moneiz
 
             if (implicitLoad && (configuration.GitHubSha == null || file.Sha.EqualsIgnoreCase(configuration.GitHubSha)))
             {
-                Console.WriteLine($"GitHub dabatabase sha '{file.Sha}' is equals to the current db sha '{configuration.GitHubSha}' => Do not import");
+                Console.WriteLine($"GitHub database sha '{file.Sha}' is equals to the current db sha '{configuration.GitHubSha}' => Do not import");
                 return;
             }
 
             if (implicitLoad)
             {
-                Console.WriteLine($"GitHub dabatabase sha '{file.Sha}' is different from current db sha '{configuration.GitHubSha}'");
+                Console.WriteLine($"GitHub database sha '{file.Sha}' is different from current db sha '{configuration.GitHubSha}'");
                 if (await _confirmService.Confirm("A new version of the database is available on GitHub. Do you want to load it?") == false)
                     return;
             }
