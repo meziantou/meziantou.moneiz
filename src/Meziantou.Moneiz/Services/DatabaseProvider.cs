@@ -210,8 +210,9 @@ namespace Meziantou.Moneiz
                 sha = file?.Sha,
             });
 
-            files = await httpClient.GetFromJsonAsync<GitHubContent[]>(url);
-            file = files.First(f => f.Name == MoneizDownloadFileName);
+            putResult.EnsureSuccessStatusCode();
+
+            file = (await putResult.Content.ReadFromJsonAsync<UpdateFileResult>()).Content;
 
             // Save the blob sha
             configuration.GitHubSha = file.Sha;
@@ -328,6 +329,12 @@ namespace Meziantou.Moneiz
         {
             [JsonPropertyName("login")]
             public string Login { get; set; }
+        }
+
+        private sealed class UpdateFileResult
+        {
+            [JsonPropertyName("content")]
+            public GitHubContent Content { get; set; }
         }
 
         private sealed class GitHubContent
