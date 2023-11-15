@@ -6,29 +6,29 @@
 
 <h1>Create scheduled transaction</h1>
 
-<LoadingIndicator IsLoading="database == null">
-    <EditForm Model="@model" OnValidSubmit="OnSubmit">
+<LoadingIndicator IsLoading="_database is null">
+    <EditForm Model="@_model" OnValidSubmit="OnSubmit">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
         <div class="form-group">
             <label>
                 Name
-                <InputText @bind-Value="model.Name" />
+                <InputText @bind-Value="_model.Name" />
             </label>
         </div>
 
         <div class="form-group">
             <label>
                 Start date
-                <InputDate @bind-Value="model.StartDate" />
+                <InputDate @bind-Value="_model.StartDate" />
             </label>
         </div>
 
         <div class="form-group">
             <label>
                 Recurrence rule (<a href="https://www.textmagic.com/free-tools/rrule-generator">generator</a>)
-                <InputText @bind-Value="model.RecurrenceRule" list="RecurrenceRuleSamples" />
+                <InputText @bind-Value="_model.RecurrenceRule" list="RecurrenceRuleSamples" />
             </label>
 
             <datalist id="RecurrenceRuleSamples">
@@ -39,19 +39,19 @@
             </datalist>
         </div>
 
-        @if (database.VisibleAccounts.Skip(1).Any())
+        @if (_database.VisibleAccounts.Skip(1).Any())
         {
             <div class="form-group">
                 <label>
                     Inter-account
-                    <InputCheckbox @bind-Value="model.InterAccount" />
+                    <InputCheckbox @bind-Value="_model.InterAccount" />
                 </label>
             </div>
         }
 
         <div class="form-group">
             <label>
-                @if (model.InterAccount)
+                @if (_model.InterAccount)
                 {
                     @: Debited account
                 }
@@ -59,30 +59,30 @@
                 {
                     @: Account
                 }
-                <InputSelectAccount @bind-Value="model.DebitedAccount" />
+                <InputSelectAccount @bind-Value="_model.DebitedAccount" />
             </label>
         </div>
 
-        @if (model.InterAccount)
+        @if (_model.InterAccount)
         {
             <div class="form-group">
                 <label>
                     CreditedAccount
-                    <InputSelectAccount @bind-Value="model.CreditedAccount" />
+                    <InputSelectAccount @bind-Value="_model.CreditedAccount" />
                 </label>
             </div>
         }
 
-        @if (!model.InterAccount)
+        @if (!_model.InterAccount)
         {
             <div class="form-group">
                 <label>
                     Payee
-                    <InputText @bind-Value="model.Payee" list="Payees" @onfocusout="OnPayeeChanged" />
+                    <InputText @bind-Value="_model.Payee" list="Payees" @onfocusout="OnPayeeChanged" />
                 </label>
 
                 <datalist id="Payees">
-                    @foreach (var payee in database.Payees.OrderBy(p => p.Name))
+                    @foreach (var payee in _database.Payees.OrderBy(p => p.Name))
                     {
                         <option value="@payee" />
                     }
@@ -93,26 +93,24 @@
         <div class="form-group">
             <label>
                 Category
-                <InputSelectCategory IsOptional="true" @bind-Value="model.Category" />
+                <InputSelectCategory IsOptional="true" @bind-Value="_model.Category" />
             </label>
         </div>
 
         <div class="form-group">
             <label>
                 Amount
-                <InputNumber @bind-Value="model.Amount" />
+                <InputNumber @bind-Value="_model.Amount" />
             </label>
         </div>
 
         <div class="form-group">
             <label>
                 Comment
-                <InputText @bind-Value="model.Comment" />
+                <InputText @bind-Value="_model.Comment" />
             </label>
         </div>
 
         <button type="submit">Submit</button>
     </EditForm>
 </LoadingIndicator>
-
-

@@ -1,7 +1,6 @@
-﻿namespace Meziantou.Moneiz.Core
+﻿namespace Meziantou.Moneiz.Core;
+
+public sealed class SaveOptions
 {
-    public sealed class SaveOptions
-    {
-        public bool IndicateDbChanged { get; set; }
-    }
+    public bool IndicateDbChanged { get; set; }
 }

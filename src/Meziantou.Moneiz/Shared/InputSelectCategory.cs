@@ -7,92 +7,90 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Rendering;
 
-namespace Meziantou.Moneiz.Shared
+namespace Meziantou.Moneiz.Shared;
+
+public sealed class InputSelectCategory : InputBase<Category>
 {
-    public sealed class InputSelectCategory : InputBase<Category>
+    private Database _database;
+
+    [Inject]
+    private DatabaseProvider DatabaseProvider { get; set; }
+
+    protected override async Task OnInitializedAsync()
     {
-        private Database _database;
+        _database = await DatabaseProvider.GetDatabase();
+    }
 
-        [Inject]
-        private DatabaseProvider DatabaseProvider { get; set; }
+    [Parameter]
+    public bool IsOptional { get; set; }
 
-        protected override async Task OnInitializedAsync()
+    protected override string FormatValueAsString(Category value)
+    {
+        return value?.Id.ToStringInvariant();
+    }
+
+    protected override bool TryParseValueFromString(string value, out Category result, out string validationErrorMessage)
+    {
+        if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var resultInt))
         {
-            _database = await DatabaseProvider.GetDatabase();
+            result = _database.GetCategoryById(resultInt);
+            validationErrorMessage = null;
+            return true;
         }
-
-        [Parameter]
-        public bool IsOptional { get; set; }
-
-        protected override string FormatValueAsString(Category value)
+        else
         {
-            return value?.Id.ToStringInvariant();
-        }
-
-        protected override bool TryParseValueFromString(string value, out Category result, out string validationErrorMessage)
-        {
-            if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var resultInt))
+            if (IsOptional)
             {
-                result = _database.GetCategoryById(resultInt);
+                result = null;
                 validationErrorMessage = null;
                 return true;
             }
-            else
+
+            result = default;
+            validationErrorMessage = "The chosen value is not a valid number.";
+            return false;
+        }
+    }
+
+    protected override void BuildRenderTree(RenderTreeBuilder builder)
+    {
+        builder.OpenElement(0, "select");
+        builder.AddMultipleAttributes(1, AdditionalAttributes);
+        builder.AddAttribute(2, "class", CssClass);
+        builder.AddAttribute(3, "value", BindConverter.FormatValue(CurrentValueAsString));
+        builder.AddAttribute(4, "onchange", EventCallback.Factory.CreateBinder<string>(this, value => CurrentValueAsString = value, CurrentValueAsString));
+
+        if (_database is not null)
+        {
+            if (IsOptional)
             {
-                if (IsOptional)
+                builder.OpenElement(5, "option");
+                builder.CloseElement();
+            }
+
+            foreach (var group in _database.Categories.GroupBy(c => c.GroupName, System.StringComparer.Ordinal).OrderBy(g => g.Key, System.StringComparer.Ordinal))
+            {
+                if (group.Key is not null)
                 {
-                    result = null;
-                    validationErrorMessage = null;
-                    return true;
+                    builder.OpenElement(6, "optgroup");
+                    builder.AddAttribute(7, "label", group.Key);
                 }
 
-                result = default;
-                validationErrorMessage = "The chosen value is not a valid number.";
-                return false;
-            }
-        }
-
-        protected override void BuildRenderTree(RenderTreeBuilder builder)
-        {
-            builder.OpenElement(0, "select");
-            builder.AddMultipleAttributes(1, AdditionalAttributes);
-            builder.AddAttribute(2, "class", CssClass);
-            builder.AddAttribute(3, "value", BindConverter.FormatValue(CurrentValueAsString));
-            builder.AddAttribute(4, "onchange", EventCallback.Factory.CreateBinder<string>(this, value => CurrentValueAsString = value, CurrentValueAsString));
-
-            if (_database != null)
-            {
-                var i = 5;
-                if (IsOptional)
+                foreach (var category in group.OrderBy(c => c.Name, System.StringComparer.Ordinal))
                 {
-                    builder.OpenElement(i++, "option");
+                    builder.OpenElement(8, "option");
+                    builder.AddAttribute(9, "value", category.Id.ToStringInvariant());
+                    builder.AddContent(10, category.Name);
                     builder.CloseElement();
                 }
 
-                foreach (var group in _database.Categories.GroupBy(c => c.GroupName).OrderBy(g => g.Key))
+                if (group.Key is not null)
                 {
-                    if (group.Key != null)
-                    {
-                        builder.OpenElement(i++, "optgroup");
-                        builder.AddAttribute(i++, "label", group.Key);
-                    }
-
-                    foreach (var category in group.OrderBy(c => c.Name))
-                    {
-                        builder.OpenElement(i++, "option");
-                        builder.AddAttribute(i++, "value", category.Id.ToStringInvariant());
-                        builder.AddContent(i++, category.Name);
-                        builder.CloseElement();
-                    }
-
-                    if (group.Key != null)
-                    {
-                        builder.CloseElement();
-                    }
+                    builder.CloseElement();
                 }
             }
-
-            builder.CloseElement();
         }
+
+        builder.CloseElement();
     }
 }

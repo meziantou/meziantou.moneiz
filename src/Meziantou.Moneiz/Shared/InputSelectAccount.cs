@@ -6,62 +6,60 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Rendering;
 
-namespace Meziantou.Moneiz.Shared
+namespace Meziantou.Moneiz.Shared;
+
+public sealed class InputSelectAccount : InputBase<Account>
 {
-    public sealed class InputSelectAccount : InputBase<Account>
+    private Database _database;
+
+    [Inject]
+    private DatabaseProvider DatabaseProvider { get; set; }
+
+    protected override async Task OnInitializedAsync()
     {
-        private Database _database;
+        _database = await DatabaseProvider.GetDatabase();
+    }
 
-        [Inject]
-        private DatabaseProvider DatabaseProvider { get; set; }
+    protected override string FormatValueAsString(Account value)
+    {
+        return value?.Id.ToStringInvariant();
+    }
 
-        protected override async Task OnInitializedAsync()
+    protected override bool TryParseValueFromString(string value, out Account result, out string validationErrorMessage)
+    {
+        if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var resultInt))
         {
-            _database = await DatabaseProvider.GetDatabase();
+            result = _database.GetAccountById(resultInt);
+            validationErrorMessage = null;
+            return true;
         }
-
-        protected override string FormatValueAsString(Account value)
+        else
         {
-            return value?.Id.ToStringInvariant();
+            result = default;
+            validationErrorMessage = "The chosen value is not a valid number.";
+            return false;
         }
+    }
 
-        protected override bool TryParseValueFromString(string value, out Account result, out string validationErrorMessage)
+    protected override void BuildRenderTree(RenderTreeBuilder builder)
+    {
+        builder.OpenElement(0, "select");
+        builder.AddMultipleAttributes(1, AdditionalAttributes);
+        builder.AddAttribute(2, "class", CssClass);
+        builder.AddAttribute(3, "value", BindConverter.FormatValue(CurrentValueAsString));
+        builder.AddAttribute(4, "onchange", EventCallback.Factory.CreateBinder<string>(this, value => CurrentValueAsString = value, CurrentValueAsString));
+
+        if (_database is not null)
         {
-            if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var resultInt))
+            foreach (var account in _database.VisibleAccounts)
             {
-                result = _database.GetAccountById(resultInt);
-                validationErrorMessage = null;
-                return true;
-            }
-            else
-            {
-                result = default;
-                validationErrorMessage = "The chosen value is not a valid number.";
-                return false;
+                builder.OpenElement(5, "option");
+                builder.AddAttribute(6, "value", account.Id.ToStringInvariant());
+                builder.AddContent(7, account.ToString());
+                builder.CloseElement();
             }
         }
 
-        protected override void BuildRenderTree(RenderTreeBuilder builder)
-        {
-            builder.OpenElement(0, "select");
-            builder.AddMultipleAttributes(1, AdditionalAttributes);
-            builder.AddAttribute(2, "class", CssClass);
-            builder.AddAttribute(3, "value", BindConverter.FormatValue(CurrentValueAsString));
-            builder.AddAttribute(4, "onchange", EventCallback.Factory.CreateBinder<string>(this, value => CurrentValueAsString = value, CurrentValueAsString));
-
-            if (_database != null)
-            {
-                var i = 5;
-                foreach (var account in _database.VisibleAccounts)
-                {
-                    builder.OpenElement(i++, "option");
-                    builder.AddAttribute(i++, "value", account.Id.ToStringInvariant());
-                    builder.AddContent(i++, account.ToString());
-                    builder.CloseElement();
-                }
-            }
-
-            builder.CloseElement();
-        }
+        builder.CloseElement();
     }
 }

@@ -1,8 +1,10 @@
-﻿namespace Meziantou.Moneiz.Core
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace Meziantou.Moneiz.Core;
+
+[SuppressMessage("Design", "CA1008:Enums should have zero value")]
+public enum CashFlow
 {
-    public enum CashFlow
-    {
-        Expense = -1,
-        Income = 1,
-    }
+    Expense = -1,
+    Income = 1,
 }

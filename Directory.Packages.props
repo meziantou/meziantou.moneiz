@@ -1,0 +1,22 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+  <ItemGroup>
+    <GlobalPackageReference Include="Meziantou.DotNet.CodingStandard" Version="1.0.91" />
+    <PackageVersion Include="Meziantou.AspNetCore.Components" Version="2.0.9" />
+    <PackageVersion Include="Meziantou.AspNetCore.Components.WebAssembly" Version="1.0.2" />
+    <PackageVersion Include="Meziantou.Framework" Version="3.0.38" />
+    <PackageVersion Include="Meziantou.Framework.RelativeDate" Version="2.0.0" />
+    <PackageVersion Include="Meziantou.Framework.Scheduling" Version="2.0.3" />
+    <PackageVersion Include="Meziantou.Framework.SimpleQueryLanguage" Version="1.0.1" />
+    <PackageVersion Include="Meziantou.Framework.ValueStopwatch" Version="1.0.3" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageVersion Include="MudBlazor" Version="6.11.0" />
+    <PackageVersion Include="xunit" Version="2.6.1" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.3" />
+  </ItemGroup>
+</Project>

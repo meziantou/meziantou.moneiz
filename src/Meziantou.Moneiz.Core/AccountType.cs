@@ -1,8 +1,7 @@
-﻿namespace Meziantou.Moneiz.Core
+﻿namespace Meziantou.Moneiz.Core;
+
+public enum AccountType
 {
-    public enum AccountType
-    {
-        Current,
-        Saving,
-    }
+    Current,
+    Saving,
 }

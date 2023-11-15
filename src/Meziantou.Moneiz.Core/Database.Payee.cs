@@ -1,101 +1,100 @@
 ﻿using System;
 using System.Linq;
 
-namespace Meziantou.Moneiz.Core
+namespace Meziantou.Moneiz.Core;
+
+public partial class Database
 {
-    public partial class Database
+    public Payee? GetPayeeById(int? id)
     {
-        public Payee? GetPayeeById(int? id)
-        {
-            if (id == null)
-                return null;
+        if (id is null)
+            return null;
 
-            return Payees.FirstOrDefault(item => item.Id == id);
+        return Payees.FirstOrDefault(item => item.Id == id);
+    }
+
+    public Payee? GetPayeeByName(string? name)
+    {
+        if (name is null)
+            return null;
+
+        return Payees.FirstOrDefault(item => item.Name == name);
+    }
+
+    public Payee? GetOrCreatePayeeByName(string? name)
+    {
+        if (name is null)
+            return null;
+
+        var payee = Payees.FirstOrDefault(item => item.Name == name);
+        if (payee is null)
+        {
+            payee = new Payee { Name = name };
+            SavePayee(payee);
         }
 
-        public Payee? GetPayeeByName(string? name)
-        {
-            if (name == null)
-                return null;
+        return payee;
+    }
 
-            return Payees.FirstOrDefault(item => item.Name == name);
+    public void RemovePayee(Payee payee)
+    {
+        using (DeferEvents())
+        {
+            ReplacePayee(oldPayee: payee, newPayee: null);
+            Payees.Remove(payee);
+            RaiseDatabaseChanged();
         }
+    }
 
-        public Payee? GetOrCreatePayeeByName(string? name)
+    public void SavePayee(Payee payee)
+    {
+        using (DeferEvents())
         {
-            if (name == null)
-                return null;
-
-            var payee = Payees.FirstOrDefault(item => item.Name == name);
-            if (payee == null)
+            var existingPayee = Payees.FirstOrDefault(item => item.Id == payee.Id);
+            if (existingPayee is null)
             {
-                payee = new Payee { Name = name };
-                SavePayee(payee);
+                payee.Id = GenerateId(Payees, item => item.Id);
             }
 
-            return payee;
+            AddOrReplace(Payees, existingPayee, payee);
+            MergePayees();
+            RaiseDatabaseChanged();
         }
+    }
 
-        public void RemovePayee(Payee payee)
+    private void MergePayees()
+    {
+        foreach (var group in Payees.GroupBy(c => c.Name, StringComparer.Ordinal))
         {
-            using (DeferEvents())
+            var first = group.First();
+            foreach (var item in group.Skip(1))
             {
-                ReplacePayee(oldPayee: payee, newPayee: null);
-                Payees.Remove(payee);
-                RaiseDatabaseChanged();
+                ReplacePayee(oldPayee: item, newPayee: first);
+                RemovePayee(item);
+            }
+        }
+    }
+
+    private void ReplacePayee(Payee? oldPayee, Payee? newPayee)
+    {
+        ReplacePayee(newPayee, p => p == oldPayee);
+    }
+
+    private void ReplacePayee(Payee? newPayee, Func<Payee?, bool> predicate)
+    {
+        foreach (var scheduledTransactions in ScheduledTransactions)
+        {
+            if (predicate(scheduledTransactions.Payee))
+            {
+                scheduledTransactions.Payee = newPayee;
             }
         }
 
-        public void SavePayee(Payee payee)
+        foreach (var transactions in Transactions)
         {
-            using (DeferEvents())
+            if (predicate(transactions.Payee))
             {
-                var existingPayee = Payees.FirstOrDefault(item => item.Id == payee.Id);
-                if (existingPayee == null)
-                {
-                    payee.Id = GenerateId(Payees, item => item.Id);
-                }
-
-                AddOrReplace(Payees, existingPayee, payee);
-                MergePayees();
-                RaiseDatabaseChanged();
-            }
-        }
-
-        private void MergePayees()
-        {
-            foreach (var group in Payees.GroupBy(c => c.Name))
-            {
-                var first = group.First();
-                foreach (var item in group.Skip(1))
-                {
-                    ReplacePayee(oldPayee: item, newPayee: first);
-                    RemovePayee(item);
-                }
-            }
-        }
-
-        private void ReplacePayee(Payee? oldPayee, Payee? newPayee)
-        {
-            ReplacePayee(newPayee, p => p == oldPayee);
-        }
-
-        private void ReplacePayee(Payee? newPayee, Func<Payee?, bool> predicate)
-        {
-            foreach (var scheduledTransactions in ScheduledTransactions)
-            {
-                if (predicate(scheduledTransactions.Payee))
-                {
-                    scheduledTransactions.Payee = newPayee;
-                }
-            }
-
-            foreach (var transactions in Transactions)
-            {
-                if (predicate(transactions.Payee))
-                {
-                    transactions.Payee = newPayee;
-                }
+                transactions.Payee = newPayee;
             }
         }
     }

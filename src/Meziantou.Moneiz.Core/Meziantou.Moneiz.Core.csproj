@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Meziantou.Framework" Version="3.0.38" />
-    <PackageReference Include="Meziantou.Framework.Scheduling" Version="2.0.3" />
+    <PackageReference Include="Meziantou.Framework" />
+    <PackageReference Include="Meziantou.Framework.Scheduling" />
   </ItemGroup>
 
   <ItemGroup>

@@ -33,6 +33,7 @@
 
     string[] formats = { "yyyy/MM/dd", "dd/MM/yyyy", "MM/dd/yyyy", "dd MMM yyyy" };
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "Get user time")]
     protected override async Task OnInitializedAsync()
     {
         DateTime now = DateTime.Now;

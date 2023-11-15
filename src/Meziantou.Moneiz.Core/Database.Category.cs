@@ -4,93 +4,92 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using Meziantou.Framework;
 
-namespace Meziantou.Moneiz.Core
+namespace Meziantou.Moneiz.Core;
+
+public partial class Database
 {
-    public partial class Database
+    [JsonIgnore]
+    public IEnumerable<string> CategoryGroups => Categories.Select(c => c.GroupName).WhereNotNull().Distinct(StringComparer.Ordinal);
+
+    public Category? GetCategoryById(int? id)
     {
-        [JsonIgnore]
-        public IEnumerable<string> CategoryGroups => Categories.Select(c => c.GroupName).WhereNotNull().Distinct();
+        if (id is null)
+            return null;
 
-        public Category? GetCategoryById(int? id)
+        return Categories.FirstOrDefault(item => item.Id == id);
+    }
+
+
+    public void RemoveCategory(Category category)
+    {
+        using (DeferEvents())
         {
-            if (id == null)
-                return null;
-
-            return Categories.FirstOrDefault(item => item.Id == id);
+            ReplaceCategory(oldCategory: category, newCategory: null);
+            Categories.Remove(category);
+            RaiseDatabaseChanged();
         }
+    }
 
-
-        public void RemoveCategory(Category category)
+    public void SaveCategory(Category category)
+    {
+        using (DeferEvents())
         {
-            using (DeferEvents())
+            var existingCategory = Categories.FirstOrDefault(item => item.Id == category.Id);
+            if (existingCategory is null)
             {
-                ReplaceCategory(oldCategory: category, newCategory: null);
-                Categories.Remove(category);
-                RaiseDatabaseChanged();
+                category.Id = GenerateId(Categories, item => item.Id);
             }
+
+            AddOrReplace(Categories, existingCategory, category);
+            MergeCategories();
+            RaiseDatabaseChanged();
         }
+    }
 
-        public void SaveCategory(Category category)
+    private void MergeCategories()
+    {
+        using (DeferEvents())
         {
-            using (DeferEvents())
+            foreach (var group in Categories.GroupBy(c => (c.GroupName, c.Name)))
             {
-                var existingCategory = Categories.FirstOrDefault(item => item.Id == category.Id);
-                if (existingCategory == null)
+                var first = group.First();
+                foreach (var c in group.Skip(1))
                 {
-                    category.Id = GenerateId(Categories, item => item.Id);
-                }
-
-                AddOrReplace(Categories, existingCategory, category);
-                MergeCategories();
-                RaiseDatabaseChanged();
-            }
-        }
-
-        private void MergeCategories()
-        {
-            using (DeferEvents())
-            {
-                foreach (var group in Categories.GroupBy(c => (c.GroupName, c.Name)))
-                {
-                    var first = group.First();
-                    foreach (var c in group.Skip(1))
-                    {
-                        ReplaceCategory(oldCategory: c, newCategory: first);
-                        RemoveCategory(c);
-                    }
+                    ReplaceCategory(oldCategory: c, newCategory: first);
+                    RemoveCategory(c);
                 }
             }
         }
+    }
 
-        private void ReplaceCategory(Category? oldCategory, Category? newCategory)
+    private void ReplaceCategory(Category? oldCategory, Category? newCategory)
+    {
+        ReplaceCategory(newCategory, c => c == oldCategory);
+    }
+
+    private void ReplaceCategory(Category? newCategory, Func<Category?, bool> predicate)
+    {
+        foreach (var payee in Payees)
         {
-            ReplaceCategory(newCategory, c => c == oldCategory);
+            if (predicate(payee.DefaultCategory))
+            {
+                payee.DefaultCategory = newCategory;
+            }
         }
 
-        private void ReplaceCategory(Category? newCategory, Func<Category?, bool> predicate)
+        foreach (var scheduledTransactions in ScheduledTransactions)
         {
-            foreach (var payee in Payees)
+            if (predicate(scheduledTransactions.Category))
             {
-                if (predicate(payee.DefaultCategory))
-                {
-                    payee.DefaultCategory = newCategory;
-                }
+                scheduledTransactions.Category = newCategory;
             }
+        }
 
-            foreach (var scheduledTransactions in ScheduledTransactions)
+        foreach (var transactions in Transactions)
+        {
+            if (predicate(transactions.Category))
             {
-                if (predicate(scheduledTransactions.Category))
-                {
-                    scheduledTransactions.Category = newCategory;
-                }
-            }
-
-            foreach (var transactions in Transactions)
-            {
-                if (predicate(transactions.Category))
-                {
-                    transactions.Category = newCategory;
-                }
+                transactions.Category = newCategory;
             }
         }
     }

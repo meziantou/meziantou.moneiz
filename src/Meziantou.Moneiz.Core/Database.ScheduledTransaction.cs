@@ -1,137 +1,136 @@
 ﻿using System;
 using System.Linq;
 
-namespace Meziantou.Moneiz.Core
+namespace Meziantou.Moneiz.Core;
+
+public partial class Database
 {
-    public partial class Database
+    public ScheduledTransaction? GetScheduledTransactionById(int? id)
     {
-        public ScheduledTransaction? GetScheduledTransactionById(int? id)
-        {
-            if (id == null)
-                return null;
+        if (id is null)
+            return null;
 
-            return ScheduledTransactions.FirstOrDefault(item => item.Id == id);
-        }
+        return ScheduledTransactions.FirstOrDefault(item => item.Id == id);
+    }
 
-        public void SaveScheduledTransaction(ScheduledTransaction scheduledTransaction)
+    public void SaveScheduledTransaction(ScheduledTransaction scheduledTransaction)
+    {
+        using (DeferEvents())
         {
-            using (DeferEvents())
+            var existingTransaction = ScheduledTransactions.FirstOrDefault(item => item.Id == scheduledTransaction.Id);
+            if (existingTransaction is null)
             {
-                var existingTransaction = ScheduledTransactions.FirstOrDefault(item => item.Id == scheduledTransaction.Id);
-                if (existingTransaction == null)
-                {
-                    scheduledTransaction.Id = GenerateId(ScheduledTransactions, item => item.Id);
-                }
+                scheduledTransaction.Id = GenerateId(ScheduledTransactions, item => item.Id);
+            }
 
-                AddOrReplace(ScheduledTransactions, existingTransaction, scheduledTransaction);
+            AddOrReplace(ScheduledTransactions, existingTransaction, scheduledTransaction);
 
+            if (scheduledTransaction.NextOccurenceDate == null)
+            {
+                ProcessScheduledTransactions();
+            }
+
+            RaiseDatabaseChanged();
+        }
+    }
+
+    public void RemoveScheduledTransaction(ScheduledTransaction scheduledTransaction)
+    {
+        if (ScheduledTransactions.Remove(scheduledTransaction))
+        {
+            RaiseDatabaseChanged();
+        }
+    }
+
+    public void ProcessScheduledTransactions()
+    {
+        using (DeferEvents())
+        {
+            var utcNow = GetToday();
+            var date = utcNow.AddDays(5);
+
+            foreach (var scheduledTransaction in ScheduledTransactions.ToList())
+            {
+                ProcessScheduledTransaction(scheduledTransaction, date);
+            }
+        }
+    }
+
+    private void ProcessScheduledTransaction(ScheduledTransaction scheduledTransaction, DateOnly createUntil)
+    {
+        using (DeferEvents())
+        {
+            var reccurenceRule = scheduledTransaction.RecurrenceRule;
+            if (reccurenceRule is null)
+            {
+                // Invalid recurrence rule => remove the scheduled transaction
+                RemoveScheduledTransaction(scheduledTransaction);
+                return;
+            }
+
+            if (scheduledTransaction.NextOccurenceDate == null)
+            {
+                DateOnly? recurrenceDate = reccurenceRule.GetNextOccurrence(scheduledTransaction.StartDate.ToDateTime(TimeOnly.MinValue)) is DateTime nextDateTime ? DateOnly.FromDateTime(nextDateTime) : null;
+                scheduledTransaction.NextOccurenceDate = recurrenceDate;
                 if (scheduledTransaction.NextOccurenceDate == null)
                 {
-                    ProcessScheduledTransactions();
-                }
-
-                RaiseDatabaseChanged();
-            }
-        }
-
-        public void RemoveScheduledTransaction(ScheduledTransaction scheduledTransaction)
-        {
-            if (ScheduledTransactions.Remove(scheduledTransaction))
-            {
-                RaiseDatabaseChanged();
-            }
-        }
-
-        public void ProcessScheduledTransactions()
-        {
-            using (DeferEvents())
-            {
-                var utcNow = GetToday();
-                var date = utcNow.AddDays(5);
-
-                foreach (var scheduledTransaction in ScheduledTransactions.ToList())
-                {
-                    ProcessScheduledTransaction(scheduledTransaction, date);
+                    // recurrence ended => remove the scheduled transaction
+                    RemoveScheduledTransaction(scheduledTransaction);
+                    return;
                 }
             }
-        }
 
-        private void ProcessScheduledTransaction(ScheduledTransaction scheduledTransaction, DateOnly createUntil)
-        {
-            using (DeferEvents())
+            while (scheduledTransaction.NextOccurenceDate < createUntil)
             {
-                var reccurenceRule = scheduledTransaction.RecurrenceRule;
-                if (reccurenceRule == null)
+                var transactionDate = scheduledTransaction.NextOccurenceDate.Value;
+                var interAccount = scheduledTransaction.CreditedAccount is not null;
+                var transaction = new Transaction
                 {
-                    // Invalid recurrence rule => remove the scheduled transaction
+                    Account = scheduledTransaction.Account,
+                    Category = scheduledTransaction.Category,
+                    Comment = scheduledTransaction.Comment,
+                    Amount = interAccount ? -Math.Abs(scheduledTransaction.Amount) : scheduledTransaction.Amount,
+                    Payee = scheduledTransaction.Payee,
+                    ValueDate = transactionDate,
+                };
+
+                SaveTransaction(transaction);
+
+                if (scheduledTransaction.CreditedAccount is not null)
+                {
+                    var creditedTransaction = new Transaction
+                    {
+                        Account = scheduledTransaction.CreditedAccount,
+                        Category = scheduledTransaction.Category,
+                        Comment = scheduledTransaction.Comment,
+                        Amount = Math.Abs(scheduledTransaction.Amount),
+                        Payee = scheduledTransaction.Payee,
+                        ValueDate = transactionDate,
+                        LinkedTransaction = transaction,
+                    };
+
+                    transaction.LinkedTransaction = creditedTransaction;
+                    SaveTransaction(transaction);
+                    SaveTransaction(creditedTransaction);
+                }
+
+                DateOnly? newRecurrenceDate = reccurenceRule.GetNextOccurrence(scheduledTransaction.NextOccurenceDate.Value.AddDays(1).ToDateTime(TimeOnly.MinValue)) is DateTime nextDateTime ? DateOnly.FromDateTime(nextDateTime) : null;
+                if (scheduledTransaction.NextOccurenceDate == newRecurrenceDate)
+                {
+                    // Infinite loop, remove the transaction
                     RemoveScheduledTransaction(scheduledTransaction);
                     return;
                 }
 
-                if (scheduledTransaction.NextOccurenceDate == null)
+                if (newRecurrenceDate == null)
                 {
-                    DateOnly? recurrenceDate = reccurenceRule.GetNextOccurrence(scheduledTransaction.StartDate.ToDateTime(TimeOnly.MinValue)) is DateTime nextDateTime ? DateOnly.FromDateTime(nextDateTime) : null;
-                    scheduledTransaction.NextOccurenceDate = recurrenceDate;
-                    if (scheduledTransaction.NextOccurenceDate == null)
-                    {
-                        // recurrence ended => remove the scheduled transaction
-                        RemoveScheduledTransaction(scheduledTransaction);
-                        return;
-                    }
+                    // Recurrence ended, remove the transaction
+                    RemoveScheduledTransaction(scheduledTransaction);
+                    return;
                 }
 
-                while (scheduledTransaction.NextOccurenceDate < createUntil)
-                {
-                    var transactionDate = scheduledTransaction.NextOccurenceDate.Value;
-                    var interAccount = scheduledTransaction.CreditedAccount != null;
-                    var transaction = new Transaction
-                    {
-                        Account = scheduledTransaction.Account,
-                        Category = scheduledTransaction.Category,
-                        Comment = scheduledTransaction.Comment,
-                        Amount = interAccount ? -Math.Abs(scheduledTransaction.Amount) : scheduledTransaction.Amount,
-                        Payee = scheduledTransaction.Payee,
-                        ValueDate = transactionDate,
-                    };
-
-                    SaveTransaction(transaction);
-
-                    if (scheduledTransaction.CreditedAccount != null)
-                    {
-                        var creditedTransaction = new Transaction
-                        {
-                            Account = scheduledTransaction.CreditedAccount,
-                            Category = scheduledTransaction.Category,
-                            Comment = scheduledTransaction.Comment,
-                            Amount = Math.Abs(scheduledTransaction.Amount),
-                            Payee = scheduledTransaction.Payee,
-                            ValueDate = transactionDate,
-                            LinkedTransaction = transaction,
-                        };
-
-                        transaction.LinkedTransaction = creditedTransaction;
-                        SaveTransaction(transaction);
-                        SaveTransaction(creditedTransaction);
-                    }
-
-                    DateOnly? newRecurrenceDate = reccurenceRule.GetNextOccurrence(scheduledTransaction.NextOccurenceDate.Value.AddDays(1).ToDateTime(TimeOnly.MinValue)) is DateTime nextDateTime ? DateOnly.FromDateTime(nextDateTime) : null;
-                    if (scheduledTransaction.NextOccurenceDate == newRecurrenceDate)
-                    {
-                        // Infinite loop, remove the transaction
-                        RemoveScheduledTransaction(scheduledTransaction);
-                        return;
-                    }
-
-                    if (newRecurrenceDate == null)
-                    {
-                        // Recurrence ended, remove the transaction
-                        RemoveScheduledTransaction(scheduledTransaction);
-                        return;
-                    }
-
-                    scheduledTransaction.NextOccurenceDate = newRecurrenceDate;
-                    RaiseDatabaseChanged();
-                }
+                scheduledTransaction.NextOccurenceDate = newRecurrenceDate;
+                RaiseDatabaseChanged();
             }
         }
     }
