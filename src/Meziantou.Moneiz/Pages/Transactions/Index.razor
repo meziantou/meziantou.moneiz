@@ -195,6 +195,8 @@ else
                     {
                         <DropdownItem><a class="view-transactions" href="/categories/@(transaction.Category.Id)/transactions"><i class="fas fa-search"></i> View Transactions with category '@transaction.Category.Name'</a></DropdownItem>
                     }
+
+                    <DropdownItem><a href="/scheduler/create?CreateFromTransactionId=@(transaction.Id)"><i class="fas fa-calendar"></i> Make recurrent</a></DropdownItem>
                 </Dropdown>
             </td>
         </tr>

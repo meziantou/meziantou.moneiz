@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using Meziantou.Moneiz.Core;
 using Meziantou.Moneiz.Extensions;
 using Meziantou.Moneiz.Services;
+using Meziantou.Framework;
 
 namespace Meziantou.Moneiz.Pages.ScheduledTransactions;
 
@@ -18,6 +19,9 @@ public partial class Edit
 
     [Parameter, SupplyParameterFromQuery]
     public int? DuplicatedScheduleTransactionId { get; set; }
+
+    [Parameter, SupplyParameterFromQuery]
+    public int? CreateFromTransactionId { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -57,6 +61,19 @@ public partial class Edit
                 CreditedAccount = _database.DefaultAccount,
                 StartDate = Database.GetToday(),
             };
+
+            if (CreateFromTransactionId is not null)
+            {
+                var transaction = _database.GetTransactionById(CreateFromTransactionId);
+                if (transaction is not null)
+                {
+                    _model.Payee = transaction.Payee?.Name;
+                    _model.Category = transaction.Category;
+                    _model.Amount = transaction.Amount;
+                    _model.StartDate = transaction.ValueDate.AddDays(1);
+                    _model.RecurrenceRule = $"FREQ=MONTHLY;BYMONTHDAY={transaction.ValueDate.Day.ToStringInvariant()};INTERVAL=1";
+                }
+            }
         }
     }
 
