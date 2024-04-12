@@ -1,17 +1,10 @@
 ﻿namespace Meziantou.Moneiz.Core;
 
-public sealed class Currency
+public sealed class Currency(string isoName, string displayName, decimal exchangeRate)
 {
-    public Currency(string isoName, string displayName, decimal exchangeRate)
-    {
-        IsoName = isoName;
-        DisplayName = displayName;
-        ExchangeRate = exchangeRate;
-    }
-
-    public string? IsoName { get; set; }
-    public string? DisplayName { get; set; }
-    public decimal ExchangeRate { get; }
+    public string? IsoName { get; set; } = isoName;
+    public string? DisplayName { get; set; } = displayName;
+    public decimal ExchangeRate { get; } = exchangeRate;
 
     public override string ToString() => IsoName + " - " + DisplayName;
 }

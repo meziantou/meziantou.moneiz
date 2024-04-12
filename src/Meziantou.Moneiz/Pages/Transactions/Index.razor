@@ -1,6 +1,7 @@
 ﻿@page "/transactions"
 @page "/accounts/{AccountId:int}/transactions"
 @page "/categories/{CategoryId:int}/transactions"
+@page "/category-group/{CategoryGroup}/transactions"
 @page "/payees/{PayeeId:int}/transactions"
 @using System.Globalization
 @using System.Diagnostics.CodeAnalysis
@@ -133,9 +134,9 @@ else
                 {
                     <input type="date" @ref="inlineEditorInput"
                            value="@BindConverter.FormatValue(currentEdit.ValueDate, "yyyy-MM-dd", CultureInfo.InvariantCulture)"
-                    @oninput="e => currentEdit.ValueDate = ParseDate((string)e.Value, currentEdit.ValueDate)"
-                    @onkeydown="e => InlineEditorKeyDown(e)"
-                    @onblur="e => EndInlineEdit()" />
+                           @oninput="e => currentEdit.ValueDate = ParseDate((string)e.Value, currentEdit.ValueDate)"
+                           @onkeydown="e => InlineEditorKeyDown(e)"
+                           @onblur="e => EndInlineEdit()" />
                 }
                 else
                 {
@@ -153,9 +154,9 @@ else
                 {
                     <input type="number" @ref="inlineEditorInput"
                            value="@currentEdit.Amount"
-                    @oninput="e => currentEdit.Amount = Convert.ToDecimal(e.Value)"
-                    @onkeydown="e => InlineEditorKeyDown(e)"
-                    @onblur="e => EndInlineEdit()" />
+                           @oninput="e => currentEdit.Amount = Convert.ToDecimal(e.Value)"
+                           @onkeydown="e => InlineEditorKeyDown(e)"
+                           @onblur="e => EndInlineEdit()" />
                 }
                 else
                 {
@@ -171,9 +172,9 @@ else
                 {
                     <input type="text" @ref="inlineEditorInput"
                            value="@currentEdit.Comment"
-                    @oninput="e => currentEdit.Comment = (string)e.Value"
-                    @onkeydown="e => InlineEditorKeyDown(e)"
-                    @onblur="e => EndInlineEdit()" />
+                           @oninput="e => currentEdit.Comment = (string)e.Value"
+                           @onkeydown="e => InlineEditorKeyDown(e)"
+                           @onblur="e => EndInlineEdit()" />
                 }
                 else
                 {
@@ -194,6 +195,11 @@ else
                     @if (transaction.Category != null)
                     {
                         <DropdownItem><a class="view-transactions" href="/categories/@(transaction.Category.Id)/transactions"><i class="fas fa-search"></i> View Transactions with category '@transaction.Category.Name'</a></DropdownItem>
+
+                        if (transaction.Category.GroupName != null)
+                        {
+                            <DropdownItem><a class="view-transactions" href="/category-group/@(Uri.EscapeDataString(transaction.Category.GroupName))/transactions"><i class="fas fa-search"></i> View Transactions with category group '@transaction.Category.GroupName'</a></DropdownItem>
+                        }
                     }
 
                     <DropdownItem><a href="/scheduler/create?CreateFromTransactionId=@(transaction.Id)"><i class="fas fa-calendar"></i> Make recurrent</a></DropdownItem>
@@ -220,6 +226,9 @@ else
 
     [Parameter]
     public int? CategoryId { get; set; }
+
+    [Parameter]
+    public string CategoryGroup { get; set; }
 
     [Parameter]
     public int? PayeeId { get; set; }
@@ -253,7 +262,7 @@ else
     }
 
     [MemberNotNullWhen(true, nameof(AccountId))]
-    private bool CanShowAccountBalanceOnTransaction() => AccountId != null && CategoryId == null && PayeeId == null && !HasSearch();
+    private bool CanShowAccountBalanceOnTransaction() => AccountId != null && CategoryId == null && CategoryGroup == null && PayeeId == null && !HasSearch();
 
     [MemberNotNullWhen(true, nameof(Search))]
     private bool HasSearch() => !string.IsNullOrWhiteSpace(Search);
@@ -342,6 +351,11 @@ else
         {
             var category = database.GetCategoryById(CategoryId);
             result = result.Where(t => t.Category == category);
+        }
+
+        if (!string.IsNullOrEmpty(CategoryGroup))
+        {
+            result = result.Where(t => string.Equals(t.Category?.GroupName, CategoryGroup, StringComparison.OrdinalIgnoreCase));
         }
 
         if (!string.IsNullOrWhiteSpace(Search))

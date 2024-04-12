@@ -15,9 +15,13 @@ internal static class TransactionQueries
     private static QueryBuilder<Transaction> CreateTransactionQuery()
     {
         var builder = new QueryBuilder<Transaction>();
+        builder.AddHandler("bank", (transaction, text) => transaction.Account?.Bank?.Contains(text, StringComparison.OrdinalIgnoreCase) == true);
+        builder.AddHandler("account", (transaction, text) => transaction.Account?.Name?.Contains(text, StringComparison.OrdinalIgnoreCase) == true);
+        builder.AddHandler<int>("accountId", (transaction, id) => transaction.Account?.Id == id);
         builder.AddHandler("title", (transaction, text) => transaction.FinalTitle?.Contains(text, StringComparison.OrdinalIgnoreCase) == true);
         builder.AddHandler("payee", (transaction, text) => transaction.Payee?.Name?.Contains(text, StringComparison.OrdinalIgnoreCase) == true);
         builder.AddHandler("category", (transaction, text) => transaction.Category?.Name?.Contains(text, StringComparison.OrdinalIgnoreCase) == true);
+        builder.AddHandler("categoryGroup", (transaction, text) => transaction.Category?.GroupName.Contains(text, StringComparison.OrdinalIgnoreCase) == true);
         builder.AddHandler("comment", (transaction, text) => transaction.Comment?.Contains(text, StringComparison.OrdinalIgnoreCase) == true);
         builder.AddHandler<TransactionState>("state", (transaction, value) => transaction.State == value);
         builder.AddRangeHandler<DateOnly>("date", (transaction, range) => range.IsInRange(transaction.ValueDate));
