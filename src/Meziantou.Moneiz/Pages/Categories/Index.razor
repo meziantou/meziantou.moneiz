@@ -29,7 +29,10 @@
             <td class="commands">
                 <Dropdown>
                     <DropdownItem><a class="view-transactions" href="/categories/@category.Id/transactions"><i class="fas fa-search"></i> View Transactions</a></DropdownItem>
-                    <DropdownItem><a class="view-transactions" href="/category-group/@(Uri.EscapeDataString(category.GroupName))/transactions"><i class="fas fa-search"></i> View Transactions with category group '@category.GroupName'</a></DropdownItem>
+                    @if (category.GroupName != null)
+                    {
+                        <DropdownItem><a class="view-transactions" href="/category-group/@(Uri.EscapeDataString(category.GroupName))/transactions"><i class="fas fa-search"></i> View Transactions with category group '@category.GroupName'</a></DropdownItem>
+                    }
                     <DropdownItem><a class="edit" href="/categories/@category.Id/edit"><i class="fas fa-pencil-alt"></i> Edit</a></DropdownItem>
                     <DropdownItem><button type="button" class="btn-link" @onclick="() => Delete(category)"><i class="fas fa-trash" style="color: red"></i> Delete</button></DropdownItem>
                 </Dropdown>
@@ -41,17 +44,31 @@
 @code {
     Database database;
 
+
+
     protected override async Task OnInitializedAsync()
+
     {
+
         database = await DatabaseProvider.GetDatabase();
+
     }
 
+
+
     private async Task Delete(Category category)
+
     {
+
         if (await ConfirmService.Confirm($"Do you really want to delete '{category}'?"))
+
         {
+
             database.RemoveCategory(category);
+
             await DatabaseProvider.Save();
+
         }
+
     }
 }
