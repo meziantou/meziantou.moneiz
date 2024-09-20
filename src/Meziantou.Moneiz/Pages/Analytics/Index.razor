@@ -9,6 +9,10 @@
         <h2>Accounts</h2>
         <div class="form-group">
             <div style="display: flex; gap: 12px">
+                <a @onclick="() => SelectAll()">All</a>
+                <a @onclick="() => UnselectAll()">None</a>
+            </div>
+            <div style="display: flex; gap: 12px">
                 @foreach (var currency in allAccounts.Select(a => a.CurrencyIsoCode).Distinct().OrderBy(c => c))
                 {
                     <a @onclick="() => SelectByCurrency(currency)">@currency</a>
@@ -18,7 +22,7 @@
                 <a @onclick="() => SelectByType(AccountType.Current)">Current</a>
                 <a @onclick="() => SelectByType(AccountType.Saving)">Saving</a>
             </div>
-            <ul class="unstyled">
+            <ul class="unstyled" style="margin-top: 15px">
                 @foreach (var account in allAccounts)
                 {
                     <li>
@@ -85,6 +89,16 @@
     {
         Generate();
         InvokeAsync(StateHasChanged);
+    }
+
+    private void SelectAll()
+    {
+        options.SelectedAccounts.AddRange(allAccounts);
+    }
+    
+    private void UnselectAll()
+    {
+        options.SelectedAccounts.Clear();
     }
 
     private void SelectByCurrency(string currency)

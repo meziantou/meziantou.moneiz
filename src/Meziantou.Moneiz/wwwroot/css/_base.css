@@ -45,6 +45,10 @@ a {
     color: #337ab7;
 }
 
+a:hover {
+  cursor: pointer;
+}
+
 ul.unstyled > li {
     list-style: none;
 }
