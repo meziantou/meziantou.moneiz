@@ -1,6 +1,5 @@
 ﻿.dropdown-toggle {
-  position: relative;
-  display: inline-block;
+  display: block;
   cursor: pointer;
   padding: 0;
   color: #333;
@@ -38,7 +37,8 @@
   }
 
   .dropdown-content a,
-  .dropdown-content .btn-link {
+  .dropdown-content .btn-link,
+  .navbar .dropdown-content a {
     padding: 3px 20px;
     color: #333;
     white-space: nowrap;
@@ -56,6 +56,8 @@
 
     .dropdown-content a:focus,
     .dropdown-content a:hover,
+    .navbar .dropdown-content a:focus,
+    .navbar .dropdown-content a:hover,
     .dropdown-content .btn-link:focus,
     .dropdown-content .btn-link:hover {
       text-decoration: none;

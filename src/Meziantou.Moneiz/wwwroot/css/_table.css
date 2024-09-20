@@ -32,6 +32,6 @@ td {
     padding: 0;
   }
 
-    td.commands > .dropdown {
+    td.commands > .dropdown-toggle {
       padding: 8px;
     }

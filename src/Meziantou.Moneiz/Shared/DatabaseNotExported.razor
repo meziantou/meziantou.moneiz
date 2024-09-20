@@ -3,7 +3,7 @@
 
 @if (needImport)
 {
-    <a class="database-not-exported" href="/database"><span>A new version is available</span></a>
+    <a class="database-not-exported" href="/database"><span><i class="fas fa-download"></i> A new version is available</span></a>
 }
 
 @if (needExport)
@@ -16,12 +16,12 @@
 		}
 		else
 		{
-		    <button type="button" @onclick="ExportToGitHub">Export to GitHub</button>
+		    <button type="button" @onclick="ExportToGitHub"><i class="fas fa-upload"></i> Export to GitHub</button>
 		}
     }
     else
     {
-        <a class="database-not-exported" href="/database"><span>Export database</span></a>
+        <a class="database-not-exported" href="/database"><span><i class="fas fa-upload"></i> Export database</span></a>
     }
 }
 

@@ -1,11 +1,9 @@
-﻿<div class="dropdown">
-    <button class="btn-link dropdown-toggle" popovertarget="@id" style="anchor-name: @anchor">@MenuText <i class="fas @MenuIcon"></i></button>
-    <nav class="dropdown-content" id="@id" popover="auto" style="left:anchor(@anchor right);top: anchor(@anchor bottom)">
-        <ul>
-            @ChildContent
-        </ul>
-    </nav>
-</div>
+﻿<button class="btn-link dropdown-toggle" popovertarget="@id" style="anchor-name: @anchor">@MenuText <i class="fas @MenuIcon"></i></button>
+<nav class="dropdown-content" id="@id" popover="auto" style="left:anchor(@anchor right);top: anchor(@anchor bottom)">
+    <ul>
+        @ChildContent
+    </ul>
+</nav>
 
 @code {
     string id = "id-" + Guid.NewGuid().ToString("N");

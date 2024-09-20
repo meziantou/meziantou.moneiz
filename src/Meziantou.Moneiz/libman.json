@@ -3,7 +3,7 @@
   "defaultProvider": "cdnjs",
   "libraries": [
     {
-      "library": "localforage@1.7.3",
+      "library": "localforage@1.10.0",
       "destination": "wwwroot/lib/localforage",
       "files": [ "localforage.min.js" ]
     }
