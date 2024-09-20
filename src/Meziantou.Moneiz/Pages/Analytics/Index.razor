@@ -108,14 +108,34 @@
     
     private void SelectActives()
     {
-        options.SelectedAccounts.Clear();
-        options.SelectedAccounts.AddRange(allAccounts.Where(a => !a.Closed));
+        var accounts = allAccounts.Where(a => !a.Closed);
+        if (options.SelectedAccounts.Intersect(accounts).Count() != accounts.Count())
+        {
+            options.SelectedAccounts.AddRange(accounts);
+        }
+        else
+        {
+            foreach (var account in accounts)
+            {
+                options.SelectedAccounts.Remove(account);
+            }
+        }
     }
     
     private void SelectClosed()
     {
-        options.SelectedAccounts.Clear();
-        options.SelectedAccounts.AddRange(allAccounts.Where(a => a.Closed));
+        var accounts = allAccounts.Where(a => a.Closed);
+        if (options.SelectedAccounts.Intersect(accounts).Count() != accounts.Count())
+        {
+            options.SelectedAccounts.AddRange(accounts);
+        }
+        else
+        {
+            foreach (var account in accounts)
+            {
+                options.SelectedAccounts.Remove(account);
+            }
+        }
     }
 
     private void SelectByCurrency(string currency)
