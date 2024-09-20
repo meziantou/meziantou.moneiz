@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Meziantou.Framework;
 using Meziantou.Moneiz.Core;
+using Meziantou.Moneiz.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Rendering;
@@ -17,17 +18,12 @@ public sealed class InputSelectCategory : InputBase<Category>
     private DatabaseProvider DatabaseProvider { get; set; }
 
     protected override async Task OnInitializedAsync()
-    {
-        _database = await DatabaseProvider.GetDatabase();
-    }
+        => _database = await DatabaseProvider.GetDatabase();
 
     [Parameter]
     public bool IsOptional { get; set; }
 
-    protected override string FormatValueAsString(Category value)
-    {
-        return value?.Id.ToStringInvariant();
-    }
+    protected override string FormatValueAsString(Category value) => value?.Id.ToStringInvariant();
 
     protected override bool TryParseValueFromString(string value, out Category result, out string validationErrorMessage)
     {

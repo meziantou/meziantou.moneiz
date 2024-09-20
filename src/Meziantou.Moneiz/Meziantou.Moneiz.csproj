@@ -1,9 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
     <Version>3.0.0</Version>
     <SourceRevisionId>$(GITHUB_SHA)</SourceRevisionId>
@@ -40,6 +37,7 @@
 
   <ItemGroup>
     <Content Remove="staticwebapp.config.json" />
+    <None Include="C:\sources\meziantou.moneiz\src\Meziantou.Moneiz\.editorconfig" />
     <None Include="staticwebapp.config.json" />
   </ItemGroup>
 
@@ -59,4 +57,8 @@
     <Message Importance="high" Text="Concatenating CSS files: @(ConcatFiles->'%(Identity)', ' ')" />
     <WriteLinesToFile File="wwwroot/css/site.css" Lines="@(FileContents)" Overwrite="true" />
   </Target>
+  
+  <ItemGroup>
+    <EditorConfigFiles Remove="C:\sources\meziantou.moneiz\src\Meziantou.Moneiz\.editorconfig" />
+  </ItemGroup>
 </Project>

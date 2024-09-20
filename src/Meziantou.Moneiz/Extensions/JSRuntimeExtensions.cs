@@ -11,16 +11,13 @@ internal static class JSRuntimeExtensions
     {
         return jsRuntime.InvokeVoidAsync("MoneizOpenInTab", url);
     }
-    
+
     public static ValueTask<string> GetValue(this IJSRuntime jsRuntime, string name)
     {
         return jsRuntime.InvokeAsync<string>("MoneizGetValue", name);
     }
 
-    public static ValueTask SetValue(this IJSRuntime jsRuntime, string name, string value)
-    {
-        return jsRuntime.InvokeVoidAsync("MoneizSetValue", name, value);
-    }
+    public static ValueTask SetValue(this IJSRuntime jsRuntime, string name, string value) => jsRuntime.InvokeVoidAsync("MoneizSetValue", name, value);
 
     public static ValueTask ExportToFile(this IJSRuntime jsRuntime, string filename, byte[] content)
     {

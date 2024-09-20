@@ -19,13 +19,12 @@ public partial class Database
         return Categories.FirstOrDefault(item => item.Id == id);
     }
 
-
     public void RemoveCategory(Category category)
     {
         using (DeferEvents())
         {
             ReplaceCategory(oldCategory: category, newCategory: null);
-            Categories.Remove(category);
+            _ = Categories.Remove(category);
             RaiseDatabaseChanged();
         }
     }
@@ -63,9 +62,7 @@ public partial class Database
     }
 
     private void ReplaceCategory(Category? oldCategory, Category? newCategory)
-    {
-        ReplaceCategory(newCategory, c => c == oldCategory);
-    }
+        => ReplaceCategory(newCategory, c => c == oldCategory);
 
     private void ReplaceCategory(Category? newCategory, Func<Category?, bool> predicate)
     {

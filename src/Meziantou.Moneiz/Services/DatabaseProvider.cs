@@ -15,7 +15,7 @@ using Meziantou.Moneiz.Services;
 using Microsoft.AspNetCore.Components.WebAssembly.Http;
 using Microsoft.JSInterop;
 
-namespace Meziantou.Moneiz;
+namespace Meziantou.Moneiz.Services;
 
 public sealed class DatabaseProvider(IJSRuntime jsRuntime, ConfirmService confirmService) : IDisposable
 {
@@ -30,10 +30,7 @@ public sealed class DatabaseProvider(IJSRuntime jsRuntime, ConfirmService confir
     public event EventHandler DatabaseChanged;
     public event EventHandler DatabaseSaved;
 
-    public void Dispose()
-    {
-        _semaphore.Dispose();
-    }
+    public void Dispose() => _semaphore.Dispose();
 
     [SuppressMessage("Maintainability", "CA1508:Avoid dead conditional code", Justification = "false-positive")]
     public async Task<Database> GetDatabase()
@@ -67,7 +64,7 @@ public sealed class DatabaseProvider(IJSRuntime jsRuntime, ConfirmService confir
             }
             finally
             {
-                _semaphore.Release();
+                _ = _semaphore.Release();
             }
         }
 
@@ -124,10 +121,7 @@ public sealed class DatabaseProvider(IJSRuntime jsRuntime, ConfirmService confir
         RaiseDatabaseChanged();
     }
 
-    private void Database_DatabaseChanged(object sender, EventArgs e)
-    {
-        RaiseDatabaseChanged();
-    }
+    private void Database_DatabaseChanged(object sender, EventArgs e) => RaiseDatabaseChanged();
 
     private void RaiseDatabaseSaved()
     {
@@ -141,20 +135,11 @@ public sealed class DatabaseProvider(IJSRuntime jsRuntime, ConfirmService confir
         DatabaseChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    public async ValueTask<bool> HasLocalChanges()
-    {
-        return (await jsRuntime.GetValue<bool?>(MoneizLocalStorageChangedName)) ?? false;
-    }
+    public async ValueTask<bool> HasLocalChanges() => (await jsRuntime.GetValue<bool?>(MoneizLocalStorageChangedName)) ?? false;
 
-    public async ValueTask<DatabaseConfiguration> LoadConfiguration()
-    {
-        return (await jsRuntime.GetValue<DatabaseConfiguration>(MoneizLocalStorageConfigurationName)) ?? new DatabaseConfiguration();
-    }
+    public async ValueTask<DatabaseConfiguration> LoadConfiguration() => (await jsRuntime.GetValue<DatabaseConfiguration>(MoneizLocalStorageConfigurationName)) ?? new DatabaseConfiguration();
 
-    public ValueTask SetConfiguration(DatabaseConfiguration configuration)
-    {
-        return jsRuntime.SetValue(MoneizLocalStorageConfigurationName, configuration);
-    }
+    public ValueTask SetConfiguration(DatabaseConfiguration configuration) => jsRuntime.SetValue(MoneizLocalStorageConfigurationName, configuration);
 
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope")]
     private static HttpClient CreateClient(DatabaseConfiguration configuration)
@@ -168,7 +153,7 @@ public sealed class DatabaseProvider(IJSRuntime jsRuntime, ConfirmService confir
         var httpClient = new HttpClient(handler, disposeHandler: true);
         httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", configuration.GitHubToken);
-        httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "Mozilla/5.0");
+        _ = httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "Mozilla/5.0");
         httpClient.BaseAddress = new Uri("https://api.github.com");
 
         return httpClient;
@@ -204,7 +189,7 @@ public sealed class DatabaseProvider(IJSRuntime jsRuntime, ConfirmService confir
             sha = file?.Sha,
         });
 
-        putResult.EnsureSuccessStatusCode();
+        _ = putResult.EnsureSuccessStatusCode();
 
         file = (await putResult.Content.ReadFromJsonAsync<UpdateFileResult>()).Content;
 
@@ -229,7 +214,7 @@ public sealed class DatabaseProvider(IJSRuntime jsRuntime, ConfirmService confir
         var url = "repos/" + currentUser.Login + "/" + configuration.GitHubRepository + "/contents/";
         var files = await SafeGetForJsonAsync<GitHubContent[]>(httpClient, url);
         var file = files?.FirstOrDefault(f => f.Name == MoneizDownloadFileName);
-        if (file is not null && configuration.GitHubSha is null || !file.Sha.EqualsIgnoreCase(configuration.GitHubSha))
+        if ((file is not null && configuration.GitHubSha is null) || !file.Sha.EqualsIgnoreCase(configuration.GitHubSha))
             return true;
 
         return false;
@@ -365,10 +350,7 @@ public sealed class DatabaseProvider(IJSRuntime jsRuntime, ConfirmService confir
         {
         }
 
-        public CacheBusterHandler(HttpMessageHandler innerHandler)
-        {
-            InnerHandler = innerHandler;
-        }
+        public CacheBusterHandler(HttpMessageHandler innerHandler) => InnerHandler = innerHandler;
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {

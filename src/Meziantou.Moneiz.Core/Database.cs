@@ -33,7 +33,7 @@ public sealed partial class Database
     }
 
     [JsonPropertyName("a")]
-    public IList<Account> Accounts { get; set; } = new List<Account>();
+    public IList<Account> Accounts { get; set; } = [];
 
     [JsonIgnore]
     public IEnumerable<Account> VisibleAccounts => Accounts.Where(a => !a.Closed).Sort();
@@ -45,16 +45,16 @@ public sealed partial class Database
     public IReadOnlyList<Currency> Currencies { get; }
 
     [JsonPropertyName("c")]
-    public IList<Category> Categories { get; set; } = new List<Category>();
+    public IList<Category> Categories { get; set; } = [];
 
     [JsonPropertyName("d")]
-    public IList<Payee> Payees { get; set; } = new List<Payee>();
+    public IList<Payee> Payees { get; set; } = [];
 
     [JsonPropertyName("e")]
-    public IList<Transaction> Transactions { get; set; } = new List<Transaction>();
+    public IList<Transaction> Transactions { get; set; } = [];
 
     [JsonPropertyName("f")]
-    public IList<ScheduledTransaction> ScheduledTransactions { get; set; } = new List<ScheduledTransaction>();
+    public IList<ScheduledTransaction> ScheduledTransactions { get; set; } = [];
 
     [JsonPropertyName("g")]
     public DateTime LastModifiedDate { get; set; } = DateTime.UtcNow;
