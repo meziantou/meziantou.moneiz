@@ -10,6 +10,11 @@
         <div class="form-group">
             <div style="display: flex; gap: 12px">
                 <a @onclick="() => SelectAll()">All</a>
+                @if (allAccounts.Any(a => a.Closed))
+                {
+                    <a @onclick="() => SelectActives()">Active</a>
+                    <a @onclick="() => SelectClosed()">Closed</a>
+                }
                 <a @onclick="() => UnselectAll()">None</a>
             </div>
             <div style="display: flex; gap: 12px">
@@ -99,6 +104,18 @@
     private void UnselectAll()
     {
         options.SelectedAccounts.Clear();
+    }
+    
+    private void SelectActives()
+    {
+        options.SelectedAccounts.Clear();
+        options.SelectedAccounts.AddRange(allAccounts.Where(a => !a.Closed));
+    }
+    
+    private void SelectClosed()
+    {
+        options.SelectedAccounts.Clear();
+        options.SelectedAccounts.AddRange(allAccounts.Where(a => a.Closed));
     }
 
     private void SelectByCurrency(string currency)
