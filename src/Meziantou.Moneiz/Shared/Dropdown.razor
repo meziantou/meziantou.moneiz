@@ -1,12 +1,15 @@
-﻿<div class="dropdown @(isOpened ? "opened" : "")" @onclick="() => Toggle()">
-    <a>@MenuText <i class="fas @MenuIcon"></i></a>
-    <ul class="dropdown-content">
-        @ChildContent
-    </ul>
+﻿<div class="dropdown">
+    <button class="btn-link dropdown-toggle" popovertarget="@id" style="anchor-name: @anchor">@MenuText <i class="fas @MenuIcon"></i></button>
+    <nav class="dropdown-content" id="@id" popover="auto" style="left:anchor(@anchor right);top: anchor(@anchor bottom)">
+        <ul>
+            @ChildContent
+        </ul>
+    </nav>
 </div>
 
 @code {
-    bool isOpened;
+    string id = "id-" + Guid.NewGuid().ToString("N");
+    string anchor = "--anchor-" + Guid.NewGuid().ToString("N");
 
     [Parameter]
     public string MenuText { get; set; }
@@ -16,9 +19,4 @@
 
     [Parameter]
     public RenderFragment ChildContent { get; set; }
-
-    public void Toggle()
-    {
-        isOpened = !isOpened;
-    }
 }
