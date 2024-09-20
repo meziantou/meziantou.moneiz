@@ -36,22 +36,22 @@ else
         <div class="account-balance">
             <div>
                 <span class="account-balance-title">On <UserDate Date="@today" />:</span>
-                <Amount value="@database.GetTodayBalance(account)" currency="@account.CurrencyIsoCode" />
+                <Amount Value="@database.GetTodayBalance(account)" Currency="@account.CurrencyIsoCode" />
             </div>
             <div>
                 <span class="account-balance-title">All transactions:</span>
-                <Amount value="@database.GetBalance(account)" currency="@account.CurrencyIsoCode" />
+                <Amount Value="@database.GetBalance(account)" Currency="@account.CurrencyIsoCode" />
             </div>
             <div>
                 <span class="account-balance-title">Reconciled transactions:</span>
                 <span>
-                    <Amount value="@database.GetReconciledBalance(account)" currency="@account.CurrencyIsoCode" />
+                    <Amount Value="@database.GetReconciledBalance(account)" Currency="@account.CurrencyIsoCode" />
                 </span>
             </div>
             <div>
                 <span class="account-balance-title">Checked transactions:</span>
                 <span id="CheckedBalanceContainer">
-                    <Amount value="@database.GetCheckedBalance(account)" currency="@account.CurrencyIsoCode" />
+                    <Amount Value="@database.GetCheckedBalance(account)" Currency="@account.CurrencyIsoCode" />
                 </span>
             </div>
             <div class="account-balance-actions">
