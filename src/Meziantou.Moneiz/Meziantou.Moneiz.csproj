@@ -5,7 +5,6 @@
     <Version>3.0.0</Version>
     <SourceRevisionId>$(GITHUB_SHA)</SourceRevisionId>
 
-    <!--<InvariantGlobalization>true</InvariantGlobalization>-->
     <BlazorEnableCompression>False</BlazorEnableCompression>
     <RunAOTCompilation Condition="$(Configuration) == 'Release'">true</RunAOTCompilation>
     <InvariantGlobalization>true</InvariantGlobalization>
@@ -39,7 +38,6 @@
 
   <ItemGroup>
     <Content Remove="staticwebapp.config.json" />
-    <None Include="C:\sources\meziantou.moneiz\src\Meziantou.Moneiz\.editorconfig" />
     <None Include="staticwebapp.config.json" />
   </ItemGroup>
 
@@ -59,8 +57,4 @@
     <Message Importance="high" Text="Concatenating CSS files: @(ConcatFiles->'%(Identity)', ' ')" />
     <WriteLinesToFile File="wwwroot/css/site.css" Lines="@(FileContents)" Overwrite="true" />
   </Target>
-  
-  <ItemGroup>
-    <EditorConfigFiles Remove="C:\sources\meziantou.moneiz\src\Meziantou.Moneiz\.editorconfig" />
-  </ItemGroup>
 </Project>
