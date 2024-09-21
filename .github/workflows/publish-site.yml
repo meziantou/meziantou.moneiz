@@ -36,7 +36,13 @@ jobs:
       run: dotnet test
 
     - name: Publish
-      run: dotnet publish src/Meziantou.Moneiz/Meziantou.Moneiz.csproj --configuration Release --output ${{ env.OUTPUT }}
+      run: dotnet publish src/Meziantou.Moneiz/Meziantou.Moneiz.csproj --configuration Release --output ${{ env.OUTPUT }} /bl
+
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: binlog
+        path: "**/*.binlog"
       
     - name: Copy staticwebapp.config.json file
       run: cp src/Meziantou.Moneiz/staticwebapp.config.json ${{ env.OUTPUT }}/wwwroot/staticwebapp.config.json
