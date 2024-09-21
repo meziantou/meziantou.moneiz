@@ -21,7 +21,7 @@ public sealed class AnalyticsOptions
     {
         if (!BigTableDisabledCategories.Remove(categoryId))
         {
-            BigTableDisabledCategories.Add(categoryId);
+            _ = BigTableDisabledCategories.Add(categoryId);
         }
 
         OptionChanged?.Invoke(this, EventArgs.Empty);
@@ -32,7 +32,7 @@ public sealed class AnalyticsOptions
         name ??= "";
         if (!BigTableDisabledCategoryGroups.Remove(name))
         {
-            BigTableDisabledCategoryGroups.Add(name);
+            _ = BigTableDisabledCategoryGroups.Add(name);
         }
 
         OptionChanged?.Invoke(this, EventArgs.Empty);

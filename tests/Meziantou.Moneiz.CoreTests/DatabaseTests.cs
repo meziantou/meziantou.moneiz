@@ -39,9 +39,9 @@ public class DatabaseTests
         // Assert
         Assert.Null(database);
 
-        Assert.Single(imported.Accounts);
-        Assert.Single(imported.Categories);
-        Assert.Single(imported.Payees);
+        _ = Assert.Single(imported.Accounts);
+        _ = Assert.Single(imported.Categories);
+        _ = Assert.Single(imported.Payees);
         Assert.Equal(3, imported.Transactions.Count);
         Assert.NotEmpty(imported.Currencies);
 

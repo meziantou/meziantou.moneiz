@@ -127,7 +127,7 @@ public sealed class ScheduledTransaction
     public IEnumerable<DateTime> GetNextOccurences()
     {
         if (RecurrenceRule is null || NextOccurenceDate == null)
-            return Enumerable.Empty<DateTime>();
+            return [];
 
         return RecurrenceRule.GetNextOccurrences(NextOccurenceDate.Value.ToDateTime(TimeOnly.MinValue));
     }

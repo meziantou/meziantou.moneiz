@@ -41,7 +41,7 @@ public partial class Database
         using (DeferEvents())
         {
             ReplacePayee(oldPayee: payee, newPayee: null);
-            Payees.Remove(payee);
+            _ = Payees.Remove(payee);
             RaiseDatabaseChanged();
         }
     }

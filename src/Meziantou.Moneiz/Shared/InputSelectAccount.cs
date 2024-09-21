@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Meziantou.Framework;
 using Meziantou.Moneiz.Core;
+using Meziantou.Moneiz.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Rendering;
@@ -16,14 +17,10 @@ public sealed class InputSelectAccount : InputBase<Account>
     private DatabaseProvider DatabaseProvider { get; set; }
 
     protected override async Task OnInitializedAsync()
-    {
-        _database = await DatabaseProvider.GetDatabase();
-    }
+        => _database = await DatabaseProvider.GetDatabase();
 
     protected override string FormatValueAsString(Account value)
-    {
-        return value?.Id.ToStringInvariant();
-    }
+        => value?.Id.ToStringInvariant();
 
     protected override bool TryParseValueFromString(string value, out Account result, out string validationErrorMessage)
     {

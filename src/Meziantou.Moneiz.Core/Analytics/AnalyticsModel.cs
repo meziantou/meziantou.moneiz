@@ -6,7 +6,7 @@ namespace Meziantou.Moneiz.Core.Analytics;
 
 public sealed class AnalyticsModel
 {
-    public IReadOnlyList<Account> Accounts { get; set; } = Array.Empty<Account>();
+    public IReadOnlyList<Account> Accounts { get; set; } = [];
     public DateOnly? PeriodFrom { get; set; }
     public DateOnly? PeriodTo { get; set; }
 
@@ -85,7 +85,7 @@ public sealed class AnalyticsModel
 
         var bigTable = new BigTable
         {
-            Dates = new DateOnly[(toDate.Year - fromDate.Year) * 12 + (toDate.Month - fromDate.Month) + 1],
+            Dates = new DateOnly[((toDate.Year - fromDate.Year) * 12) + (toDate.Month - fromDate.Month) + 1],
         };
         for (var i = 0; i < bigTable.Dates.Length; i++)
         {
@@ -125,7 +125,7 @@ public sealed class AnalyticsModel
             {
                 if (options.IsCategoryEnabled(transaction.CategoryId ?? -1) && options.IsGroupEnabled(transaction.Category?.GroupName ?? ""))
                 {
-                    var index = (transaction.ValueDate.Year - fromDate.Year) * 12 + (transaction.ValueDate.Month - fromDate.Month);
+                    var index = ((transaction.ValueDate.Year - fromDate.Year) * 12) + (transaction.ValueDate.Month - fromDate.Month);
                     bigTableCategory.Totals[index].Add(transaction.Amount);
                 }
             }
@@ -176,7 +176,7 @@ public sealed class BalanceHistory
     public DateOnly StartDate { get; set; }
     public DateOnly EndDate { get; set; }
 
-    public IList<BalanceHistoryEntry> BalancesByAccount { get; } = new List<BalanceHistoryEntry>();
+    public IList<BalanceHistoryEntry> BalancesByAccount { get; } = [];
 }
 
 public sealed class BalanceHistoryEntry

@@ -11,7 +11,7 @@ public static class NavigationManagerExtensions
     public static void NavigateToAccounts(this NavigationManager navigationManager) => navigationManager.NavigateTo("accounts");
     public static void NavigateToCategories(this NavigationManager navigationManager) => navigationManager.NavigateTo("categories");
     public static void NavigateToPayees(this NavigationManager navigationManager) => navigationManager.NavigateTo("payees");
-     public static void NavigateToScheduler(this NavigationManager navigationManager) => navigationManager.NavigateTo("scheduler");
+    public static void NavigateToScheduler(this NavigationManager navigationManager) => navigationManager.NavigateTo("scheduler");
 
     public static void NavigateToReturnUrlOrHome(this NavigationManager navigationManager)
     {

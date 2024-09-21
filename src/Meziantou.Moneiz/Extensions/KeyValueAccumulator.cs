@@ -66,7 +66,7 @@ internal struct KeyValueAccumulator
             // Coalesce count 3+ multi-value entries into _accumulator dictionary
             foreach (var entry in _expandingAccumulator)
             {
-                _accumulator[entry.Key] = new StringValues(entry.Value.ToArray());
+                _accumulator[entry.Key] = new StringValues([.. entry.Value]);
             }
         }
 

@@ -4,16 +4,11 @@ using System.Linq;
 
 namespace Meziantou.Moneiz.Core.Analytics;
 
-public sealed class BigTableCategoryGroup
+public sealed class BigTableCategoryGroup(BigTable bigTable)
 {
     private BigTableValue _total;
 
-    public BigTableCategoryGroup(BigTable bigTable)
-    {
-        BigTable = bigTable ?? throw new ArgumentNullException(nameof(bigTable));
-    }
-
-    public BigTable BigTable { get; }
+    public BigTable BigTable { get; } = bigTable ?? throw new ArgumentNullException(nameof(bigTable));
     public string? Name { get; set; }
     public List<BigTableCategory> Categories { get; } = [];
 

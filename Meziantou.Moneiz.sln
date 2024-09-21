@@ -7,14 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Meziantou.Moneiz", "src\Mez
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Meziantou.Moneiz.Core", "src\Meziantou.Moneiz.Core\Meziantou.Moneiz.Core.csproj", "{00537C36-09E3-408D-AE63-F09F2AF97393}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5E0B03C3-A926-4CAC-976A-136738891F4B}"
-	ProjectSection(SolutionItems) = preProject
-		.editorconfig = .editorconfig
-		global.json = global.json
-		.github\workflows\publish-site.yml = .github\workflows\publish-site.yml
-		.github\workflows\swa-stop.yml = .github\workflows\swa-stop.yml
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{FF1F5957-AD48-4C6A-ABB5-233E04911A45}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{2BB5C7BE-E380-438C-84E6-38D350FE6E26}"
