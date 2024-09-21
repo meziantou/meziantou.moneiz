@@ -8,6 +8,8 @@
     <!--<InvariantGlobalization>true</InvariantGlobalization>-->
     <BlazorEnableCompression>False</BlazorEnableCompression>
     <RunAOTCompilation Condition="$(Configuration) == 'Release'">true</RunAOTCompilation>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <InvariantTimezone>true</InvariantTimezone>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(Configuration)' == 'Release'">
