@@ -11,8 +11,8 @@ public class MoneizDisplaySettings
     public string? DateFormat { get; set; }
     public bool FullWidth { get; set; }
 
-    public string FormatDate(DateOnly date) => DateFormat is null ? date.ToShortDateString() : date.ToString(DateFormat, CultureInfo.CurrentCulture);
-    public string? FormatDate(DateOnly? date) => DateFormat is null ? date?.ToShortDateString() : date?.ToString(DateFormat, CultureInfo.CurrentCulture);
-    public string FormatDate(DateTime date) => DateFormat is null ? date.ToShortDateString() : date.ToString(DateFormat, CultureInfo.CurrentCulture);
-    public string? FormatDate(DateTime? date) => DateFormat is null ? date?.ToShortDateString() : date?.ToString(DateFormat, CultureInfo.CurrentCulture);
+    public string FormatDate(DateOnly date) => DateFormat is null ? date.ToShortDateString() : date.ToString(DateFormat, CultureInfo.InvariantCulture);
+    public string? FormatDate(DateOnly? date) => DateFormat is null ? date?.ToShortDateString() : date?.ToString(DateFormat, CultureInfo.InvariantCulture);
+    public string FormatDate(DateTime date) => DateFormat is null ? date.ToShortDateString() : date.ToString(DateFormat, CultureInfo.InvariantCulture);
+    public string? FormatDate(DateTime? date) => DateFormat is null ? date?.ToShortDateString() : date?.ToString(DateFormat, CultureInfo.InvariantCulture);
 }

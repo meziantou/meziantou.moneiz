@@ -10,7 +10,7 @@
 @inject SettingsProvider SettingsProvider
 @inject NavigationManager NavigationManager
 
-@if (account != null)
+@if (account is not null)
 {
     <h1>Transactions of @account</h1>
 }
@@ -26,12 +26,12 @@ else
         </p>
         <p>
             <label>
-                <input type="checkbox" inert="@HasSearch()" checked="@ShowReconciledTransactions()" @onchange="() => ToggleReconciledVisibility()" /> Show reconciled transactions
+                <input type="checkbox" inert="@HasSearch" checked="@ShowReconciledTransactions()" @onchange="() => ToggleReconciledVisibility()" /> Show reconciled transactions
             </label>
         </p>
     </div>
 
-    @if (account != null)
+    @if (account is not null)
     {
         <div class="account-balance">
             <div>
@@ -72,14 +72,14 @@ else
                 <tr>
                     <th></th>
                     <th>Operation Date</th>
-                    @if (AccountId == null)
+                    @if (AccountId is null)
                     {
                         <th>Account</th>
                     }
                     <th>Category</th>
                     <th>Title</th>
                     <th>Amount</th>
-                    @if (CanShowAccountBalanceOnTransaction())
+                    @if (CanShowAccountBalanceOnTransaction)
                     {
                         <th>Balance</th>
                     }
@@ -116,11 +116,11 @@ else
         }
         <tr>
             <td class="transaction-state">
-                @if (transaction.State == TransactionState.Reconciliated)
+                @if (transaction.State is TransactionState.Reconciliated)
                 {
                     <div class="btn-transaction-status fas fa-check-square" title="@transaction.State"></div>
                 }
-                else if (transaction.State == TransactionState.Checked)
+                else if (transaction.State is TransactionState.Checked)
                 {
                     <div class="btn-transaction-status far fa-check-square" title="@transaction.State" @onclick="() => Uncheck(transaction)"></div>
                 }
@@ -130,7 +130,7 @@ else
                 }
             </td>
             <td @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Date)">
-                @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Date)
+                @if (currentEdit?.Id == transaction.Id && editColumn is EditColumn.Date)
                 {
                     <input type="date" @ref="inlineEditorInput"
                            value="@BindConverter.FormatValue(currentEdit.ValueDate, "yyyy-MM-dd", CultureInfo.InvariantCulture)"
@@ -143,7 +143,7 @@ else
                     <UserDate Date="@transaction.ValueDate" />
                 }
             </td>
-            @if (AccountId == null)
+            @if (AccountId is null)
             {
                 <td>@transaction.Account.Name</td>
             }
@@ -163,7 +163,7 @@ else
                     <Amount Value="@transaction.Amount" Currency="@transaction.Account.CurrencyIsoCode" />
                 }
             </td>
-            @if (CanShowAccountBalanceOnTransaction())
+            @if (CanShowAccountBalanceOnTransaction)
             {
                 <td><Amount Value="@accountBalance" Currency="@transaction.Account.CurrencyIsoCode" /></td>
             }
@@ -250,24 +250,26 @@ else
             showReconciled = await SettingsProvider.GetShowReconciliatedTransactions(AccountId ?? -1) ?? showReconciled;
         }
 
+        HasSearch = !string.IsNullOrWhiteSpace(Search);
+        CanShowAccountBalanceOnTransaction = AccountId is not null && CategoryId is null && CategoryGroup is null && PayeeId is null && !HasSearch;
         LoadTransactions();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (currentEdit != null && inlineEditorInput.Id != null)
+        if (currentEdit is not null && inlineEditorInput.Id is not null)
         {
             await inlineEditorInput.FocusAsync();
         }
     }
 
     [MemberNotNullWhen(true, nameof(AccountId))]
-    private bool CanShowAccountBalanceOnTransaction() => AccountId != null && CategoryId == null && CategoryGroup == null && PayeeId == null && !HasSearch();
+    private bool CanShowAccountBalanceOnTransaction { get; set; }
 
     [MemberNotNullWhen(true, nameof(Search))]
-    private bool HasSearch() => !string.IsNullOrWhiteSpace(Search);
+    private bool HasSearch { get; set; }
 
-    private bool ShowReconciledTransactions() => showReconciled || HasSearch();
+    private bool ShowReconciledTransactions() => showReconciled || HasSearch;
 
     private async Task ToggleReconciledVisibility()
     {
@@ -300,7 +302,7 @@ else
 
     private bool HasMorePages()
     {
-        return transactions.Skip((pageIndex + 1) * displaySettings.PageSize).Any();
+        return transactions.Count > (pageIndex + 1) * displaySettings.PageSize;
     }
 
     private async Task Reconcile()
@@ -358,7 +360,7 @@ else
             result = result.Where(t => string.Equals(t.Category?.GroupName, CategoryGroup, StringComparison.OrdinalIgnoreCase));
         }
 
-        if (!string.IsNullOrWhiteSpace(Search))
+        if (HasSearch)
         {
             var query = TransactionQueries.TransactionQuery.Build(Search);
             result = result.Where(t => query.Evaluate(t));
@@ -366,10 +368,10 @@ else
 
         result = result.OrderByDescending(t => t.ValueDate).ThenBy(t => t.Payee?.Name);
 
-        if (CanShowAccountBalanceOnTransaction())
+        if (CanShowAccountBalanceOnTransaction)
         {
             var balance = database.GetBalance(account);
-            var list = new List<TransactionWithAccountBalance>(capacity: 200);
+            var list = new List<TransactionWithAccountBalance>(capacity: displaySettings.PageSize);
             foreach (var transaction in result)
             {
                 list.Add(new(transaction, balance));
