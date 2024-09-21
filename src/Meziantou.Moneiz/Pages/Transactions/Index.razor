@@ -5,6 +5,7 @@
 @page "/payees/{PayeeId:int}/transactions"
 @using System.Globalization
 @using System.Diagnostics.CodeAnalysis
+@using System.Diagnostics
 @inject DatabaseProvider DatabaseProvider
 @inject ConfirmService ConfirmService
 @inject SettingsProvider SettingsProvider
@@ -327,6 +328,8 @@ else
 
     private void LoadTransactions()
     {
+        var sw = Stopwatch.StartNew();
+
         IEnumerable<Transaction> result = database.Transactions;
         if (!ShowReconciledTransactions())
         {
@@ -384,6 +387,8 @@ else
         {
             transactions = result.Select(t => new TransactionWithAccountBalance(t, 0m)).ToArray();
         }
+
+        Console.WriteLine($"LoadTransactions: {sw.ElapsedMilliseconds}ms");
     }
 
     private void BeginInlineEdit(Transaction transaction, EditColumn column)
