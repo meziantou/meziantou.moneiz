@@ -1,13 +1,17 @@
-﻿<button class="btn-link dropdown-toggle" popovertarget="@id" style="anchor-name: @anchor">@MenuText <i class="fas @MenuIcon"></i></button>
+﻿<button @onclick="e => visible = true" class="btn-link dropdown-toggle" popovertarget="@id" style="anchor-name: @anchor">@MenuText <i class="fas @MenuIcon"></i></button>
 <nav class="dropdown-content" id="@id" popover="auto" style="left:anchor(@anchor right);top: anchor(@anchor bottom)">
-    <ul>
-        @ChildContent
-    </ul>
+    @if (visible)
+    {
+        <ul>
+            @ChildContent
+        </ul>
+    }
 </nav>
 
 @code {
     string id = "id-" + Guid.NewGuid().ToString("N");
     string anchor = "--anchor-" + Guid.NewGuid().ToString("N");
+    bool visible = false;
 
     [Parameter]
     public string MenuText { get; set; }
