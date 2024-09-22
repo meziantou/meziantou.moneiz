@@ -28,13 +28,13 @@
             <td style="text-align: right">@database.Transactions.Count(t => t.Category == category)</td>
             <td class="commands">
                 <Dropdown>
-                    <DropdownItem><a class="view-transactions" href="/categories/@category.Id/transactions"><i class="fas fa-search"></i> View Transactions</a></DropdownItem>
+                    <li><a class="view-transactions" href="/categories/@category.Id/transactions"><i class="fas fa-search"></i> View Transactions</a></li>
                     @if (category.GroupName != null)
                     {
-                        <DropdownItem><a class="view-transactions" href="/category-group/@(Uri.EscapeDataString(category.GroupName))/transactions"><i class="fas fa-search"></i> View Transactions with category group '@category.GroupName'</a></DropdownItem>
+                        <li><a class="view-transactions" href="/category-group/@(Uri.EscapeDataString(category.GroupName))/transactions"><i class="fas fa-search"></i> View Transactions with category group '@category.GroupName'</a></li>
                     }
-                    <DropdownItem><a class="edit" href="/categories/@category.Id/edit"><i class="fas fa-pencil-alt"></i> Edit</a></DropdownItem>
-                    <DropdownItem><button type="button" class="btn-link" @onclick="() => Delete(category)"><i class="fas fa-trash" style="color: red"></i> Delete</button></DropdownItem>
+                    <li><a class="edit" href="/categories/@category.Id/edit"><i class="fas fa-pencil-alt"></i> Edit</a></li>
+                    <li><button type="button" class="btn-link" @onclick="() => Delete(category)"><i class="fas fa-trash" style="color: red"></i> Delete</button></li>
                 </Dropdown>
             </td>
         </tr>

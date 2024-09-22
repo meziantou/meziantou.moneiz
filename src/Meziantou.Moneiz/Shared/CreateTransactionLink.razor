@@ -10,28 +10,12 @@
     [Parameter]
     public Account Account { get; set; }
 
-    [Parameter]
-    public Transaction Transaction { get; set; }
-
-    [Parameter]
-    public Transaction DuplicatedTransaction { get; set; }
-
     [Parameter(CaptureUnmatchedValues = true)]
     public Dictionary<string, object> LinkAttributes { get; set; }
 
     private string GetUrl()
     {
-        string url = "";
-        if (Transaction != null)
-        {
-            url = $"/transactions/{EscapeUri(Transaction.Id.ToStringInvariant())}/edit";
-        }
-        else
-        {
-            url = "/transactions/create";
-        }
-
-        return url + $"?accountId={EscapeUri(Account?.Id.ToStringInvariant())}&duplicatedTransaction={EscapeUri(DuplicatedTransaction?.Id.ToStringInvariant())}&returnUrl={EscapeUri(NavigationManager.Uri)}";
+        return $"/transactions/create?accountId={Account?.Id}&returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}";
     }
 
     protected override void OnInitialized()
@@ -47,13 +31,5 @@
     private void OnLocationChanged(object sender, LocationChangedEventArgs e)
     {
         StateHasChanged();
-    }
-
-    private static string EscapeUri(string value)
-    {
-        if (string.IsNullOrEmpty(value))
-            return "";
-
-        return Uri.EscapeDataString(value);
     }
 }

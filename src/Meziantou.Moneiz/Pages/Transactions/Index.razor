@@ -9,6 +9,7 @@
 @inject DatabaseProvider DatabaseProvider
 @inject ConfirmService ConfirmService
 @inject SettingsProvider SettingsProvider
+@inject UrlService UrlService
 @inject NavigationManager NavigationManager
 
 @if (account is not null)
@@ -66,156 +67,161 @@ else
     <input type="text" value="@Search" @oninput="OnSearch" class="form-control" placeholder="🔍 Search">
 </div>
 
-<Repeater Items="transactions?.Skip(pageIndex * displaySettings.PageSize).Take(displaySettings.PageSize)">
-    <RepeaterContainerTemplate>
-        <table>
-            <thead>
-                <tr>
-                    <th></th>
-                    <th>Operation Date</th>
+
+@if (transactions is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <table class="transaction-list">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Operation Date</th>
+                @if (AccountId is null)
+                {
+                    <th>Account</th>
+                }
+                <th>Category</th>
+                <th>Title</th>
+                <th>Amount</th>
+                @if (CanShowAccountBalanceOnTransaction)
+                {
+                    <th>Balance</th>
+                }
+                <th>Comment</th>
+                <th></th>
+            </tr>
+        </thead>
+
+        @if (PageIndex.Value > 0)
+        {
+            <tr>
+                <td colspan="7" class="row-navigation">
+                    <a href="@NavigationManager.GetUriWithQueryParameter("page", PageIndex.Value - 1)" style="cursor: pointer">Newer transactions</a>
+                </td>
+            </tr>
+        }
+
+        <Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize Items="transactions">
+            <ItemContent>
+                @{
+                    var (transaction, accountBalance) = context;
+                }
+
+                <tr @key="transaction.Id">
+                    <td class="transaction-state">
+                        @if (transaction.State is TransactionState.Reconciliated)
+                        {
+                            <div class="btn-transaction-status fas fa-check-square" title="@transaction.State"></div>
+                        }
+                        else if (transaction.State is TransactionState.Checked)
+                        {
+                            <div class="btn-transaction-status far fa-check-square" title="@transaction.State" @onclick="() => Uncheck(transaction)"></div>
+                        }
+                        else
+                        {
+                            <div class="btn-transaction-status far fa-square" title="@transaction.State" @onclick="() => Check(transaction)"></div>
+                        }
+                    </td>
+                    <td @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Date)">
+                        @if (currentEdit?.Id == transaction.Id && editColumn is EditColumn.Date)
+                        {
+                            <input type="date" @ref="inlineEditorInput"
+                                   value="@BindConverter.FormatValue(currentEdit.ValueDate, "yyyy-MM-dd", CultureInfo.InvariantCulture)"
+                                   @oninput="e => currentEdit.ValueDate = ParseDate((string)e.Value, currentEdit.ValueDate)"
+                                   @onkeydown="e => InlineEditorKeyDown(e)"
+                                   @onblur="e => EndInlineEdit()" />
+                        }
+                        else
+                        {
+                            <UserDate Date="@transaction.ValueDate" />
+                        }
+                    </td>
                     @if (AccountId is null)
                     {
-                        <th>Account</th>
+                        <td title="@transaction.Account.Name">@transaction.Account.Name</td>
                     }
-                    <th>Category</th>
-                    <th>Title</th>
-                    <th>Amount</th>
+                    <td title="@transaction.Category">@transaction.Category?.Name</td>
+                    <td title="@transaction.FinalTitle">@transaction.FinalTitle</td>
+                    <td @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Amount)">
+                        @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Amount)
+                        {
+                            <input type="number" @ref="inlineEditorInput"
+                                   value="@currentEdit.Amount"
+                                   @oninput="e => currentEdit.Amount = Convert.ToDecimal(e.Value)"
+                                   @onkeydown="e => InlineEditorKeyDown(e)"
+                                   @onblur="e => EndInlineEdit()" />
+                        }
+                        else
+                        {
+                            <Amount Value="@transaction.Amount" Currency="@transaction.Account.CurrencyIsoCode" />
+                        }
+                    </td>
                     @if (CanShowAccountBalanceOnTransaction)
                     {
-                        <th>Balance</th>
+                        <td><Amount Value="@accountBalance" Currency="@transaction.Account.CurrencyIsoCode" /></td>
                     }
-                    <th>Comment</th>
-                    <th></th>
-                </tr>
-            </thead>
-
-            @if (pageIndex > 0)
-            {
-                <tr>
-                    <td colspan="7" class="row-navigation">
-                        <a @onclick="() => pageIndex--" style="cursor: pointer">Newer transactions</a>
-                    </td>
-                </tr>
-            }
-
-            @context
-
-            @if (HasMorePages())
-            {
-                <tr>
-                    <td colspan="7" class="row-navigation">
-                        <a @onclick="() => pageIndex++" style="cursor: pointer">Older transactions</a>
-                    </td>
-                </tr>
-            }
-        </table>
-    </RepeaterContainerTemplate>
-
-    <ItemTemplate Context="transactionWithAccountBalance">
-        @{
-            var (transaction, accountBalance) = transactionWithAccountBalance;
-        }
-        <tr>
-            <td class="transaction-state">
-                @if (transaction.State is TransactionState.Reconciliated)
-                {
-                    <div class="btn-transaction-status fas fa-check-square" title="@transaction.State"></div>
-                }
-                else if (transaction.State is TransactionState.Checked)
-                {
-                    <div class="btn-transaction-status far fa-check-square" title="@transaction.State" @onclick="() => Uncheck(transaction)"></div>
-                }
-                else
-                {
-                    <div class="btn-transaction-status far fa-square" title="@transaction.State" @onclick="() => Check(transaction)"></div>
-                }
-            </td>
-            <td @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Date)">
-                @if (currentEdit?.Id == transaction.Id && editColumn is EditColumn.Date)
-                {
-                    <input type="date" @ref="inlineEditorInput"
-                           value="@BindConverter.FormatValue(currentEdit.ValueDate, "yyyy-MM-dd", CultureInfo.InvariantCulture)"
-                           @oninput="e => currentEdit.ValueDate = ParseDate((string)e.Value, currentEdit.ValueDate)"
-                           @onkeydown="e => InlineEditorKeyDown(e)"
-                           @onblur="e => EndInlineEdit()" />
-                }
-                else
-                {
-                    <UserDate Date="@transaction.ValueDate" />
-                }
-            </td>
-            @if (AccountId is null)
-            {
-                <td>@transaction.Account.Name</td>
-            }
-            <td title="@transaction.Category">@transaction.Category?.Name</td>
-            <td>@transaction.FinalTitle</td>
-            <td @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Amount)">
-                @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Amount)
-                {
-                    <input type="number" @ref="inlineEditorInput"
-                           value="@currentEdit.Amount"
-                           @oninput="e => currentEdit.Amount = Convert.ToDecimal(e.Value)"
-                           @onkeydown="e => InlineEditorKeyDown(e)"
-                           @onblur="e => EndInlineEdit()" />
-                }
-                else
-                {
-                    <Amount Value="@transaction.Amount" Currency="@transaction.Account.CurrencyIsoCode" />
-                }
-            </td>
-            @if (CanShowAccountBalanceOnTransaction)
-            {
-                <td><Amount Value="@accountBalance" Currency="@transaction.Account.CurrencyIsoCode" /></td>
-            }
-            <td @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Comment)">
-                @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Comment)
-                {
-                    <input type="text" @ref="inlineEditorInput"
-                           value="@currentEdit.Comment"
-                           @oninput="e => currentEdit.Comment = (string)e.Value"
-                           @onkeydown="e => InlineEditorKeyDown(e)"
-                           @onblur="e => EndInlineEdit()" />
-                }
-                else
-                {
-                    @transaction.Comment
-                }
-            </td>
-            <td class="commands">
-                <Dropdown>
-                    <DropdownItem><CreateTransactionLink DuplicatedTransaction="transaction" class="duplicate"><i class="fas fa-copy"></i> Duplicate</CreateTransactionLink></DropdownItem>
-                    <DropdownItem><CreateTransactionLink Transaction="transaction" class="view-transactions"><i class="fas fa-pencil-alt"></i> Edit</CreateTransactionLink></DropdownItem>
-                    <DropdownItem><button type="button" class="btn-link" @onclick="() => Delete(transaction)"><i class="fas fa-trash" style="color: red"></i> Delete</button></DropdownItem>
-
-                    @if (transaction.Payee != null)
-                    {
-                        <DropdownItem><a class="view-transactions" href="/payees/@(transaction.Payee.Id)/transactions"><i class="fas fa-search"></i> View Transactions with payee '@transaction.Payee.Name'</a></DropdownItem>
-                    }
-
-                    @if (transaction.Category != null)
-                    {
-                        <DropdownItem><a class="view-transactions" href="/categories/@(transaction.Category.Id)/transactions"><i class="fas fa-search"></i> View Transactions with category '@transaction.Category.Name'</a></DropdownItem>
-
-                        if (transaction.Category.GroupName != null)
+                    <td @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Comment)">
+                        @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Comment)
                         {
-                            <DropdownItem><a class="view-transactions" href="/category-group/@(Uri.EscapeDataString(transaction.Category.GroupName))/transactions"><i class="fas fa-search"></i> View Transactions with category group '@transaction.Category.GroupName'</a></DropdownItem>
+                            <input type="text" @ref="inlineEditorInput"
+                                   value="@currentEdit.Comment"
+                                   @oninput="e => currentEdit.Comment = (string)e.Value"
+                                   @onkeydown="e => InlineEditorKeyDown(e)"
+                                   @onblur="e => EndInlineEdit()" />
                         }
-                    }
+                        else
+                        {
+                            @transaction.Comment
+                        }
+                    </td>
+                    <td class="commands">
+                        <Dropdown>
+                            <li><a href="@UrlService.DuplicateTransaction(transaction)" class="duplicate"><i class="fas fa-copy"></i> Duplicate</a></li>
+                            <li><a href="@UrlService.EditTransaction(transaction)" class="view-transactions"><i class="fas fa-pencil-alt"></i> Edit</a></li>
+                            <li><button type="button" class="btn-link" @onclick="() => Delete(transaction)"><i class="fas fa-trash" style="color: red"></i> Delete</button></li>
 
-                    <DropdownItem><a href="/scheduler/create?CreateFromTransactionId=@(transaction.Id)"><i class="fas fa-calendar"></i> Make recurrent</a></DropdownItem>
-                </Dropdown>
-            </td>
-        </tr>
-    </ItemTemplate>
-</Repeater>
+                            @if (transaction.Payee != null)
+                            {
+                                <li><a class="view-transactions" href="/payees/@(transaction.Payee.Id)/transactions"><i class="fas fa-search"></i> View Transactions with payee '@transaction.Payee.Name'</a></li>
+                            }
+
+                            @if (transaction.Category != null)
+                            {
+                                <li><a class="view-transactions" href="/categories/@(transaction.Category.Id)/transactions"><i class="fas fa-search"></i> View Transactions with category '@transaction.Category.Name'</a></li>
+
+                                if (transaction.Category.GroupName != null)
+                                {
+                                    <li><a class="view-transactions" href="/category-group/@(Uri.EscapeDataString(transaction.Category.GroupName))/transactions"><i class="fas fa-search"></i> View Transactions with category group '@transaction.Category.GroupName'</a></li>
+                                }
+                            }
+
+                            <li><a href="/scheduler/create?CreateFromTransactionId=@(transaction.Id)"><i class="fas fa-calendar"></i> Make recurrent</a></li>
+                        </Dropdown>
+                    </td>
+                </tr>
+            </ItemContent>
+        </Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize>
+
+        @if (HasMorePages)
+        {
+            <tr>
+                <td colspan="7" class="row-navigation">
+                    <a href="@NavigationManager.GetUriWithQueryParameter("page", PageIndex.Value + 1)" style="cursor: pointer">Older transactions</a>
+                </td>
+            </tr>
+        }
+    </table>
+}
+
 
 @code {
     MoneizDisplaySettings displaySettings;
     Database database;
     Account account;
-    IReadOnlyList<TransactionWithAccountBalance> transactions;
-    int pageIndex = 0;
+    List<TransactionWithAccountBalance> transactions;
     DateOnly today;
     bool showReconciled = true;
     TransactionEdit currentEdit = null;
@@ -237,6 +243,9 @@ else
     [Parameter, SupplyParameterFromQuery(Name = "search")]
     public string Search { get; set; }
 
+    [Parameter, SupplyParameterFromQuery(Name = "page")]
+    public int? PageIndex { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         displaySettings = await SettingsProvider.GetDisplaySettings();
@@ -246,6 +255,8 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
+        PageIndex ??= 0;
+
         if (AccountId != null)
         {
             showReconciled = await SettingsProvider.GetShowReconciliatedTransactions(AccountId ?? -1) ?? showReconciled;
@@ -269,6 +280,8 @@ else
 
     [MemberNotNullWhen(true, nameof(Search))]
     private bool HasSearch { get; set; }
+
+    private bool HasMorePages { get; set; }
 
     private bool ShowReconciledTransactions() => showReconciled || HasSearch;
 
@@ -299,11 +312,6 @@ else
             await DatabaseProvider.Save();
             LoadTransactions();
         }
-    }
-
-    private bool HasMorePages()
-    {
-        return transactions.Count > (pageIndex + 1) * displaySettings.PageSize;
     }
 
     private async Task Reconcile()
@@ -369,24 +377,39 @@ else
             result = result.Where(t => query.Evaluate(t));
         }
 
-        result = result.OrderByDescending(t => t.ValueDate).ThenBy(t => t.Payee?.Name);
+        result = result.OrderByDescending(t => t.ValueDate).ThenByDescending(t => t.Id);
 
+        // Load the transactions we need
+        var list = new List<TransactionWithAccountBalance>(capacity: displaySettings.PageSize);
+        var balance = CanShowAccountBalanceOnTransaction ? database.GetBalance(account) : 0m;
+        using var enumerator = result.GetEnumerator();
+
+        // Skip to the correct page and update the balance
         if (CanShowAccountBalanceOnTransaction)
         {
-            var balance = database.GetBalance(account);
-            var list = new List<TransactionWithAccountBalance>(capacity: displaySettings.PageSize);
-            foreach (var transaction in result)
+            for (var i = 0; i < PageIndex.Value * displaySettings.PageSize && enumerator.MoveNext(); i++)
             {
-                list.Add(new(transaction, balance));
+                var transaction = enumerator.Current;
                 balance -= transaction.Amount;
             }
-
-            transactions = list;
         }
         else
         {
-            transactions = result.Select(t => new TransactionWithAccountBalance(t, 0m)).ToArray();
+            for (var i = 0; i < PageIndex.Value * displaySettings.PageSize && enumerator.MoveNext(); i++)
+            {
+            }
         }
+
+        // Take the transactions for the current page
+        for (var i = 0; i < displaySettings.PageSize && enumerator.MoveNext(); i++)
+        {
+            var transaction = enumerator.Current;
+            list.Add(new(transaction, balance));
+            balance -= transaction.Amount;
+        }
+
+        transactions = list;
+        HasMorePages = enumerator.MoveNext();
 
         Console.WriteLine($"LoadTransactions: {sw.ElapsedMilliseconds}ms");
     }
