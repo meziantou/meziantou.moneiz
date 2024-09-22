@@ -1,6 +1,5 @@
 ﻿@page "/database"
 @inject NavigationManager NavigationManager
-@inject ConfirmService ConfirmService
 @inject DatabaseProvider DatabaseProvider
 
 @if (database != null)
@@ -94,12 +93,12 @@
             using var ms = file.OpenReadStream();
             var database = await Database.Load(ms);
             await DatabaseProvider.Import(database);
-            await ConfirmService.Alert("Database imported");
+            GlobalInterop.Alert("Database imported");
             NavigationManager.NavigateTo("/");
         }
         catch (Exception ex)
         {
-            await ConfirmService.Alert("Cannot import database:" + ex);
+            GlobalInterop.Alert("Cannot import database:" + ex);
         }
     }
 

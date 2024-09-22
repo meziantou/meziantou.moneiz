@@ -1,6 +1,5 @@
 ﻿@page "/accounts"
 @inject DatabaseProvider DatabaseProvider
-@inject ConfirmService ConfirmService
 
 <h1>Accounts</h1>
 
@@ -68,7 +67,7 @@
 
     public async Task Delete(Account account)
     {
-        if (await ConfirmService.Confirm($"Do you really want to delete '{account}'?"))
+        if (GlobalInterop.Confirm($"Do you really want to delete '{account}'?"))
         {
             database.RemoveAccount(account);
             await DatabaseProvider.Save();

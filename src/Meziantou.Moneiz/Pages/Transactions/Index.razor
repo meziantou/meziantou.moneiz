@@ -7,8 +7,6 @@
 @using System.Diagnostics.CodeAnalysis
 @using System.Diagnostics
 @inject DatabaseProvider DatabaseProvider
-@inject ConfirmService ConfirmService
-@inject SettingsProvider SettingsProvider
 @inject UrlService UrlService
 @inject NavigationManager NavigationManager
 
@@ -306,7 +304,7 @@ else
 
     private async Task Delete(Transaction transaction)
     {
-        if (await ConfirmService.Confirm($"Do you want to delete this transaction?"))
+        if (GlobalInterop.Confirm($"Do you want to delete this transaction?"))
         {
             database.RemoveTransaction(transaction);
             await DatabaseProvider.Save();
@@ -317,7 +315,7 @@ else
     private async Task Reconcile()
     {
         var amount = AmountUtilities.FormatAmount(database.GetCheckedBalance(account));
-        if (!await ConfirmService.Confirm($"Balance of '{account}': {account?.CurrencyIsoCode}{amount}.\nDo you confirm this balance?"))
+        if (!GlobalInterop.Confirm($"Balance of '{account}': {account?.CurrencyIsoCode}{amount}.\nDo you confirm this balance?"))
             return;
 
         database.Reconcile(account);

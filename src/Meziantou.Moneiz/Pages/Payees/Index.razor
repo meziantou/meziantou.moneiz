@@ -1,6 +1,5 @@
 ﻿@page "/payees"
 @inject DatabaseProvider DatabaseProvider
-@inject ConfirmService ConfirmService
 
 <h1>Payees</h1>
 
@@ -47,7 +46,7 @@
 
     private async Task Delete(Payee payee)
     {
-        if (await ConfirmService.Confirm($"Do you really want to delete '{payee}'?"))
+        if (GlobalInterop.Confirm($"Do you really want to delete '{payee}'?"))
         {
             database.RemovePayee(payee);
             await DatabaseProvider.Save();

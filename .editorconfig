@@ -59,3 +59,6 @@ dotnet_diagnostic.CA1812.severity = none
 
 # MA0048: File name must match type name
 dotnet_diagnostic.MA0048.severity = none
+
+# CA1054: URI-like parameters should not be strings
+dotnet_diagnostic.CA1054.severity = none

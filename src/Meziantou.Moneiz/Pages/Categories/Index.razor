@@ -1,6 +1,5 @@
 ﻿@page "/categories"
 @inject DatabaseProvider DatabaseProvider
-@inject ConfirmService ConfirmService
 
 <h1>Categories</h1>
 
@@ -44,31 +43,17 @@
 @code {
     Database database;
 
-
-
     protected override async Task OnInitializedAsync()
-
     {
-
         database = await DatabaseProvider.GetDatabase();
-
     }
 
-
-
     private async Task Delete(Category category)
-
     {
-
-        if (await ConfirmService.Confirm($"Do you really want to delete '{category}'?"))
-
+        if (GlobalInterop.Confirm($"Do you really want to delete '{category}'?"))
         {
-
             database.RemoveCategory(category);
-
             await DatabaseProvider.Save();
-
         }
-
     }
 }

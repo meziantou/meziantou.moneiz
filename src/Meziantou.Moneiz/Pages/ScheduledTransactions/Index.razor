@@ -1,7 +1,6 @@
 ﻿@page "/scheduler"
 @using Meziantou.Framework.Scheduling
 @inject DatabaseProvider DatabaseProvider
-@inject ConfirmService ConfirmService
 @inject NavigationManager NavigationManager
 
 <h1>Scheduler</h1>
@@ -65,7 +64,7 @@
 
     private async Task Delete(ScheduledTransaction scheduledTransaction)
     {
-        if (await ConfirmService.Confirm($"Do you want to delete '{scheduledTransaction.Name}'"))
+        if (GlobalInterop.Confirm($"Do you want to delete '{scheduledTransaction.Name}'"))
         {
             database.RemoveScheduledTransaction(scheduledTransaction);
             await DatabaseProvider.Save();

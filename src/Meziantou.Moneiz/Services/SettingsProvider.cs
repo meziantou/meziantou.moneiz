@@ -6,29 +6,17 @@ using Microsoft.JSInterop;
 
 namespace Meziantou.Moneiz.Services;
 
-public sealed class SettingsProvider(IJSRuntime jsRuntime)
+public static class SettingsProvider
 {
-    private ValueTask<T> GetValue<T>(string key)
-    {
-        return jsRuntime.GetValue<T>("settings:" + key);
-    }
+    private static Task<T> GetValue<T>(string key) => GlobalInterop.GetValue<T>("settings:" + key);
 
-    private ValueTask SetValue<T>(string key, T value)
-    {
-        return jsRuntime.SetValue("settings:" + key, value);
-    }
+    private static Task SetValue<T>(string key, T value) => GlobalInterop.SetValue("settings:" + key, value);
 
-    public ValueTask<bool?> GetShowReconciliatedTransactions(int accountId)
-    {
-        return GetValue<bool?>("account:" + accountId.ToStringInvariant() + ":ShowReconciled");
-    }
+    public static Task<bool?> GetShowReconciliatedTransactions(int accountId) => GetValue<bool?>("account:" + accountId.ToStringInvariant() + ":ShowReconciled");
 
-    public ValueTask SetShowReconciliatedTransactions(int accountId, bool value)
-    {
-        return SetValue("account:" + accountId.ToStringInvariant() + ":ShowReconciled", value);
-    }
+    public static Task SetShowReconciliatedTransactions(int accountId, bool value) => SetValue("account:" + accountId.ToStringInvariant() + ":ShowReconciled", value);
 
-    public async ValueTask<MoneizDisplaySettings> GetDisplaySettings()
+    public static async Task<MoneizDisplaySettings> GetDisplaySettings()
     {
         var result = await GetValue<MoneizDisplaySettings>("displaySettings");
         result ??= new MoneizDisplaySettings();
@@ -41,8 +29,5 @@ public sealed class SettingsProvider(IJSRuntime jsRuntime)
         return result;
     }
 
-    public ValueTask SetDisplaySettings(MoneizDisplaySettings value)
-    {
-        return SetValue("displaySettings", value);
-    }
+    public static Task SetDisplaySettings(MoneizDisplaySettings value) => SetValue("displaySettings", value);
 }

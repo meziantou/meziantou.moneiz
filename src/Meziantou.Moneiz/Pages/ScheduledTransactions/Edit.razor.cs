@@ -88,7 +88,7 @@ public partial class Edit
         {
             if (_model.StartDate < Database.GetToday())
             {
-                if (!await ConfirmService.Confirm("The schedule starts in the past. Are you sure?"))
+                if (!GlobalInterop.Confirm("The schedule starts in the past. Are you sure?"))
                     return;
             }
 

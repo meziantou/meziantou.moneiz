@@ -10,14 +10,11 @@ using System.Threading.Tasks;
 using Meziantou.AspNetCore.Components.WebAssembly;
 using Meziantou.Framework;
 using Meziantou.Moneiz.Core;
-using Meziantou.Moneiz.Extensions;
-using Meziantou.Moneiz.Services;
 using Microsoft.AspNetCore.Components.WebAssembly.Http;
-using Microsoft.JSInterop;
 
 namespace Meziantou.Moneiz.Services;
 
-public sealed class DatabaseProvider(IJSRuntime jsRuntime, ConfirmService confirmService) : IDisposable
+public sealed class DatabaseProvider : IDisposable
 {
     private const string MoneizLocalStorageDbName = "moneiz.db";
     private const string MoneizLocalStorageConfigurationName = "moneiz.configuration";
@@ -50,7 +47,7 @@ public sealed class DatabaseProvider(IJSRuntime jsRuntime, ConfirmService confir
 
                     if (_database is null)
                     {
-                        var result = await jsRuntime.GetByteArrayValue(MoneizLocalStorageDbName);
+                        var result = await GlobalInterop.GetByteArrayValue(MoneizLocalStorageDbName);
                         if (result is not null)
                         {
                             _database = await Database.Load(result);
@@ -87,11 +84,11 @@ public sealed class DatabaseProvider(IJSRuntime jsRuntime, ConfirmService confir
         Console.WriteLine("Database blob generated in " + stopwatch.GetElapsedTime());
 
         stopwatch = ValueStopwatch.StartNew();
-        await jsRuntime.SetValue(MoneizLocalStorageDbName, bytes);
+        await GlobalInterop.SetValue(MoneizLocalStorageDbName, bytes);
         Console.WriteLine("Database blob saved in " + stopwatch.GetElapsedTime());
 
         stopwatch = ValueStopwatch.StartNew();
-        await jsRuntime.SetValue(MoneizLocalStorageChangedName, options.IndicateDbChanged);
+        await GlobalInterop.SetValue(MoneizLocalStorageChangedName, options.IndicateDbChanged);
         Console.WriteLine("Database changed saved in " + stopwatch.GetElapsedTime());
 
         stopwatch = ValueStopwatch.StartNew();
@@ -104,8 +101,8 @@ public sealed class DatabaseProvider(IJSRuntime jsRuntime, ConfirmService confir
         var database = await GetDatabase();
         var bytes = database.Export();
 
-        await jsRuntime.ExportToFile(MoneizDownloadFileName, bytes);
-        await jsRuntime.SetValue(MoneizLocalStorageChangedName, value: false);
+        await GlobalInterop.ExportToFile(MoneizDownloadFileName, bytes);
+        await GlobalInterop.SetValue(MoneizLocalStorageChangedName, value: false);
         RaiseDatabaseSaved();
     }
 
@@ -135,11 +132,14 @@ public sealed class DatabaseProvider(IJSRuntime jsRuntime, ConfirmService confir
         DatabaseChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    public async ValueTask<bool> HasLocalChanges() => (await jsRuntime.GetValue<bool?>(MoneizLocalStorageChangedName)) ?? false;
+    [SuppressMessage("Performance", "CA1822:Mark members as static")]
+    public async Task<bool> HasLocalChanges() => (await GlobalInterop.GetValue<bool?>(MoneizLocalStorageChangedName)) ?? false;
 
-    public async ValueTask<DatabaseConfiguration> LoadConfiguration() => (await jsRuntime.GetValue<DatabaseConfiguration>(MoneizLocalStorageConfigurationName)) ?? new DatabaseConfiguration();
+    [SuppressMessage("Performance", "CA1822:Mark members as static")]
+    public async Task<DatabaseConfiguration> LoadConfiguration() => (await GlobalInterop.GetValue<DatabaseConfiguration>(MoneizLocalStorageConfigurationName)) ?? new DatabaseConfiguration();
 
-    public ValueTask SetConfiguration(DatabaseConfiguration configuration) => jsRuntime.SetValue(MoneizLocalStorageConfigurationName, configuration);
+    [SuppressMessage("Performance", "CA1822:Mark members as static")]
+    public Task SetConfiguration(DatabaseConfiguration configuration) => GlobalInterop.SetValue(MoneizLocalStorageConfigurationName, configuration);
 
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope")]
     private static HttpClient CreateClient(DatabaseConfiguration configuration)
@@ -178,7 +178,7 @@ public sealed class DatabaseProvider(IJSRuntime jsRuntime, ConfirmService confir
         if (file is not null && !configuration.GitHubSha.EqualsIgnoreCase(file.Sha))
         {
             Console.WriteLine($"GitHub database sha '{file.Sha}' is different from current db sha '{configuration.GitHubSha}'");
-            if (!await confirmService.Confirm("The database on GitHub is not the same as the one synchronized on this machine. Do you want to overwrite it?"))
+            if (!GlobalInterop.Confirm("The database on GitHub is not the same as the one synchronized on this machine. Do you want to overwrite it?"))
                 return;
         }
 
@@ -197,7 +197,7 @@ public sealed class DatabaseProvider(IJSRuntime jsRuntime, ConfirmService confir
         configuration.GitHubSha = file.Sha;
         await SetConfiguration(configuration);
 
-        await jsRuntime.SetValue(MoneizLocalStorageChangedName, value: false);
+        await GlobalInterop.SetValue(MoneizLocalStorageChangedName, value: false);
         RaiseDatabaseSaved();
     }
 
@@ -224,7 +224,7 @@ public sealed class DatabaseProvider(IJSRuntime jsRuntime, ConfirmService confir
     {
         if (!implicitLoad && await HasLocalChanges())
         {
-            if (!await confirmService.Confirm("You have local changes. Importing the database will destroy them. Do you want to proceed?"))
+            if (!GlobalInterop.Confirm("You have local changes. Importing the database will destroy them. Do you want to proceed?"))
                 return;
         }
 
@@ -241,7 +241,7 @@ public sealed class DatabaseProvider(IJSRuntime jsRuntime, ConfirmService confir
         {
             if (!implicitLoad)
             {
-                await confirmService.Alert("No database found on GitHub");
+                GlobalInterop.Alert("No database found on GitHub");
             }
             else
             {
@@ -260,7 +260,7 @@ public sealed class DatabaseProvider(IJSRuntime jsRuntime, ConfirmService confir
         if (implicitLoad)
         {
             Console.WriteLine($"GitHub database sha '{file.Sha}' is different from current db sha '{configuration.GitHubSha}'");
-            if (!await confirmService.Confirm("A new version of the database is available on GitHub. Do you want to load it?"))
+            if (!GlobalInterop.Confirm("A new version of the database is available on GitHub. Do you want to load it?"))
                 return;
         }
 
@@ -272,7 +272,6 @@ public sealed class DatabaseProvider(IJSRuntime jsRuntime, ConfirmService confir
         await Import(database);
         configuration.GitHubSha = blob.Sha;
         await SetConfiguration(configuration);
-
     }
 
     private static async Task<T> SafeGetForJsonAsync<T>(HttpClient httpClient, string url) where T : class
@@ -295,7 +294,7 @@ public sealed class DatabaseProvider(IJSRuntime jsRuntime, ConfirmService confir
         var currentUser = await httpClient.GetFromJsonAsync<GitHubUser>("user");
 
         var url = "https://github.com/" + currentUser.Login + "/" + configuration.GitHubRepository;
-        await jsRuntime.OpenInTab(url);
+        GlobalInterop.OpenInTab(url);
     }
 
     public async ValueTask<bool> IsGitHubConfigured()

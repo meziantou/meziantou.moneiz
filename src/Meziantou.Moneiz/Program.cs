@@ -11,8 +11,6 @@ builder.RootComponents.Add<App>("app");
 
 builder.Services.AddTransient(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.Services.AddSingleton<DatabaseProvider>();
-builder.Services.AddSingleton<ConfirmService>();
-builder.Services.AddSingleton<SettingsProvider>();
 builder.Services.AddScoped<UrlService>();
 builder.Services.AddMudServices();
 

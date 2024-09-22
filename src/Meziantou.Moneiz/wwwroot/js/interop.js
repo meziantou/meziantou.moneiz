@@ -30,10 +30,6 @@ function MoneizDownloadFile(name, content) {
   URL.revokeObjectURL(exportUrl);
 }
 
-function MoneizOpenInTab(url) {
-  window.open(url, '_blank');
-}
-
 async function MoneizUpdate() {
   const serviceWorker = await navigator.serviceWorker.ready;
   await serviceWorker.update();
