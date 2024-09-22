@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Http;
 
 namespace Meziantou.Moneiz.Services;
 
-public sealed class DatabaseProvider : IDisposable
+public sealed partial class DatabaseProvider : IDisposable
 {
     private const string MoneizLocalStorageDbName = "moneiz.db";
     private const string MoneizLocalStorageConfigurationName = "moneiz.configuration";
@@ -133,13 +133,13 @@ public sealed class DatabaseProvider : IDisposable
     }
 
     [SuppressMessage("Performance", "CA1822:Mark members as static")]
-    public async Task<bool> HasLocalChanges() => (await GlobalInterop.GetValue<bool?>(MoneizLocalStorageChangedName)) ?? false;
+    public async Task<bool> HasLocalChanges() => await GlobalInterop.GetValue(MoneizLocalStorageChangedName, defaultValue: false);
 
     [SuppressMessage("Performance", "CA1822:Mark members as static")]
-    public async Task<DatabaseConfiguration> LoadConfiguration() => (await GlobalInterop.GetValue<DatabaseConfiguration>(MoneizLocalStorageConfigurationName)) ?? new DatabaseConfiguration();
+    public async Task<DatabaseConfiguration> LoadConfiguration() => (await GlobalInterop.GetValue(MoneizLocalStorageConfigurationName, JsonDatabaseContext.Default.DatabaseConfiguration)) ?? new DatabaseConfiguration();
 
     [SuppressMessage("Performance", "CA1822:Mark members as static")]
-    public Task SetConfiguration(DatabaseConfiguration configuration) => GlobalInterop.SetValue(MoneizLocalStorageConfigurationName, configuration);
+    public Task SetConfiguration(DatabaseConfiguration configuration) => GlobalInterop.SetValue(MoneizLocalStorageConfigurationName, configuration, JsonDatabaseContext.Default.DatabaseConfiguration);
 
     [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope")]
     private static HttpClient CreateClient(DatabaseConfiguration configuration)
@@ -367,4 +367,7 @@ public sealed class DatabaseProvider : IDisposable
             return base.SendAsync(request, cancellationToken);
         }
     }
+
+    [JsonSerializable(typeof(DatabaseConfiguration))]
+    private sealed partial class JsonDatabaseContext : JsonSerializerContext;
 }

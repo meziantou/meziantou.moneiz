@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Runtime.InteropServices.JavaScript;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
 using Microsoft.JSInterop;
 
@@ -19,17 +21,27 @@ public static partial class GlobalInterop
 
     [JSImport("globalThis.MoneizSetValue")]
     public static partial Task SetValue(string name, string value);
-    public static Task SetValue<T>(string name, T value) => SetValue(name, JsonSerializer.Serialize(value));
+    public static Task SetValue(string name, bool value) => SetValue(name, value ? "true" : "false");
+    public static Task SetValue<T>(string name, T value, JsonTypeInfo<T> typeInfo) => SetValue(name, JsonSerializer.Serialize(value, typeInfo));
     public static Task SetValue(string name, byte[] value) => SetValue(name, value is null ? null : Convert.ToBase64String(value));
 
     [JSImport("globalThis.MoneizGetValue")]
     public static partial Task<string> GetValue(string name);
 
-    public static async Task<T> GetValue<T>(string name)
+    public static async Task<bool> GetValue(string name, bool defaultValue)
     {
         var value = await GetValue(name);
         if (value is not null)
-            return JsonSerializer.Deserialize<T>(value);
+            return value is "true";
+
+        return defaultValue;
+    }
+
+    public static async Task<T> GetValue<T>(string name, JsonTypeInfo<T> typeInfo)
+    {
+        var value = await GetValue(name);
+        if (value is not null)
+            return JsonSerializer.Deserialize(value, typeInfo);
 
         return default;
     }
