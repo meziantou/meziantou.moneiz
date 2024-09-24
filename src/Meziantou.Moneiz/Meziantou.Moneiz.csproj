@@ -7,8 +7,10 @@
 
     <BlazorEnableCompression>False</BlazorEnableCompression>
     <RunAOTCompilation Condition="$(Configuration) == 'Release'">true</RunAOTCompilation>
-    <InvariantGlobalization>true</InvariantGlobalization>
     <InvariantTimezone>true</InvariantTimezone>
+
+    <!-- Needed to compare strings-->
+    <InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(Configuration)' == 'Release'">

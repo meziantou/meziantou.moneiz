@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Meziantou.Framework;
 using Meziantou.Framework.SimpleQueryLanguage;
 using Meziantou.Moneiz.Core;
 using Meziantou.Moneiz.Extensions;
@@ -14,15 +15,25 @@ internal static class TransactionQueries
 
     private static QueryBuilder<Transaction> CreateTransactionQuery()
     {
+        static bool MatchStringValue(string value, string query)
+        {
+            if (value is null)
+                return false;
+
+            value = value.RemoveDiacritics();
+            query = query.RemoveDiacritics();
+            return value.Contains(query, StringComparison.OrdinalIgnoreCase);
+        }
+
         var builder = new QueryBuilder<Transaction>();
-        builder.AddHandler("bank", (transaction, text) => transaction.Account?.Bank?.Contains(text, StringComparison.OrdinalIgnoreCase) == true);
-        builder.AddHandler("account", (transaction, text) => transaction.Account?.Name?.Contains(text, StringComparison.OrdinalIgnoreCase) == true);
+        builder.AddHandler("bank", (transaction, text) => MatchStringValue(transaction.Account?.Bank, text));
+        builder.AddHandler("account", (transaction, text) => MatchStringValue(transaction.Account?.Name, text));
         builder.AddHandler<int>("accountId", (transaction, id) => transaction.Account?.Id == id);
-        builder.AddHandler("title", (transaction, text) => transaction.FinalTitle?.Contains(text, StringComparison.OrdinalIgnoreCase) == true);
-        builder.AddHandler("payee", (transaction, text) => transaction.Payee?.Name?.Contains(text, StringComparison.OrdinalIgnoreCase) == true);
-        builder.AddHandler("category", (transaction, text) => transaction.Category?.Name?.Contains(text, StringComparison.OrdinalIgnoreCase) == true);
-        builder.AddHandler("categoryGroup", (transaction, text) => transaction.Category?.GroupName.Contains(text, StringComparison.OrdinalIgnoreCase) == true);
-        builder.AddHandler("comment", (transaction, text) => transaction.Comment?.Contains(text, StringComparison.OrdinalIgnoreCase) == true);
+        builder.AddHandler("title", (transaction, text) => MatchStringValue(transaction.FinalTitle, text));
+        builder.AddHandler("payee", (transaction, text) => MatchStringValue(transaction.Payee?.Name, text));
+        builder.AddHandler("category", (transaction, text) => MatchStringValue(transaction.Category?.Name, text));
+        builder.AddHandler("categoryGroup", (transaction, text) => MatchStringValue(transaction.Category?.GroupName, text));
+        builder.AddHandler("comment", (transaction, text) => MatchStringValue(transaction.Comment, text));
         builder.AddHandler<TransactionState>("state", (transaction, value) => transaction.State == value);
         builder.AddRangeHandler<DateOnly>("date", (transaction, range) => range.IsInRange(transaction.ValueDate));
         builder.AddRangeHandler<decimal>("amount", (transaction, range) => range.IsInRange(transaction.Amount));
@@ -30,19 +41,19 @@ internal static class TransactionQueries
         builder.SetTextFilterHandler((transaction, text) =>
         {
             var amount = ExtractDecimalValues(text)?.LastOrDefault();
-            if (transaction.FinalTitle?.Contains(text, StringComparison.OrdinalIgnoreCase) == true)
+            if (MatchStringValue(transaction.FinalTitle, text))
                 return true;
 
-            if (transaction.Payee?.Name?.Contains(text, StringComparison.OrdinalIgnoreCase) == true)
+            if (MatchStringValue(transaction.Payee?.Name, text))
                 return true;
 
-            if (transaction.Category?.Name?.Contains(text, StringComparison.OrdinalIgnoreCase) == true)
+            if (MatchStringValue(transaction.Category?.Name, text))
                 return true;
 
-            if (transaction.Category?.GroupName?.Contains(text, StringComparison.OrdinalIgnoreCase) == true)
+            if (MatchStringValue(transaction.Category?.GroupName, text))
                 return true;
 
-            if (transaction.Comment?.Contains(text, StringComparison.OrdinalIgnoreCase) == true)
+            if (MatchStringValue(transaction.Comment, text))
                 return true;
 
             if (amount.HasValue)
