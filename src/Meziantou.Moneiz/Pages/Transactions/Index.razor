@@ -328,8 +328,8 @@ else
 
     private void OnSearch(ChangeEventArgs e)
     {
-        Search = (string)e.Value;
-        LoadTransactions();
+        var newUri = NavigationManager.GetUriWithQueryParameters(new Dictionary<string, object>() { ["search"] = e.Value });
+        NavigationManager.NavigateTo(newUri);
     }
 
     private void LoadTransactions()
