@@ -27,10 +27,7 @@ public sealed partial class Database
 
     public event EventHandler? DatabaseChanged;
 
-    public Database()
-    {
-        Currencies = InitializeCurrencies();
-    }
+    public Database() => Currencies = InitializeCurrencies();
 
     [JsonPropertyName("a")]
     public IList<Account> Accounts { get; set; } = [];

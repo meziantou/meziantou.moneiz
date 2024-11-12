@@ -3,9 +3,6 @@ using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
 using Meziantou.Framework;
-using Meziantou.Moneiz.Core;
-using Meziantou.Moneiz.Extensions;
-using Microsoft.JSInterop;
 
 namespace Meziantou.Moneiz.Services;
 

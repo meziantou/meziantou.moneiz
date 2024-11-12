@@ -29,7 +29,7 @@ internal static class QueryHelpers
         ArgumentNullException.ThrowIfNull(name);
         ArgumentNullException.ThrowIfNull(value);
 
-        return AddQueryString(uri, new[] { new KeyValuePair<string, string?>(name, value) });
+        return AddQueryString(uri, [new KeyValuePair<string, string?>(name, value)]);
     }
 
     /// <summary>
