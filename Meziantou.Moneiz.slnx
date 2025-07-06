@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Meziantou.Moneiz.Core/Meziantou.Moneiz.Core.csproj" />
+    <Project Path="src/Meziantou.Moneiz.ExchangeRatesGenerator/Meziantou.Moneiz.ExchangeRatesGenerator.csproj" />
+    <Project Path="src/Meziantou.Moneiz/Meziantou.Moneiz.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Meziantou.Moneiz.CoreTests/Meziantou.Moneiz.CoreTests.csproj" />
+  </Folder>
+</Solution>
