@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Text.Json.Serialization;
+using Meziantou.Moneiz.Core.V1;
 
 namespace Meziantou.Moneiz.Core;
 
@@ -23,6 +24,10 @@ public partial class Database
         if (existingAccount is null)
         {
             account.Id = GenerateId(Accounts, a => a.Id);
+            if (Accounts.Count > 0)
+            {
+                account.SortOrder = Accounts.Where(account => !account.Closed).Max(account => account.SortOrder) + 1;
+            }
         }
 
         AddOrReplace(Accounts, existingAccount, account);

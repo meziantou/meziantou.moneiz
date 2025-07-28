@@ -1,4 +1,4 @@
-﻿@page "/accounts/create"
+@page "/accounts/create"
 @page "/accounts/{id:int}/edit"
 @inject DatabaseProvider DatabaseProvider
 @inject NavigationManager NavigationManager
@@ -87,6 +87,7 @@
 </LoadingIndicator>
 
 @code {
+
     Database database;
     AccountModel model = new AccountModel();
 
