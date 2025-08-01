@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Http;
@@ -10,11 +10,12 @@ using System.Threading.Tasks;
 using Meziantou.AspNetCore.Components.WebAssembly;
 using Meziantou.Framework;
 using Meziantou.Moneiz.Core;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.WebAssembly.Http;
 
 namespace Meziantou.Moneiz.Services;
 
-public sealed partial class DatabaseProvider : IDisposable
+public sealed partial class DatabaseProvider(NavigationManager navigationManager) : IDisposable
 {
     private const string MoneizLocalStorageDbName = "moneiz.db";
     private const string MoneizLocalStorageConfigurationName = "moneiz.configuration";
@@ -42,7 +43,14 @@ public sealed partial class DatabaseProvider : IDisposable
                     var configuration = await LoadConfiguration();
                     if (configuration.GitHubAutoLoad && !string.IsNullOrWhiteSpace(configuration?.GitHubToken))
                     {
-                        await ImportFromGitHub(implicitLoad: true);
+                        try
+                        {
+                            await ImportFromGitHub(implicitLoad: true);
+                        }
+                        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.Unauthorized)
+                        {
+                            navigationManager.NavigateTo("/database");
+                        }
                     }
 
                     if (_database is null)
