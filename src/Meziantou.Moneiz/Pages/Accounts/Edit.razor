@@ -51,6 +51,18 @@
             </label>
         </div>
 
+		<div class="form-group">
+			<label>
+				Account type
+				<InputSelect @bind-Value="model.AccountType">
+					@foreach (var item in Enum.GetValues(typeof(AccountType)))
+					{
+						<option value="@item">@item</option>
+					}
+				</InputSelect>
+			</label>
+		</div>
+
         <div class="form-group">
             <label>
                 Default cash flow
