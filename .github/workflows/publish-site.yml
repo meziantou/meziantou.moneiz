@@ -2,8 +2,6 @@ name: CI
 
 on:
   push:
-    branches:
-      - '*'
 
 env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
@@ -17,9 +15,6 @@ defaults:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      DOTNET_NOLOGO: true
-
     steps:
     - uses: actions/checkout@v4
 
