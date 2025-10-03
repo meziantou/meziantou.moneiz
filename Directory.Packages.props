@@ -7,7 +7,7 @@
     <GlobalPackageReference Include="Meziantou.DotNet.CodingStandard" Version="1.0.138" />
     <PackageVersion Include="Meziantou.AspNetCore.Components" Version="2.0.18" />
     <PackageVersion Include="Meziantou.AspNetCore.Components.WebAssembly" Version="1.0.10" />
-    <PackageVersion Include="Meziantou.Framework" Version="4.4.6" />
+    <PackageVersion Include="Meziantou.Framework" Version="5.0.0" />
     <PackageVersion Include="Meziantou.Framework.RelativeDate" Version="2.1.6" />
     <PackageVersion Include="Meziantou.Framework.Scheduling" Version="2.0.6" />
     <PackageVersion Include="Meziantou.Framework.SimpleQueryLanguage" Version="1.0.3" />
