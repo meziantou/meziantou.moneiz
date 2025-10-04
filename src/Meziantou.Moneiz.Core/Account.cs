@@ -58,4 +58,7 @@ public sealed class Account
     {
         return obj is Account a && a.Id == Id;
     }
+
+    public static bool operator ==(Account? left, Account? right) => EqualityComparer<Account>.Default.Equals(left, right);
+    public static bool operator !=(Account? left, Account? right) => !(left == right);
 }
