@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Text.Json.Serialization;
-using Meziantou.Moneiz.Core.V1;
+﻿using System.Text.Json.Serialization;
 
 namespace Meziantou.Moneiz.Core;
 
@@ -82,7 +79,7 @@ public partial class Database
         return GetBalance(account, DateOnly.MaxValue, TransactionState.Checked);
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "Get user time")]
+    [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "Get user time")]
     public static DateOnly GetToday()
     {
         return DateOnly.FromDateTime(DateTime.Now);
@@ -115,10 +112,10 @@ public partial class Database
             if (transaction.ValueDate > date)
                 return false;
 
-            if (transactionState == TransactionState.Reconciliated && transaction.ReconciliationDate == null)
+            if (transactionState is TransactionState.Reconciliated && transaction.ReconciliationDate == null)
                 return false;
 
-            if (transactionState == TransactionState.Checked && transaction.CheckedDate == null)
+            if (transactionState is TransactionState.Checked && transaction.CheckedDate == null)
                 return false;
 
             return true;
@@ -128,7 +125,7 @@ public partial class Database
     public void Reconcile(Account account)
     {
         var now = DateTime.UtcNow;
-        foreach (var transaction in Transactions.Where(t => t.Account == account && t.State == TransactionState.Checked))
+        foreach (var transaction in Transactions.Where(t => t.Account == account && t.State is TransactionState.Checked))
         {
             transaction.ReconciliationDate = now;
         }

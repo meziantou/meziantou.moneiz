@@ -1,55 +1,59 @@
 @page "/accounts/create"
 @page "/accounts/{id:int}/edit"
+@using System.Diagnostics
 @inject DatabaseProvider DatabaseProvider
 @inject NavigationManager NavigationManager
 
 <h1>Create Account</h1>
 
 <LoadingIndicator IsLoading="database == null">
-    <EditForm Model="@model" OnValidSubmit="OnSubmit">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
+	<EditForm Model="@model" OnValidSubmit="OnSubmit">
+		<DataAnnotationsValidator />
+		<ValidationSummary />
 
-        <div class="form-group">
-            <label>
-                Name
-                <InputText @bind-Value="model.Name" />
-            </label>
-        </div>
+		<div class="form-group">
+			<label>
+				Name
+				<InputText @bind-Value="model.Name" />
+			</label>
+		</div>
 
-        <div class="form-group">
-            <label>
-                Currency
-                <InputSelect @bind-Value="model.Currency">
-                    <option></option>
-                    @foreach (var item in database?.Currencies.OrderBy(c => c.IsoName))
-                    {
-                        <option value="@item.IsoName">@item</option>
-                    }
-                </InputSelect>
-            </label>
-        </div>
+		<div class="form-group">
+			<label>
+				Currency
+				<InputSelect @bind-Value="model.Currency">
+					<option></option>
+					@if (database is not null)
+					{
+						foreach (var item in database.Currencies.OrderBy(c => c.IsoName))
+						{
+							<option value="@item.IsoName">@item</option>
+						}
+					}
+				</InputSelect>
+			</label>
+		</div>
 
-        <div class="form-group">
-            <label>
-                Holder name
-                <InputText @bind-Value="model.HolderName" />
-            </label>
-        </div>
+		<div class="form-group">
+			<label>
+				Holder name
+				<InputText @bind-Value="model.HolderName" />
+			</label>
+		</div>
 
-        <div class="form-group">
-            <label>
-                Bank
-                <InputText @bind-Value="model.BankName" />
-            </label>
-        </div>
+		<div class="form-group">
+			<label>
+				Bank
+				<InputText @bind-Value="model.BankName" />
+			</label>
+		</div>
 
-        <div class="form-group">
-            <label>
-                Initial balance
-                <InputNumber @bind-Value="model.InitialBalance" />
-            </label>
-        </div>
+		<div class="form-group">
+			<label>
+				Initial balance
+				<InputNumber @bind-Value="model.InitialBalance" />
+			</label>
+		</div>
 
 		<div class="form-group">
 			<label>
@@ -63,110 +67,111 @@
 			</label>
 		</div>
 
-        <div class="form-group">
-            <label>
-                Default cash flow
-                <InputSelect @bind-Value="model.DefaultCashFlow">
-                    @foreach (var item in Enum.GetValues(typeof(CashFlow)))
-                    {
-                        <option value="@item">@item</option>
-                    }
-                </InputSelect>
-            </label>
-        </div>
+		<div class="form-group">
+			<label>
+				Default cash flow
+				<InputSelect @bind-Value="model.DefaultCashFlow">
+					@foreach (var item in Enum.GetValues(typeof(CashFlow)))
+					{
+						<option value="@item">@item</option>
+					}
+				</InputSelect>
+			</label>
+		</div>
 
-        <div class="form-group">
-            <label>
-                Default transaction state
-                <InputSelect @bind-Value="model.DefaultTransactionState">
-                    @foreach (var item in Enum.GetValues(typeof(TransactionState)))
-                    {
-                        <option value="@item">@item</option>
-                    }
-                </InputSelect>
-            </label>
-        </div>
+		<div class="form-group">
+			<label>
+				Default transaction state
+				<InputSelect @bind-Value="model.DefaultTransactionState">
+					@foreach (var item in Enum.GetValues(typeof(TransactionState)))
+					{
+						<option value="@item">@item</option>
+					}
+				</InputSelect>
+			</label>
+		</div>
 
-        <div class="form-group">
-            <label>
-                Closed?
-                <InputCheckbox @bind-Value="model.Closed" />
-            </label>
-        </div>
+		<div class="form-group">
+			<label>
+				Closed?
+				<InputCheckbox @bind-Value="model.Closed" />
+			</label>
+		</div>
 
-        <button type="submit">Submit</button>
-    </EditForm>
+		<button type="submit">Submit</button>
+	</EditForm>
 </LoadingIndicator>
 
 @code {
+	Database? database;
+	AccountModel model = new AccountModel();
 
-    Database database;
-    AccountModel model = new AccountModel();
+	[Parameter]
+	public int? Id { get; set; }
 
-    [Parameter]
-    public int? Id { get; set; }
+	protected override async Task OnInitializedAsync()
+	{
+		database = await DatabaseProvider.GetDatabase();
+	}
 
-    protected override async Task OnInitializedAsync()
-    {
-        database = await DatabaseProvider.GetDatabase();
-    }
+	protected override void OnParametersSet()
+	{
+		Debug.Assert(database != null);
+		var account = database.GetAccountById(Id);
+		if (account == null && Id != null)
+		{
+			NavigationManager.NavigateToAccounts();
+			return;
+		}
 
-    protected override void OnParametersSet()
-    {
-        var account = database.GetAccountById(Id);
-        if (account == null && Id != null)
-        {
-            NavigationManager.NavigateToAccounts();
-            return;
-        }
+		if (account != null)
+		{
+			model = new AccountModel
+			{
+				Name = account.Name,
+				BankName = account.Bank,
+				HolderName = account.HolderName,
+				Currency = account.CurrencyIsoCode,
+				InitialBalance = account.InitialBalance,
+				AccountType = account.AccountType,
+				DefaultCashFlow = account.DefaultCashFlow,
+				DefaultTransactionState = account.DefaultTransactionState,
+				Closed = account.Closed,
+			};
+		}
+	}
 
-        if (account != null)
-        {
-            model = new AccountModel
-            {
-                Name = account.Name,
-                BankName = account.Bank,
-                HolderName = account.HolderName,
-                Currency = account.CurrencyIsoCode,
-                InitialBalance = account.InitialBalance,
-                AccountType = account.AccountType,
-                DefaultCashFlow = account.DefaultCashFlow,
-                DefaultTransactionState = account.DefaultTransactionState,
-                Closed = account.Closed,
-            };
-        }
-    }
+	private async Task OnSubmit()
+	{
+		Debug.Assert(database is not null);
+		var account = database.GetAccountById(Id) ?? new Core.Account();
 
-    private async Task OnSubmit()
-    {
-        var account = database.GetAccountById(Id) ?? new Core.Account();
+		account.Name = model.Name;
+		account.Bank = model.BankName.TrimAndNullify();
+		account.HolderName = model.HolderName.TrimAndNullify();
+		account.CurrencyIsoCode = model.Currency;
+		account.InitialBalance = model.InitialBalance;
+		account.AccountType = model.AccountType;
+		account.DefaultCashFlow = model.DefaultCashFlow;
+		account.DefaultTransactionState = model.DefaultTransactionState;
+		account.Closed = model.Closed;
 
-        account.Name = model.Name;
-        account.Bank = model.BankName.TrimAndNullify();
-        account.HolderName = model.HolderName.TrimAndNullify();
-        account.CurrencyIsoCode = model.Currency;
-        account.InitialBalance = model.InitialBalance;
-        account.AccountType = model.AccountType;
-        account.DefaultCashFlow = model.DefaultCashFlow;
-        account.DefaultTransactionState = model.DefaultTransactionState;
-        account.Closed = model.Closed;
+		database.SaveAccount(account);
+		await DatabaseProvider.Save();
+		NavigationManager.NavigateToAccounts();
+	}
 
-        database.SaveAccount(account);
-        await DatabaseProvider.Save();
-        NavigationManager.NavigateToAccounts();
-    }
-
-    private sealed class AccountModel
-    {
-        [Required]
-        public string Name { get; set; }
-        public string BankName { get; set; }
-        public string HolderName { get; set; }
-        public string Currency { get; set; }
-        public decimal InitialBalance { get; set; }
-        public AccountType AccountType { get; set; }
-        public CashFlow DefaultCashFlow { get; set; }
-        public TransactionState DefaultTransactionState { get; set; }
-        public bool Closed { get; set; }
-    }
+	private sealed class AccountModel
+	{
+		[Required]
+		public string? Name { get; set; }
+		public string? BankName { get; set; }
+		public string? HolderName { get; set; }
+		public string? Currency { get; set; }
+		public decimal InitialBalance { get; set; }
+		public AccountType AccountType { get; set; }
+		public CashFlow DefaultCashFlow { get; set; }
+		public TransactionState DefaultTransactionState { get; set; }
+		public bool Closed { get; set; }
+	}
 }

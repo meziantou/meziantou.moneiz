@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 using Meziantou.Framework;
 using Meziantou.Moneiz.Core;
 using Meziantou.Moneiz.Services;
@@ -9,23 +8,23 @@ using Microsoft.AspNetCore.Components.Rendering;
 
 namespace Meziantou.Moneiz.Shared;
 
-public sealed class InputSelectAccount : InputBase<Account>
+public sealed class InputSelectAccount : InputBase<Account?>
 {
-    private Database _database;
+    private Database? _database;
 
     [Inject]
-    private DatabaseProvider DatabaseProvider { get; set; }
+    private DatabaseProvider DatabaseProvider { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
         => _database = await DatabaseProvider.GetDatabase();
 
-    protected override string FormatValueAsString(Account value)
-        => value?.Id.ToStringInvariant();
+    protected override string? FormatValueAsString(Account? value) => value?.Id.ToStringInvariant();
 
-    protected override bool TryParseValueFromString(string value, out Account result, out string validationErrorMessage)
+    protected override bool TryParseValueFromString(string? value, [MaybeNullWhen(false)] out Account? result, [NotNullWhen(false)] out string? validationErrorMessage)
     {
         if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var resultInt))
         {
+            Debug.Assert(_database is not null);
             result = _database.GetAccountById(resultInt);
             validationErrorMessage = null;
             return true;
@@ -44,7 +43,7 @@ public sealed class InputSelectAccount : InputBase<Account>
         builder.AddMultipleAttributes(1, AdditionalAttributes);
         builder.AddAttribute(2, "class", CssClass);
         builder.AddAttribute(3, "value", BindConverter.FormatValue(CurrentValueAsString));
-        builder.AddAttribute(4, "onchange", EventCallback.Factory.CreateBinder<string>(this, value => CurrentValueAsString = value, CurrentValueAsString));
+        builder.AddAttribute(4, "onchange", EventCallback.Factory.CreateBinder<string?>(this, value => CurrentValueAsString = value, CurrentValueAsString));
 
         if (_database is not null)
         {

@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 using Meziantou.Framework;
 using Meziantou.Moneiz.Core;
 using Meziantou.Moneiz.Services;
@@ -10,12 +8,12 @@ using Microsoft.AspNetCore.Components.Rendering;
 
 namespace Meziantou.Moneiz.Shared;
 
-public sealed class InputSelectCategory : InputBase<Category>
+public sealed class InputSelectCategory : InputBase<Category?>
 {
-    private Database _database;
+    private Database? _database;
 
     [Inject]
-    private DatabaseProvider DatabaseProvider { get; set; }
+    private DatabaseProvider DatabaseProvider { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
         => _database = await DatabaseProvider.GetDatabase();
@@ -23,12 +21,13 @@ public sealed class InputSelectCategory : InputBase<Category>
     [Parameter]
     public bool IsOptional { get; set; }
 
-    protected override string FormatValueAsString(Category value) => value?.Id.ToStringInvariant();
+    protected override string? FormatValueAsString(Category? value) => value?.Id.ToStringInvariant();
 
-    protected override bool TryParseValueFromString(string value, out Category result, out string validationErrorMessage)
+    protected override bool TryParseValueFromString(string? value, [MaybeNullWhen(false)] out Category? result, [NotNullWhen(false)] out string? validationErrorMessage)
     {
         if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var resultInt))
         {
+            Debug.Assert(_database is not null);
             result = _database.GetCategoryById(resultInt);
             validationErrorMessage = null;
             return true;
@@ -54,7 +53,7 @@ public sealed class InputSelectCategory : InputBase<Category>
         builder.AddMultipleAttributes(1, AdditionalAttributes);
         builder.AddAttribute(2, "class", CssClass);
         builder.AddAttribute(3, "value", BindConverter.FormatValue(CurrentValueAsString));
-        builder.AddAttribute(4, "onchange", EventCallback.Factory.CreateBinder<string>(this, value => CurrentValueAsString = value, CurrentValueAsString));
+        builder.AddAttribute(4, "onchange", EventCallback.Factory.CreateBinder<string?>(this, value => CurrentValueAsString = value, CurrentValueAsString));
 
         if (_database is not null)
         {

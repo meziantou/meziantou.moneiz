@@ -1,18 +1,17 @@
-﻿using System;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 using System.ComponentModel.DataAnnotations;
 using Meziantou.Moneiz.Core;
 using Meziantou.Moneiz.Extensions;
 using Meziantou.Moneiz.Services;
 using Meziantou.Framework;
+using System.Diagnostics;
 
 namespace Meziantou.Moneiz.Pages.ScheduledTransactions;
 
 public partial class Edit
 {
-    private Database _database;
-    private EditModel _model;
+    private Database? _database;
+    private EditModel? _model;
 
     [Parameter]
     public int? Id { get; set; }
@@ -30,6 +29,7 @@ public partial class Edit
 
     protected override void OnParametersSet()
     {
+        Debug.Assert(_database is not null);
         var scheduledTransaction = _database.GetScheduledTransactionById(Id ?? DuplicatedScheduleTransactionId);
         if (scheduledTransaction is null && Id is not null)
         {
@@ -79,6 +79,8 @@ public partial class Edit
 
     private async Task OnSubmit()
     {
+        Debug.Assert(_database is not null);
+        Debug.Assert(_model is not null);
         var scheduledTransaction = _database.GetScheduledTransactionById(Id);
         scheduledTransaction ??= new ScheduledTransaction();
 
@@ -120,8 +122,12 @@ public partial class Edit
 
     private void OnPayeeChanged()
     {
+        if (_model is null)
+            return;
+
         if (_model.Category is null && !string.IsNullOrWhiteSpace(_model.Payee))
         {
+            Debug.Assert(_database is not null);
             var payee = _database.GetPayeeByName(_model.Payee);
             if ((payee?.DefaultCategory) is not null)
             {
@@ -133,16 +139,16 @@ public partial class Edit
     private sealed class EditModel
     {
         [Required]
-        public string Name { get; set; }
+        public string? Name { get; set; }
         public DateOnly StartDate { get; set; }
         [RecurrenceRuleValidation]
-        public string RecurrenceRule { get; set; }
+        public string? RecurrenceRule { get; set; }
         public bool InterAccount { get; set; }
-        public Account DebitedAccount { get; set; }
-        public Account CreditedAccount { get; set; }
-        public string Payee { get; set; }
-        public Category Category { get; set; }
+        public Account? DebitedAccount { get; set; }
+        public Account? CreditedAccount { get; set; }
+        public string? Payee { get; set; }
+        public Category? Category { get; set; }
         public decimal Amount { get; set; }
-        public string Comment { get; set; }
+        public string? Comment { get; set; }
     }
 }

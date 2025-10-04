@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace Meziantou.Moneiz.Core.Analytics;
+﻿namespace Meziantou.Moneiz.Core.Analytics;
 
 public sealed class AnalyticsModel
 {
