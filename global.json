@@ -2,5 +2,12 @@
   "sdk": {
     "version": "9.0.305",
     "rollForward": "patch"
+  },
+  "msbuild-sdks": {
+    "Meziantou.NET.Sdk": "1.0.32",
+    "Meziantou.NET.Sdk.BlazorWebAssembly": "1.0.32",
+    "Meziantou.NET.Sdk.Razor": "1.0.32",
+    "Meziantou.NET.Sdk.Test": "1.0.32",
+    "Meziantou.NET.Sdk.Web": "1.0.32"
   }
 }

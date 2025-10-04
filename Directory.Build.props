@@ -1,6 +1,0 @@
-<Project>
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>    
-  </PropertyGroup>
-</Project>
