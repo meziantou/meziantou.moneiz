@@ -1,17 +1,12 @@
-﻿using System;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace Meziantou.Moneiz.Core;
 
 public sealed class Transaction
 {
-    private Account? _account;
     private int? _accountId;
-    private Payee? _payee;
     private int? _payeeId;
-    private Category? _category;
     private int? _categoryId;
-    private Transaction? _linkedTransaction;
     private int? _linkedTransactionId;
 
     [JsonPropertyName("a")]
@@ -37,10 +32,10 @@ public sealed class Transaction
     [JsonIgnore]
     public Account? Account
     {
-        get => _account;
+        get;
         set
         {
-            _account = value;
+            field = value;
             _accountId = null;
         }
     }
@@ -55,10 +50,10 @@ public sealed class Transaction
     [JsonIgnore]
     public Payee? Payee
     {
-        get => _payee;
+        get;
         set
         {
-            _payee = value;
+            field = value;
             _payeeId = null;
         }
     }
@@ -73,10 +68,10 @@ public sealed class Transaction
     [JsonIgnore]
     public Category? Category
     {
-        get => _category;
+        get;
         set
         {
-            _category = value;
+            field = value;
             _categoryId = null;
         }
     }
@@ -91,10 +86,10 @@ public sealed class Transaction
     [JsonIgnore]
     public Transaction? LinkedTransaction
     {
-        get => _linkedTransaction;
+        get;
         set
         {
-            _linkedTransaction = value;
+            field = value;
             _linkedTransactionId = null;
         }
     }

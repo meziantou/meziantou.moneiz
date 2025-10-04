@@ -1,19 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using Meziantou.Framework.Scheduling;
 
 namespace Meziantou.Moneiz.Core;
 
 public sealed class ScheduledTransaction
 {
-    private Account? _account;
     private int? _accountId;
-    private Account? _creditedAccount;
     private int? _creditedAccountId;
-    private Payee? _payee;
     private int? _payeeId;
-    private Category? _category;
     private int? _categoryId;
 
     [JsonPropertyName("a")]
@@ -38,10 +32,10 @@ public sealed class ScheduledTransaction
     [JsonIgnore]
     public Account? Account
     {
-        get => _account;
+        get;
         set
         {
-            _account = value;
+            field = value;
             _accountId = null;
         }
     }
@@ -56,10 +50,10 @@ public sealed class ScheduledTransaction
     [JsonIgnore]
     public Account? CreditedAccount
     {
-        get => _creditedAccount;
+        get;
         set
         {
-            _creditedAccount = value;
+            field = value;
             _creditedAccountId = null;
         }
     }
@@ -74,10 +68,10 @@ public sealed class ScheduledTransaction
     [JsonIgnore]
     public Payee? Payee
     {
-        get => _payee;
+        get;
         set
         {
-            _payee = value;
+            field = value;
             _payeeId = null;
         }
     }
@@ -92,10 +86,10 @@ public sealed class ScheduledTransaction
     [JsonIgnore]
     public Category? Category
     {
-        get => _category;
+        get;
         set
         {
-            _category = value;
+            field = value;
             _categoryId = null;
         }
     }

@@ -1,5 +1,4 @@
 ﻿using Meziantou.Framework;
-using System;
 
 namespace Meziantou.Moneiz.Core;
 

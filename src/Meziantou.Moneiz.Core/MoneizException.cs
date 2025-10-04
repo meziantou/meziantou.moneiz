@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Meziantou.Moneiz.Core;
+﻿namespace Meziantou.Moneiz.Core;
 
 public class MoneizException : Exception
 {

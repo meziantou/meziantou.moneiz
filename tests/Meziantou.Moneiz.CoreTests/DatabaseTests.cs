@@ -1,10 +1,5 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
+﻿using System.Text.Json;
 using Meziantou.Moneiz.Core;
-using Xunit;
 
 namespace Meziantou.Moneiz.CoreTests;
 
@@ -48,11 +43,11 @@ public class DatabaseTests
         // Check references
         Assert.Same(imported.Payees.Single().DefaultCategory, imported.Categories.Single());
 
-        Assert.Same(imported.GetCategoryById(1), imported.GetTransactionById(1).Category);
-        Assert.Same(imported.GetAccountById(1), imported.GetTransactionById(1).Account);
-        Assert.Same(imported.GetPayeeById(1), imported.GetTransactionById(1).Payee);
+        Assert.Same(imported.GetCategoryById(1), imported.GetTransactionById(1)!.Category);
+        Assert.Same(imported.GetAccountById(1), imported.GetTransactionById(1)!.Account);
+        Assert.Same(imported.GetPayeeById(1), imported.GetTransactionById(1)!.Payee);
 
-        Assert.Same(imported.GetTransactionById(2), imported.GetTransactionById(3).LinkedTransaction);
+        Assert.Same(imported.GetTransactionById(2), imported.GetTransactionById(3)!.LinkedTransaction);
     }
 
     [Fact]

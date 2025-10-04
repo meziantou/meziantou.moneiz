@@ -13,7 +13,7 @@
             <ItemTemplate Context="account">
                 <li>
                     <a href="accounts/@account.Id/transactions">@account</a>
-                    <Amount Value="@database.GetTodayBalance(account)" Currency="@account.CurrencyIsoCode" />
+                    <Amount Value="@database!.GetTodayBalance(account)" Currency="@account.CurrencyIsoCode" />
                 </li>
             </ItemTemplate>
         </Repeater>
@@ -37,7 +37,7 @@
 </aside>
 
 @code {
-    private Database database;
+    Database? database;
 
     protected override async Task OnInitializedAsync()
     {
@@ -50,7 +50,7 @@
         DatabaseProvider.DatabaseChanged -= OnDatabaseChanged;
     }
 
-    private void OnDatabaseChanged(object sender, EventArgs e)
+    private void OnDatabaseChanged(object? sender, EventArgs e)
     {
         InvokeAsync(async () =>
         {

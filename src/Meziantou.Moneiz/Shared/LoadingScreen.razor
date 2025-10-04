@@ -20,10 +20,10 @@ else
 
 @code{
     bool isLoaded;
-    string error;
+    string? error;
 
     [Parameter]
-    public RenderFragment ChildContent { get; set; }
+    public RenderFragment? ChildContent { get; set; }
 
     protected override async Task OnInitializedAsync()
     {

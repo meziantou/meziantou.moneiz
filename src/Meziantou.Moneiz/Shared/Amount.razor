@@ -6,11 +6,11 @@
 <span class="@GetClassName()">@AmountUtilities.FormatAmount(Value)</span>
 
 @code {
-    [Parameter]
+    [Parameter, EditorRequired]
     public decimal Value { get; set; }
 
     [Parameter]
-    public string Currency { get; set; }
+    public string? Currency { get; set; }
 
     private string GetClassName()
     {

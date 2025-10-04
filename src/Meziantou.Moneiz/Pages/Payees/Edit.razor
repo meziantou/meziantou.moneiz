@@ -29,52 +29,57 @@
 </LoadingIndicator>
 
 @code {
-    Database database;
-    EditModel model = new EditModel();
+	Database? database;
+	EditModel model = new EditModel();
 
-    [Parameter]
-    public int? Id { get; set; }
+	[Parameter]
+	public int? Id { get; set; }
 
-    protected override async Task OnInitializedAsync()
-    {
-        database = await DatabaseProvider.GetDatabase();
-    }
+	protected override async Task OnInitializedAsync()
+	{
+		database = await DatabaseProvider.GetDatabase();
+	}
 
-    protected override void OnParametersSet()
-    {
-        var payee = database.GetPayeeById(Id);
-        if (payee == null && Id != null)
-        {
-            NavigationManager.NavigateToPayees();
-            return;
-        }
+	protected override void OnParametersSet()
+	{
+		var payee = database?.GetPayeeById(Id);
+		if (payee == null && Id != null)
+		{
+			NavigationManager.NavigateToPayees();
+			return;
+		}
 
-        if (payee != null)
-        {
-            model = new EditModel
+		if (payee != null)
+		{
+			model = new EditModel
             {
                 Name = payee.Name,
                 Category = payee.DefaultCategory,
             };
-        }
-    }
+		}
+	}
 
-    private async Task OnSubmit()
-    {
-        var payee = database.GetPayeeById(Id) ?? new Payee();
+	private async Task OnSubmit()
+	{
+		Debug.Assert(database != null);
+		var payee = database.GetPayeeById(Id) ?? new Payee();
 
-        payee.Name = model.Name.TrimAndNullify();
-        payee.DefaultCategory = model.Category;
+		payee.Name = model.Name.TrimAndNullify();
+		payee.DefaultCategory = model.Category;
 
-        database.SavePayee(payee);
-        await DatabaseProvider.Save();
-        NavigationManager.NavigateToPayees();
-    }
+		database.SavePayee(payee);
+		await DatabaseProvider.Save();
+		NavigationManager.NavigateToPayees();
+	}
 
-    private sealed class EditModel
-    {
-        [Required]
-        public string Name { get; set; }
-        public Category Category { get; set; }
+	private sealed class EditModel
+	{
+
+		[Required]
+
+
+
+		public string? Name { get; set; }
+		public Category? Category { get; set; }
     }
 }

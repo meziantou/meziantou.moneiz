@@ -5,7 +5,6 @@ namespace Meziantou.Moneiz.Core;
 public sealed class Payee
 {
     private int? _defaultCategoryId;
-    private Category? _defaultCategory;
 
     [JsonPropertyName("a")]
     public int Id { get; set; }
@@ -16,10 +15,10 @@ public sealed class Payee
     [JsonIgnore]
     public Category? DefaultCategory
     {
-        get => _defaultCategory;
+        get;
         set
         {
-            _defaultCategory = value;
+            field = value;
             _defaultCategoryId = null;
         }
     }

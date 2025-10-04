@@ -1,5 +1,4 @@
 ﻿#nullable enable
-using System;
 using Meziantou.Moneiz.Core;
 using Microsoft.AspNetCore.Components;
 

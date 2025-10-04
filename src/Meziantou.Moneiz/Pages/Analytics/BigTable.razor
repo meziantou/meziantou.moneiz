@@ -1,66 +1,66 @@
 ﻿@using Meziantou.Moneiz.Core.Analytics
 
 <table class="bigtable">
-    <thead>
-        <tr>
-            <th></th>
-            <th></th>
-            @foreach (var date in Model.Dates)
-            {
-                <th>@date.ToString("MMM yy")</th>
-            }
-            <th class="bigtable-totals">Total</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var group in Model.CategoryGroups)
-        {
-            <tr class="bigtable-categorygroup @(!Options.IsGroupEnabled(group.Name) ? "bigtable-disabled" : "")">
-                <td class="bigtable-checkbox"><label><input type="checkbox" @onclick="() => Options.ToggleDisabledCategoryGroup(group.Name)" checked="@Options.IsGroupEnabled(group.Name)" /></label></td>
-                <td class="bigtable-categorygroupname">@group.DisplayName</td>
-                @foreach (var total in group.Totals)
-                {
-                    <td><BigTableCell Cell="total" ShowDetails="ShowDetails" /></td>
-                }
-                <td class="bigtable-totals"><BigTableCell Cell="group.Total" ShowDetails="ShowDetails" /></td>
-            </tr>
+	<thead>
+		<tr>
+			<th></th>
+			<th></th>
+			@foreach (var date in Model.Dates)
+			{
+				<th>@date.ToString("MMM yy")</th>
+			}
+			<th class="bigtable-totals">Total</th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach (var group in Model.CategoryGroups)
+		{
+			<tr class="bigtable-categorygroup @(!Options.IsGroupEnabled(group.Name) ? "bigtable-disabled" : "")">
+				<td class="bigtable-checkbox"><label><input type="checkbox" @onclick="() => Options.ToggleDisabledCategoryGroup(group.Name)" checked="@Options.IsGroupEnabled(group.Name)" /></label></td>
+				<td class="bigtable-categorygroupname">@group.DisplayName</td>
+				@foreach (var total in group.Totals)
+				{
+					<td><BigTableCell Cell="total" ShowDetails="ShowDetails" /></td>
+				}
+				<td class="bigtable-totals"><BigTableCell Cell="group.Total" ShowDetails="ShowDetails" /></td>
+			</tr>
 
-            @if (!group.IsUnclassified)
-            {
-                @foreach (var category in group.Categories)
-                {
-                    <tr class="bigtable-category @(!Options.IsGroupEnabled(group.Name) || !Options.IsCategoryEnabled(category.CategoryId) ? "bigtable-disabled" : "")">
-                        <td class="bigtable-checkbox"><label><input type="checkbox" @onclick="() => Options.ToggleDisabledCategory(category.CategoryId)" checked="@(Options.IsCategoryEnabled(category.CategoryId) && Options.IsGroupEnabled(group.Name))" /></label></td>
-                        <td class="bigtable-categoryname">@category.DisplayName</td>
-                        @foreach (var total in category.Totals)
-                        {
-                            <td><BigTableCell Cell="total" ShowDetails="ShowDetails" /></td>
-                        }
-                        <td class="bigtable-totals"><BigTableCell Cell="category.Total" ShowDetails="ShowDetails" /></td>
-                    </tr>
-                }
-            }
-        }
+			@if (!group.IsUnclassified)
+			{
+				@foreach (var category in group.Categories)
+				{
+					<tr class="bigtable-category @(!Options.IsGroupEnabled(group.Name) || !Options.IsCategoryEnabled(category.CategoryId) ? "bigtable-disabled" : "")">
+						<td class="bigtable-checkbox"><label><input type="checkbox" @onclick="() => Options.ToggleDisabledCategory(category.CategoryId)" checked="@(Options.IsCategoryEnabled(category.CategoryId) && Options.IsGroupEnabled(group.Name))" /></label></td>
+						<td class="bigtable-categoryname">@category.DisplayName</td>
+						@foreach (var total in category.Totals)
+						{
+							<td><BigTableCell Cell="total" ShowDetails="ShowDetails" /></td>
+						}
+						<td class="bigtable-totals"><BigTableCell Cell="category.Total" ShowDetails="ShowDetails" /></td>
+					</tr>
+				}
+			}
+		}
 
-        <tr class="bigtable-totals">
-            <td class="bigtable-checkbox"></td>
-            <td class="bigtable-name">Total</td>
-            @foreach (var total in Model.Totals)
-            {
-                <td><BigTableCell Cell="total" ShowDetails="ShowDetails" /></td>
-            }
-            <td class="bigtable-totals"><BigTableCell Cell="Model.Total" ShowDetails="ShowDetails" /></td>
-        </tr>
-    </tbody>
+		<tr class="bigtable-totals">
+			<td class="bigtable-checkbox"></td>
+			<td class="bigtable-name">Total</td>
+			@foreach (var total in Model.Totals)
+			{
+				<td><BigTableCell Cell="total" ShowDetails="ShowDetails" /></td>
+			}
+			<td class="bigtable-totals"><BigTableCell Cell="Model.Total" ShowDetails="ShowDetails" /></td>
+		</tr>
+	</tbody>
 </table>
 
 @code {
-    [Parameter]
-    public bool ShowDetails { get; set; }
+	[Parameter, EditorRequired]
+	public bool ShowDetails { get; set; }
 
-    [Parameter]
-    public Meziantou.Moneiz.Core.Analytics.BigTable Model { get; set; }
+	[Parameter, EditorRequired]
+	public Meziantou.Moneiz.Core.Analytics.BigTable Model { get; set; } = null!;
 
-    [CascadingParameter]
-    public Meziantou.Moneiz.Core.Analytics.AnalyticsOptions Options { get; set; }
+	[CascadingParameter]
+	public Meziantou.Moneiz.Core.Analytics.AnalyticsOptions Options { get; set; } = null!;
 }

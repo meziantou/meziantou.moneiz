@@ -1,14 +1,13 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 
 namespace Meziantou.Moneiz;
 
 internal static class MoneizAppContext
 {
-    public static string Version => typeof(MoneizAppContext).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+    public static string? Version => typeof(MoneizAppContext).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
     public static DateTime? BuildDate => BuildDateAttribute.Get();
 
-    public static string Hash
+    public static string? Hash
     {
         get
         {

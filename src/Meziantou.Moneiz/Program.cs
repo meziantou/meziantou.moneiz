@@ -1,9 +1,6 @@
-﻿using System;
-using System.Net.Http;
-using Meziantou.Moneiz;
+﻿using Meziantou.Moneiz;
 using Meziantou.Moneiz.Services;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Microsoft.Extensions.DependencyInjection;
 using MudBlazor.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);

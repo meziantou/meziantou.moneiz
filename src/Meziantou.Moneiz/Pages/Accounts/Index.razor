@@ -46,7 +46,7 @@
 </Repeater>
 
 @code {
-    Database database;
+    Database? database;
 
     protected override async Task OnInitializedAsync()
     {
@@ -55,18 +55,21 @@
 
     public async Task MoveUp(Account account)
     {
+		Debug.Assert(database != null);
         database.MoveUpAccount(account);
         await DatabaseProvider.Save();
     }
 
     public async Task MoveDown(Account account)
-    {
+	{
+		Debug.Assert(database != null);
         database.MoveDownAccount(account);
         await DatabaseProvider.Save();
     }
 
     public async Task Delete(Account account)
-    {
+	{
+		Debug.Assert(database != null);
         if (GlobalInterop.Confirm($"Do you really want to delete '{account}'?"))
         {
             database.RemoveAccount(account);

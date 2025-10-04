@@ -1,12 +1,6 @@
-using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
 using Meziantou.AspNetCore.Components.WebAssembly;
 using Meziantou.Framework;
 using Meziantou.Moneiz.Core;
@@ -23,10 +17,10 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
 
     private const string MoneizDownloadFileName = "moneiz.db";
     private readonly SemaphoreSlim _semaphore = new(1, 1);
-    private Database _database;
+    private Database? _database;
 
-    public event EventHandler DatabaseChanged;
-    public event EventHandler DatabaseSaved;
+    public event EventHandler? DatabaseChanged;
+    public event EventHandler? DatabaseSaved;
 
     public void Dispose() => _semaphore.Dispose();
 
@@ -126,7 +120,7 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
         RaiseDatabaseChanged();
     }
 
-    private void Database_DatabaseChanged(object sender, EventArgs e) => RaiseDatabaseChanged();
+    private void Database_DatabaseChanged(object? sender, EventArgs e) => RaiseDatabaseChanged();
 
     private void RaiseDatabaseSaved()
     {
@@ -176,10 +170,15 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
 
         using var httpClient = CreateClient(configuration);
         var currentUser = await httpClient.GetFromJsonAsync<GitHubUser>("user");
+        if (currentUser is null)
+            throw new InvalidOperationException("Cannot get current user");
 
         // https://developer.github.com/v3/repos/contents/#get-repository-content
         var url = "repos/" + currentUser.Login + "/" + configuration.GitHubRepository + "/contents/";
         var files = await httpClient.GetFromJsonAsync<GitHubContent[]>(url);
+        if (files is null)
+            throw new InvalidOperationException("Cannot get repository content");
+
         var file = files.FirstOrDefault(f => f.Name == MoneizDownloadFileName);
 
         // Check sha with persisted sha
@@ -199,10 +198,10 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
 
         _ = putResult.EnsureSuccessStatusCode();
 
-        file = (await putResult.Content.ReadFromJsonAsync<UpdateFileResult>()).Content;
+        file = (await putResult.Content.ReadFromJsonAsync<UpdateFileResult>())?.Content;
 
         // Save the blob sha
-        configuration.GitHubSha = file.Sha;
+        configuration.GitHubSha = file?.Sha;
         await SetConfiguration(configuration);
 
         await GlobalInterop.SetValue(MoneizLocalStorageChangedName, value: false);
@@ -217,12 +216,14 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
         var configuration = await LoadConfiguration();
         using var httpClient = CreateClient(configuration);
         var currentUser = await httpClient.GetFromJsonAsync<GitHubUser>("user");
+        if (currentUser is null)
+            throw new InvalidOperationException("Cannot get current user");
 
         // https://developer.github.com/v3/repos/contents/#get-repository-content
         var url = "repos/" + currentUser.Login + "/" + configuration.GitHubRepository + "/contents/";
         var files = await SafeGetForJsonAsync<GitHubContent[]>(httpClient, url);
         var file = files?.FirstOrDefault(f => f.Name == MoneizDownloadFileName);
-        if ((file is not null && configuration.GitHubSha is null) || !file.Sha.EqualsIgnoreCase(configuration.GitHubSha))
+        if ((file is not null && configuration.GitHubSha is null) || file is null || !file.Sha.EqualsIgnoreCase(configuration.GitHubSha))
             return true;
 
         return false;
@@ -240,6 +241,8 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
 
         using var httpClient = CreateClient(configuration);
         var currentUser = await httpClient.GetFromJsonAsync<GitHubUser>("user");
+        if (currentUser is null)
+            throw new InvalidOperationException("Cannot get current user");
 
         // https://developer.github.com/v3/repos/contents/#get-repository-content
         var url = "repos/" + currentUser.Login + "/" + configuration.GitHubRepository + "/contents/";
@@ -275,6 +278,12 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
         // Cannot use Download url for private repository
         // /repos/:owner/:repo/git/blobs/:file_sha
         var blob = await httpClient.GetFromJsonAsync<GitHubBlob>("repos/" + currentUser.Login + "/" + configuration.GitHubRepository + "/git/blobs/" + file.Sha);
+        if (blob is null)
+            throw new InvalidOperationException("Cannot download database from GitHub");
+
+        if (blob.Content is null)
+            throw new InvalidOperationException("Cannot download database from GitHub");
+
         var data = Convert.FromBase64String(blob.Content);
         var database = await Database.Load(data);
         await Import(database);
@@ -282,7 +291,7 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
         await SetConfiguration(configuration);
     }
 
-    private static async Task<T> SafeGetForJsonAsync<T>(HttpClient httpClient, string url) where T : class
+    private static async Task<T?> SafeGetForJsonAsync<T>(HttpClient httpClient, string url) where T : class
     {
         try
         {
@@ -300,6 +309,8 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
 
         using var httpClient = CreateClient(configuration);
         var currentUser = await httpClient.GetFromJsonAsync<GitHubUser>("user");
+        if(currentUser is null)
+            throw new InvalidOperationException("Cannot get current user");
 
         var url = "https://github.com/" + currentUser.Login + "/" + configuration.GitHubRepository;
         GlobalInterop.OpenInTab(url);
@@ -314,40 +325,40 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
     private sealed class GitHubUser
     {
         [JsonPropertyName("login")]
-        public string Login { get; set; }
+        public string? Login { get; set; }
     }
 
     private sealed class UpdateFileResult
     {
         [JsonPropertyName("content")]
-        public GitHubContent Content { get; set; }
+        public GitHubContent? Content { get; set; }
     }
 
     private sealed class GitHubContent
     {
         [JsonPropertyName("encoding")]
-        public string Encoding { get; set; }
+        public string? Encoding { get; set; }
 
         [JsonPropertyName("content")]
-        public string Content { get; set; }
+        public string? Content { get; set; }
 
         [JsonPropertyName("sha")]
-        public string Sha { get; set; }
+        public string? Sha { get; set; }
 
         [JsonPropertyName("name")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
     }
 
     private sealed class GitHubBlob
     {
         [JsonPropertyName("encoding")]
-        public string Encoding { get; set; }
+        public string? Encoding { get; set; }
 
         [JsonPropertyName("content")]
-        public string Content { get; set; }
+        public string? Content { get; set; }
 
         [JsonPropertyName("sha")]
-        public string Sha { get; set; }
+        public string? Sha { get; set; }
     }
 
     private sealed class CacheBusterHandler : DelegatingHandler
@@ -361,7 +372,7 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var uri = request.RequestUri.ToString();
+            var uri = request.RequestUri!.ToString();
             if (uri.Contains('?', StringComparison.Ordinal))
             {
                 uri += "&z=" + Uri.EscapeDataString(DateTime.UtcNow.Ticks.ToStringInvariant());

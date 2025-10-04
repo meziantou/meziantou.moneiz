@@ -1,8 +1,5 @@
 ﻿#nullable enable
 
-using System;
-using System.Globalization;
-
 namespace Meziantou.Moneiz.Services;
 
 public class MoneizDisplaySettings

@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Net.Http.Json;
 
 namespace Meziantou.Moneiz.ExchangeRatesGenerator;
 
@@ -23,12 +16,17 @@ internal static class Program
          * }
          */
         var currencies = await httpClient.GetFromJsonAsync<Dictionary<string, string>>("https://openexchangerates.org/api/currencies.json?show_alternative=true&show_inactive=true");
+        if (currencies is null)
+            throw new InvalidOperationException("Cannot get currencies");
 
         var rates = new Dictionary<string, double>(StringComparer.Ordinal);
         var openExchangeRatesApiKey = args.Length > 1 ? args[1] : null;
         if (openExchangeRatesApiKey is not null)
         {
             var exchangeRates = await httpClient.GetFromJsonAsync<ExchangeRatesResponse>("https://openexchangerates.org/api/latest.json?show_alternative=true&prettyprint=false&app_id=" + openExchangeRatesApiKey);
+            if (exchangeRates is null)
+                throw new InvalidOperationException("Cannot get exchange rates");
+
             rates = exchangeRates.Rates;
         }
 
@@ -47,10 +45,12 @@ namespace Meziantou.Moneiz.Core
         var i = 0;
         foreach (var currency in currencies)
         {
-            var exchangeRate = rates.GetValueOrDefault(currency.Key, 1d);
-
-            _ = sb.AppendLine(CultureInfo.InvariantCulture, $"            result[{i}] = new Currency(\"{currency.Key}\", \"{currency.Value}\", {exchangeRate}m);");
-            i++;
+            var exchangeRate = rates?.GetValueOrDefault(currency.Key, 1d);
+            if (exchangeRate is null)
+            {
+                _ = sb.AppendLine(CultureInfo.InvariantCulture, $"            result[{i}] = new Currency(\"{currency.Key}\", \"{currency.Value}\", {exchangeRate}m);");
+                i++;
+            }
         }
 
         _ = sb.Append(@"            return result;
@@ -66,6 +66,6 @@ namespace Meziantou.Moneiz.Core
 
     private sealed class ExchangeRatesResponse
     {
-        public Dictionary<string, double> Rates { get; set; }
+        public Dictionary<string, double>? Rates { get; set; }
     }
 }

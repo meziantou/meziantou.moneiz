@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using Meziantou.Framework;
+﻿using Meziantou.Framework;
 using Meziantou.Framework.SimpleQueryLanguage;
 using Meziantou.Moneiz.Core;
 using Meziantou.Moneiz.Extensions;
@@ -15,7 +11,7 @@ internal static class TransactionQueries
 
     private static QueryBuilder<Transaction> CreateTransactionQuery()
     {
-        static bool MatchStringValue(string value, string query)
+        static bool MatchStringValue(string? value, string query)
         {
             if (value is null)
                 return false;

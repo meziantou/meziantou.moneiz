@@ -6,147 +6,153 @@
 <h1>Create transaction</h1>
 
 <LoadingIndicator IsLoading="database == null">
-    <EditForm Model="@model" OnValidSubmit="OnSubmit">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
+	<EditForm Model="@model" OnValidSubmit="OnSubmit">
+		<DataAnnotationsValidator />
+		<ValidationSummary />
 
-        @if (database.VisibleAccounts.Skip(1).Any())
-        {
-            <div class="form-group">
-                <label>
-                    Inter-account
-                    <InputCheckbox @bind-Value="model.InterAccount" />
-                </label>
-            </div>
-        }
+		@if (database!.VisibleAccounts.Skip(1).Any())
+		{
+			<div class="form-group">
+				<label>
+					Inter-account
+					<InputCheckbox @bind-Value="model!.InterAccount" />
+				</label>
+			</div>
+		}
 
-        <div class="form-group">
-            <label>
-                @if (model.InterAccount)
-                {
-                    @: Debited account
-                }
-                else
-                {
-                    @: Account
-                }
-                <InputSelectAccount @bind-Value="model.DebitedAccount" />
-            </label>
-        </div>
+		<div class="form-group">
+			<label>
+				@if (model!.InterAccount)
+				{
+					@: Debited account
+				}
+				else
+				{
+					@: Account
+				}
+				<InputSelectAccount @bind-Value="model.DebitedAccount" />
+			</label>
+		</div>
 
-        @if (model.InterAccount)
-        {
+		@if (model.InterAccount)
+		{
 
-            <div class="form-group">
-                <label>
-                    CreditedAccount
-                    <InputSelectAccount @bind-Value="model.CreditedAccount" />
-                </label>
-            </div>
-        }
+			<div class="form-group">
+				<label>
+					CreditedAccount
+					<InputSelectAccount @bind-Value="model.CreditedAccount" />
+				</label>
+			</div>
+		}
 
-        @if (!model.InterAccount)
-        {
-            <div class="form-group">
-                <label>
-                    Payee
-                    <InputText @bind-Value="model.Payee" list="Payees" @onfocusout="OnPayeeChanged" />
-                </label>
+		@if (!model.InterAccount)
+		{
+			<div class="form-group">
+				<label>
+					Payee
+					<InputText @bind-Value="model.Payee" list="Payees" @onfocusout="OnPayeeChanged" />
+				</label>
 
-                <datalist id="Payees">
-                    @foreach (var payee in database.Payees.OrderBy(p => p.Name))
-                    {
-                        <option value="@payee" />
-                    }
-                </datalist>
-            </div>
-        }
+				<datalist id="Payees">
+					@foreach (var payee in database.Payees.OrderBy(p => p.Name))
+					{
+						<option value="@payee" />
+					}
+				</datalist>
+			</div>
+		}
 
-        <div class="form-group">
-            <label>
-                Category
-                <InputSelectCategory IsOptional="true" @bind-Value="model.Category" />
-            </label>
-        </div>
+		<div class="form-group">
+			<label>
+				Category
+				<InputSelectCategory IsOptional="true" @bind-Value="model.Category" />
+			</label>
+		</div>
 
-        <div class="form-group">
-            <label>
-                Operation date
-                <InputDate @bind-Value="model.ValueDate" />
-            </label>
+		<div class="form-group">
+			<label>
+				Operation date
+				<InputDate @bind-Value="model.ValueDate" />
+			</label>
 
-            <button type="button" tabindex="-1" class="btn-link" @onclick="() => model.ValueDate = Database.GetToday()">Today</button>
-            <button type="button" tabindex="-1" class="btn-link" @onclick="() => model.ValueDate = Database.GetToday().AddDays(-1)">Yesterday</button>
-            <button type="button" tabindex="-1" class="btn-link" @onclick="() => model.ValueDate = Database.GetToday().AddDays(1)">Tomorrow</button>
-        </div>
+			<button type="button" tabindex="-1" class="btn-link" @onclick="() => model.ValueDate = Database.GetToday()">Today</button>
+			<button type="button" tabindex="-1" class="btn-link" @onclick="() => model.ValueDate = Database.GetToday().AddDays(-1)">Yesterday</button>
+			<button type="button" tabindex="-1" class="btn-link" @onclick="() => model.ValueDate = Database.GetToday().AddDays(1)">Tomorrow</button>
+		</div>
 
-        <div class="form-group">
-            <label>
-                Amount
-                <InputNumber @bind-Value="model.Amount" />
-            </label>
-        </div>
+		<div class="form-group">
+			<label>
+				Amount
+				<InputNumber @bind-Value="model.Amount" />
+			</label>
+		</div>
 
-        <div class="form-group">
-            <label>
-                Comment
-                <InputText @bind-Value="model.Comment" />
-            </label>
-        </div>
+		<div class="form-group">
+			<label>
+				Comment
+				<InputText @bind-Value="model.Comment" />
+			</label>
+		</div>
 
-        <button type="submit">Submit</button>
-    </EditForm>
+		<button type="submit">Submit</button>
+	</EditForm>
 </LoadingIndicator>
 
 @code {
-    Database database;
-    TransactionEdit model;
+	Database? database;
+	TransactionEdit? model;
 
-    [Parameter]
-    public int? Id { get; set; }
+	[Parameter]
+	public int? Id { get; set; }
 
-    protected override async Task OnInitializedAsync()
-    {
-        database = await DatabaseProvider.GetDatabase();
-    }
+	protected override async Task OnInitializedAsync()
+	{
+		database = await DatabaseProvider.GetDatabase();
+	}
 
-    protected override void OnParametersSet()
-    {
-        var transaction = database.GetDebitedTransactionById(Id) ?? database.GetTransactionById(NavigationManager.GetQueryStringNullableInt32("duplicatedTransaction"));
-        if (transaction == null && Id != null)
-        {
-            NavigationManager.NavigateToReturnUrlOrHome();
-            return;
-        }
+	protected override void OnParametersSet()
+	{
+		Debug.Assert(database != null);
+		var transaction = database.GetDebitedTransactionById(Id) ?? database.GetTransactionById(NavigationManager.GetQueryStringNullableInt32("duplicatedTransaction"));
+		if (transaction == null && Id != null)
+		{
+			NavigationManager.NavigateToReturnUrlOrHome();
+			return;
+		}
 
-        if (transaction != null)
-        {
-            var createNewTransaction = Id == null; // Ensure we do not edit a transaction instead of duplicating it
-            model = TransactionEdit.FromTransaction(transaction, createNewTransaction);
-        }
-        else
-        {
-            var account = database.GetAccountById(NavigationManager.GetQueryStringNullableInt32("accountId"));
-            model = TransactionEdit.FromAccount(account ?? database.DefaultAccount);
-        }
-    }
+		if (transaction != null)
+		{
+			var createNewTransaction = Id == null; // Ensure we do not edit a transaction instead of duplicating it
+			model = TransactionEdit.FromTransaction(transaction, createNewTransaction);
+		}
+		else
+		{
+			var account = database.GetAccountById(NavigationManager.GetQueryStringNullableInt32("accountId"));
+			model = TransactionEdit.FromAccount(account ?? database.DefaultAccount);
+		}
+	}
 
-    private async Task OnSubmit()
-    {
-        model.Save(database);
-        await DatabaseProvider.Save();
-        NavigationManager.NavigateToReturnUrlOrHome();
-    }
+	private async Task OnSubmit()
+	{
+		Debug.Assert(database != null);
+		Debug.Assert(model != null);
 
-    private void OnPayeeChanged()
-    {
-        if (model.Category == null && !string.IsNullOrWhiteSpace(model.Payee))
-        {
-            var payee = database.GetPayeeByName(model.Payee);
-            if (payee?.DefaultCategory != null)
-            {
-                model.Category = payee.DefaultCategory;
-            }
-        }
-    }
+		model.Save(database);
+		await DatabaseProvider.Save();
+		NavigationManager.NavigateToReturnUrlOrHome();
+	}
+
+	private void OnPayeeChanged()
+	{
+		Debug.Assert(database != null);
+		Debug.Assert(model != null);
+		if (model.Category == null && !string.IsNullOrWhiteSpace(model.Payee))
+		{
+			var payee = database.GetPayeeByName(model.Payee);
+			if (payee?.DefaultCategory != null)
+			{
+				model.Category = payee.DefaultCategory;
+			}
+		}
+	}
 }

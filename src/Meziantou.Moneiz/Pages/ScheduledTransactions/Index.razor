@@ -31,7 +31,7 @@
             <td>@scheduledTransaction.Name</td>
             <td>@scheduledTransaction.Account</td>
             <td><Amount Value="scheduledTransaction.Amount" Currency="@scheduledTransaction.Account?.CurrencyIsoCode" /></td>
-            <td title="@scheduledTransaction.RecurrenceRuleText">@scheduledTransaction.RecurrenceRule.GetHumanText()</td>
+            <td title="@scheduledTransaction.RecurrenceRuleText">@scheduledTransaction.RecurrenceRule?.GetHumanText()</td>
             <td>
                 <details>
                     <summary><UserDate Date="@scheduledTransaction.NextOccurenceDate" /></summary>
@@ -55,7 +55,7 @@
 </Repeater>
 
 @code {
-    Database database;
+    Database? database;
 
     protected override async Task OnInitializedAsync()
     {
@@ -64,6 +64,7 @@
 
     private async Task Delete(ScheduledTransaction scheduledTransaction)
     {
+		Debug.Assert(database != null);
         if (GlobalInterop.Confirm($"Do you want to delete '{scheduledTransaction.Name}'"))
         {
             database.RemoveScheduledTransaction(scheduledTransaction);

@@ -24,7 +24,7 @@
     <ItemTemplate Context="category">
         <tr>
             <td>@category</td>
-            <td style="text-align: right">@database.Transactions.Count(t => t.Category == category)</td>
+            <td style="text-align: right">@database!.Transactions.Count(t => t.Category == category)</td>
             <td class="commands">
                 <Dropdown>
                     <li><a class="view-transactions" href="/categories/@category.Id/transactions"><i class="fas fa-search"></i> View Transactions</a></li>
@@ -41,7 +41,7 @@
 </Repeater>
 
 @code {
-    Database database;
+    Database? database;
 
     protected override async Task OnInitializedAsync()
     {
@@ -50,6 +50,7 @@
 
     private async Task Delete(Category category)
     {
+		Debug.Assert(database != null);
         if (GlobalInterop.Confirm($"Do you really want to delete '{category}'?"))
         {
             database.RemoveCategory(category);

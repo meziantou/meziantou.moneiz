@@ -10,6 +10,8 @@
 </tr>
 
 @code {
-    [Parameter]
-    public BalanceHistoryEntry Entry { get; set; }
+
+	[Parameter, EditorRequired]
+
+	public BalanceHistoryEntry Entry { get; set; } = null!;
 }

@@ -14,11 +14,11 @@
     bool visible = false;
 
     [Parameter]
-    public string MenuText { get; set; }
+    public string? MenuText { get; set; }
 
     [Parameter]
     public string MenuIcon { get; set; } = "fa-cog";
 
     [Parameter]
-    public RenderFragment ChildContent { get; set; }
+    public RenderFragment? ChildContent { get; set; }
 }

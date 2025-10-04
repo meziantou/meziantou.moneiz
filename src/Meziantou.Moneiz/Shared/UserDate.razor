@@ -4,7 +4,7 @@
 }
 
 @code {
-    MoneizDisplaySettings displaySettings;
+    MoneizDisplaySettings? displaySettings;
 
     [Parameter]
     public DateOnly? Date { get; set; }
@@ -31,10 +31,10 @@
     private string FormattedShortDate()
     {
         if (Date != null)
-            return displaySettings?.DateFormat == null ? Date.Value.ToShortDateString() : Date.Value.ToString(displaySettings.DateFormat);
+            return displaySettings?.DateFormat == null ? Date.Value.ToShortDateString() : Date.Value.ToString(displaySettings!.DateFormat);
 
         if (DateTime != null)
-            return displaySettings?.DateFormat == null ? DateTime.Value.ToShortDateString() : DateTime.Value.ToString(displaySettings.DateFormat);
+            return displaySettings?.DateFormat == null ? DateTime.Value.ToShortDateString() : DateTime.Value.ToString(displaySettings!.DateFormat);
 
         return "";
     }

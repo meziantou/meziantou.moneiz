@@ -4,52 +4,53 @@
 <h1>Payees</h1>
 
 <div class="toolbar">
-    <a class="btn" href="/payees/create">Create payee</a>
+	<a class="btn" href="/payees/create">Create payee</a>
 </div>
 
 <Repeater Items="@database?.Payees.OrderBy(c => c.Name)">
-    <RepeaterContainerTemplate>
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Default category</th>
-                    <th></th>
-                </tr>
-            </thead>
-            @context
-        </table>
-    </RepeaterContainerTemplate>
+	<RepeaterContainerTemplate>
+		<table>
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Default category</th>
+					<th></th>
+				</tr>
+			</thead>
+			@context
+		</table>
+	</RepeaterContainerTemplate>
 
-    <ItemTemplate Context="payee">
-        <tr>
-            <td>@payee</td>
-            <td>@payee.DefaultCategory</td>
-            <td class="commands">
-                <Dropdown>
-                    <li><a class="view-transactions" href="/payees/@payee.Id/transactions"><i class="fas fa-search"></i> View Transactions</a></li>
-                    <li><a class="edit" href="/payees/@payee.Id/edit"><i class="fas fa-pencil-alt"></i> Edit</a></li>
-                    <li><button type="button" class="btn-link" @onclick="() => Delete(payee)"><i class="fas fa-trash" style="color: red"></i> Delete</button></li>
-                </Dropdown>
-            </td>
-        </tr>
-    </ItemTemplate>
+	<ItemTemplate Context="payee">
+		<tr>
+			<td>@payee</td>
+			<td>@payee.DefaultCategory</td>
+			<td class="commands">
+				<Dropdown>
+					<li><a class="view-transactions" href="/payees/@payee.Id/transactions"><i class="fas fa-search"></i> View Transactions</a></li>
+					<li><a class="edit" href="/payees/@payee.Id/edit"><i class="fas fa-pencil-alt"></i> Edit</a></li>
+					<li><button type="button" class="btn-link" @onclick="() => Delete(payee)"><i class="fas fa-trash" style="color: red"></i> Delete</button></li>
+				</Dropdown>
+			</td>
+		</tr>
+	</ItemTemplate>
 </Repeater>
 
 @code {
-    Database database;
+	Database? database;
 
-    protected override async Task OnInitializedAsync()
-    {
-        database = await DatabaseProvider.GetDatabase();
-    }
+	protected override async Task OnInitializedAsync()
+	{
+		database = await DatabaseProvider.GetDatabase();
+	}
 
-    private async Task Delete(Payee payee)
-    {
-        if (GlobalInterop.Confirm($"Do you really want to delete '{payee}'?"))
-        {
-            database.RemovePayee(payee);
-            await DatabaseProvider.Save();
-        }
-    }
+	private async Task Delete(Payee payee)
+	{
+		Debug.Assert(database != null);
+		if (GlobalInterop.Confirm($"Do you really want to delete '{payee}'?"))
+		{
+			database.RemovePayee(payee);
+			await DatabaseProvider.Save();
+		}
+	}
 }

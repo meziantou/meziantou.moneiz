@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-
-namespace Meziantou.Moneiz.Core.Analytics;
+﻿namespace Meziantou.Moneiz.Core.Analytics;
 
 public sealed class BigTableCategory(BigTableCategoryGroup categoryGroup, int categoryId)
 {

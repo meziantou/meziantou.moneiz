@@ -14,7 +14,7 @@
         <div class="form-group">
             <label>
                 GitHub token (<a href="https://github.com/settings/tokens">generate</a>)
-                <input type="password" @bind-value="databaseConfiguration.GitHubToken" />
+                <input type="password" @bind-value="databaseConfiguration!.GitHubToken" />
             </label>
         </div>
 
@@ -66,8 +66,8 @@
 </form>
 
 @code {
-    Database database;
-    DatabaseConfiguration databaseConfiguration;
+    Database? database;
+    DatabaseConfiguration? databaseConfiguration;
     bool githubOperation = false;
 
     protected override async Task OnInitializedAsync()
@@ -132,6 +132,7 @@
 
     private async Task SaveGitHubConfig()
     {
+		Debug.Assert(databaseConfiguration != null);
         await DatabaseProvider.SetConfiguration(databaseConfiguration);
     }
 

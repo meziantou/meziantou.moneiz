@@ -7,8 +7,8 @@
 </div>
 
 @code {
-    [Parameter]
-    public Meziantou.Moneiz.Core.Analytics.BalanceHistory Model { get; set; }
+	[Parameter, EditorRequired]
+	public Meziantou.Moneiz.Core.Analytics.BalanceHistory? Model { get; set; }
 
     MoneizDisplaySettings displaySettings = new();
     private string[] xAxis = Array.Empty<string>();
@@ -28,7 +28,7 @@
             var currencySeries = new List<ChartSeries>();
             Series.Add(("Balance by currencies", currencySeries));
 
-            var length = Model.BalancesByAccount.First().Balances.Length;
+            var length = Model.BalancesByAccount.First().Balances!.Length;
 
             xAxis = new string[length];
             Array.Fill(xAxis, "");
@@ -42,15 +42,15 @@
 
             foreach (var group in Model.BalancesByAccount.GroupBy(i => i.Currency))
             {
-                var currencySerie = new ChartSeries { Name = group.Key, Data = new double[length] };
+                var currencySerie = new ChartSeries { Name = group.Key!, Data = new double[length] };
                 currencySeries.Add(currencySerie);
 
                 var series = new List<ChartSeries>();
                 foreach (var balanceHistory in group)
                 {
-                    series.Add(new() { Name = balanceHistory.Account.ToString(), Data = balanceHistory.Balances.Select(value => (double)value).ToArray() });
+                    series.Add(new() { Name = balanceHistory.Account!.ToString(), Data = balanceHistory.Balances!.Select(value => (double)value).ToArray() });
 
-                    for (var i = 0; i < balanceHistory.Balances.Length; i++)
+                    for (var i = 0; i < balanceHistory.Balances!.Length; i++)
                     {
                         currencySerie.Data[i] += (double)balanceHistory.Balances[i];
                     }

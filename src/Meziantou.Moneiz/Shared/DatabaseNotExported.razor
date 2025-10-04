@@ -30,7 +30,7 @@
     private bool needExport;
     private bool canExportToGitHub;
     private bool isExporting;
-    private System.Threading.Timer timer;
+    private System.Threading.Timer? timer;
 
     protected override async Task OnInitializedAsync()
     {
@@ -45,7 +45,7 @@
         timer?.Dispose();
     }
 
-    private void DatabaseChanged(object sender, EventArgs e)
+    private void DatabaseChanged(object? sender, EventArgs e)
     {
         if (needImport)
         {
@@ -80,7 +80,7 @@
         }
     }
 
-    private async void CheckNewVersion(object o)
+    private async void CheckNewVersion(object? o)
     {
         if (needExport)
             return;

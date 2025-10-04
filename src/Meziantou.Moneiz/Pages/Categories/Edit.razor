@@ -15,7 +15,7 @@
                 Group Name
                 <InputText @bind-Value="model.GroupName" list="categorygroups" />
                 <datalist id="categorygroups">
-                    @foreach (var group in database.CategoryGroups.OrderBy(item => item))
+                    @foreach (var group in database!.CategoryGroups.OrderBy(item => item))
                     {
                         <option>@group</option>
                     }
@@ -35,7 +35,7 @@
 </LoadingIndicator>
 
 @code {
-    Database database;
+    Database? database;
     EditModel model = new EditModel();
 
     [Parameter]
@@ -48,6 +48,7 @@
 
     protected override void OnParametersSet()
     {
+		Debug.Assert(database != null);
         var category = database.GetCategoryById(Id);
         if (category == null && Id != null)
         {
@@ -66,7 +67,8 @@
     }
 
     private async Task OnSubmit()
-    {
+	{
+		Debug.Assert(database != null);
         var category = database.GetCategoryById(Id) ?? new Category();
 
         category.Name = model.Name.TrimAndNullify();
@@ -80,8 +82,8 @@
     private sealed class EditModel
     {
         [Required]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
-        public string GroupName { get; set; }
+        public string? GroupName { get; set; }
     }
 }

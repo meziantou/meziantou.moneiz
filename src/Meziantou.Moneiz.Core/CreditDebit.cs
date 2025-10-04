@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace Meziantou.Moneiz.Core;
+﻿namespace Meziantou.Moneiz.Core;
 
 [SuppressMessage("Design", "CA1008:Enums should have zero value")]
 public enum CashFlow

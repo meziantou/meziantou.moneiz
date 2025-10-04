@@ -1,14 +1,12 @@
-﻿using System;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
-using System.Threading.Tasks;
 using Meziantou.Framework;
 
 namespace Meziantou.Moneiz.Services;
 
 public static partial class SettingsProvider
 {
-    private static Task<T> GetValue<T>(string key, JsonTypeInfo<T> typeInfo) => GlobalInterop.GetValue("settings:" + key, typeInfo);
+    private static Task<T?> GetValue<T>(string key, JsonTypeInfo<T> typeInfo) => GlobalInterop.GetValue("settings:" + key, typeInfo);
 
     private static Task SetValue<T>(string key, T value, JsonTypeInfo<T> typeInfo) => GlobalInterop.SetValue("settings:" + key, value, typeInfo);
 

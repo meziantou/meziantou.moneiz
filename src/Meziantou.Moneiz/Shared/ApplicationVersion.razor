@@ -1,50 +1,53 @@
 ﻿<p>
-    <span style="font-size: 10px" title="@(MoneizAppContext.BuildDate)">Moneiz v@(MoneizAppContext.Version) built on @(BuildDateAttribute.Get()?.ToString("yyyy-MM-dd"))</span>
+	<span style="font-size: 10px" title="@(MoneizAppContext.BuildDate)">Moneiz v@(MoneizAppContext.Version) built on @(BuildDateAttribute.Get()?.ToString("yyyy-MM-dd"))</span>
 
-    @if (!isLastVersion)
-    {
-        <a href="javascript:MoneizUpdate()" class="new-version-available"><i class="fas fa-sync"></i> Update to the lastest version</a>
-    }
-    else
-    {
-        <a href="javascript:MoneizUpdate()"><i class="fas fa-sync"></i> Force update</a>
-    }
+	@if (!isLastVersion)
+	{
+		<a href="javascript:MoneizUpdate()" class="new-version-available"><i class="fas fa-sync"></i> Update to the lastest version</a>
+	}
+	else
+	{
+		<a href="javascript:MoneizUpdate()"><i class="fas fa-sync"></i> Force update</a>
+	}
 
-    <a href="https://github.com/meziantou/meziantou.moneiz/blob/main/doc/search-syntax.md" target="_blank"><i class="fa fa-question-circle"></i> Help</a>
-    <a href="https://github.com/meziantou/meziantou.moneiz/issues" target="_blank"><i class="fas fa-lightbulb"></i> Suggest features</a>
-    <a href="https://github.com/meziantou/meziantou.moneiz/issues" target="_blank"><i class="fas fa-bug"></i> Report issues</a>
+	<a href="https://github.com/meziantou/meziantou.moneiz/blob/main/doc/search-syntax.md" target="_blank"><i class="fa fa-question-circle"></i> Help</a>
+	<a href="https://github.com/meziantou/meziantou.moneiz/issues" target="_blank"><i class="fas fa-lightbulb"></i> Suggest features</a>
+	<a href="https://github.com/meziantou/meziantou.moneiz/issues" target="_blank"><i class="fas fa-bug"></i> Report issues</a>
 </p>
 
 @code {
-    bool isLastVersion = true;
+	bool isLastVersion = true;
 
-    protected override async Task OnInitializedAsync()
-    {
-        if (MoneizAppContext.Hash == null)
-            return;
+	protected override async Task OnInitializedAsync()
+	{
+		if (MoneizAppContext.Hash == null)
+			return;
 
-        try
-        {
-            using var client = new HttpClient();
-            var commits = await client.GetFromJsonAsync<Commit[]>("https://api.github.com/repos/meziantou/meziantou.moneiz/commits");
-            var lastCommit = commits.FirstOrDefault();
-            if (lastCommit != null)
-            {
-                if (!lastCommit.Sha.EqualsIgnoreCase(MoneizAppContext.Hash))
-                {
-                    isLastVersion = false;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex);
-        }
-    }
+		try
+		{
+			using var client = new HttpClient();
+			var commits = await client.GetFromJsonAsync<Commit[]>("https://api.github.com/repos/meziantou/meziantou.moneiz/commits");
+			if (commits == null)
+				throw new InvalidOperationException("Cannot get commits from GitHub.");
 
-    private sealed class Commit
-    {
-        [System.Text.Json.Serialization.JsonPropertyName("sha")]
-        public string Sha { get; set; }
-    }
+			var lastCommit = commits.FirstOrDefault();
+			if (lastCommit != null)
+			{
+				if (!lastCommit.Sha.EqualsIgnoreCase(MoneizAppContext.Hash))
+				{
+					isLastVersion = false;
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine(ex);
+		}
+	}
+
+	private sealed class Commit
+	{
+		[System.Text.Json.Serialization.JsonPropertyName("sha")]
+		public string? Sha { get; set; }
+	}
 }

@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace Meziantou.Moneiz.Core;
+﻿namespace Meziantou.Moneiz.Core;
 
 public partial class Database
 {

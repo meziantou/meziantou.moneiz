@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using Meziantou.Framework;
+﻿using Meziantou.Framework;
 using Meziantou.Moneiz.Core;
 using Microsoft.AspNetCore.Components;
 
@@ -15,7 +14,7 @@ public static class NavigationManagerExtensions
 
     public static void NavigateToReturnUrlOrHome(this NavigationManager navigationManager)
     {
-        if (navigationManager.TryGetQueryString("returnUrl", out string url))
+        if (navigationManager.TryGetQueryString("returnUrl", out string? url))
         {
             navigationManager.NavigateTo(url);
         }
@@ -25,12 +24,12 @@ public static class NavigationManagerExtensions
         }
     }
 
-    public static bool TryGetQueryString(this NavigationManager navigationManager, string key, out string value)
+    public static bool TryGetQueryString(this NavigationManager navigationManager, string key, [MaybeNullWhen(false)] out string value)
     {
         var uri = navigationManager.ToAbsoluteUri(navigationManager.Uri);
-        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue(key, out var valueFromQueryString))
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue(key, out var valueFromQueryString) && valueFromQueryString.Count > 0)
         {
-            value = valueFromQueryString;
+            value = valueFromQueryString!;
             return true;
         }
 
@@ -48,7 +47,7 @@ public static class NavigationManagerExtensions
 
     private static bool TryGetQueryString(this NavigationManager navigationManager, string key, out int? value)
     {
-        if (navigationManager.TryGetQueryString(key, out string str) && int.TryParse(str, NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
+        if (navigationManager.TryGetQueryString(key, out string? str) && int.TryParse(str, NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
         {
             value = result;
             return true;
