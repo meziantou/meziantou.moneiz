@@ -6,7 +6,7 @@
   <ItemGroup>
     <PackageVersion Include="Meziantou.AspNetCore.Components" Version="2.0.23" />
     <PackageVersion Include="Meziantou.AspNetCore.Components.WebAssembly" Version="1.0.14" />
-    <PackageVersion Include="Meziantou.Framework" Version="5.0.0" />
+    <PackageVersion Include="Meziantou.Framework" Version="5.0.1" />
     <PackageVersion Include="Meziantou.Framework.RelativeDate" Version="2.1.9" />
     <PackageVersion Include="Meziantou.Framework.Scheduling" Version="2.0.7" />
     <PackageVersion Include="Meziantou.Framework.SimpleQueryLanguage" Version="1.0.5" />
