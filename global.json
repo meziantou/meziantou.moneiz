@@ -1,11 +1,11 @@
 {
   "sdk": {
-    "version": "9.0.305",
+    "version": "9.0.306",
     "rollForward": "patch"
   },
   "msbuild-sdks": {
-    "Meziantou.NET.Sdk": "1.0.36",
-    "Meziantou.NET.Sdk.BlazorWebAssembly": "1.0.36",
-    "Meziantou.NET.Sdk.Test": "1.0.36"
+    "Meziantou.NET.Sdk": "1.0.37",
+    "Meziantou.NET.Sdk.BlazorWebAssembly": "1.0.37",
+    "Meziantou.NET.Sdk.Test": "1.0.37"
   }
 }
