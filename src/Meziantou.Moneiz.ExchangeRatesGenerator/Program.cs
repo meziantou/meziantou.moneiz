@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using System.Text.Json.Serialization;
 
 namespace Meziantou.Moneiz.ExchangeRatesGenerator;
 
@@ -46,7 +47,7 @@ namespace Meziantou.Moneiz.Core
         foreach (var currency in currencies)
         {
             var exchangeRate = rates?.GetValueOrDefault(currency.Key, 1d);
-            if (exchangeRate is null)
+            if (exchangeRate is not null)
             {
                 _ = sb.AppendLine(CultureInfo.InvariantCulture, $"            result[{i}] = new Currency(\"{currency.Key}\", \"{currency.Value}\", {exchangeRate}m);");
                 i++;
@@ -66,6 +67,7 @@ namespace Meziantou.Moneiz.Core
 
     private sealed class ExchangeRatesResponse
     {
+        [JsonPropertyName("rates")]
         public Dictionary<string, double>? Rates { get; set; }
     }
 }
