@@ -33,7 +33,7 @@ jobs:
     - name: Publish
       run: dotnet publish src/Meziantou.Moneiz/Meziantou.Moneiz.csproj --configuration Release --output ${{ env.OUTPUT }} /bl
 
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v6
       if: always()
       with:
         name: binlog
