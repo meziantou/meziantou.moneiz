@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       account:
-        description: 'Account name or ID to check (optional - if not provided, all accounts will be checked)'
+        description: 'Account ID to check (optional - if not provided, all accounts will be checked)'
         required: false
         type: string
         default: ''
@@ -16,6 +16,11 @@ on:
         description: 'Number of days to project into the future'
         required: true
         type: number
+      minimum-balance:
+        description: 'Minimum balance threshold (default: 0)'
+        required: false
+        type: number
+        default: 0
 
 jobs:
   check-overdraft:
@@ -37,7 +42,7 @@ jobs:
         shell: pwsh
         run: |
           if ([string]::IsNullOrEmpty("${{ inputs.account }}")) {
-            meziantou.moneiz --file "${{ inputs.database-path }}" --days ${{ inputs.overdraft-period-days }}
+            meziantou.moneiz --file "${{ inputs.database-path }}" --days ${{ inputs.overdraft-period-days }} --minimum-balance ${{ inputs.minimum-balance }}
           } else {
-            meziantou.moneiz --file "${{ inputs.database-path }}" --accounts "${{ inputs.account }}" --days ${{ inputs.overdraft-period-days }}
+            meziantou.moneiz --file "${{ inputs.database-path }}" --account-id "${{ inputs.account }}" --days ${{ inputs.overdraft-period-days }} --minimum-balance ${{ inputs.minimum-balance }}
           }
