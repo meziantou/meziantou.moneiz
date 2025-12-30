@@ -7,8 +7,8 @@ on:
         description: 'Path to the database file'
         required: true
         type: string
-      account:
-        description: 'Account ID to check (optional - if not provided, all accounts will be checked)'
+      account-ids:
+        description: 'Account IDs to check, space or comma-separated (e.g., "1 2 3" or "1,2,3"). If not provided, all accounts will be checked.'
         required: false
         type: string
         default: ''
@@ -41,8 +41,8 @@ jobs:
       - name: Check for overdraft
         shell: pwsh
         run: |
-          if ([string]::IsNullOrEmpty("${{ inputs.account }}")) {
+          if ([string]::IsNullOrEmpty("${{ inputs.account-ids }}")) {
             meziantou.moneiz --file "${{ inputs.database-path }}" --days ${{ inputs.overdraft-period-days }} --minimum-balance ${{ inputs.minimum-balance }}
           } else {
-            meziantou.moneiz --file "${{ inputs.database-path }}" --account-id "${{ inputs.account }}" --days ${{ inputs.overdraft-period-days }} --minimum-balance ${{ inputs.minimum-balance }}
+            meziantou.moneiz --file "${{ inputs.database-path }}" --account-id "${{ inputs.account-ids }}" --days ${{ inputs.overdraft-period-days }} --minimum-balance ${{ inputs.minimum-balance }}
           }

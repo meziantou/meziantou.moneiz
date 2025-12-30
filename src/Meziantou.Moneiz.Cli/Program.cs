@@ -7,10 +7,9 @@ var fileOption = new Option<FileInfo>("--file")
     Description = "Path to the database file"
 };
 
-var accountIdsOption = new Option<string[]>("--account-id")
+var accountIdsOption = new Option<string>("--account-id")
 {
-    AllowMultipleArgumentsPerToken = true,
-    Description = "Account IDs to check. If not specified, all accounts will be checked."
+    Description = "Account IDs to check (comma-separated, e.g., '1,2,3'). If not specified, all accounts will be checked."
 };
 
 var daysOption = new Option<int>("--days")
@@ -40,7 +39,7 @@ rootCommand.SetAction((parseResult) =>
         return Task.FromResult(1);
     }
 
-    var accountIds = parseResult.GetValue(accountIdsOption) ?? [];
+    var accountIds = parseResult.GetValue(accountIdsOption);
     var days = parseResult.GetValue(daysOption);
     var minimumBalance = parseResult.GetValue(minimumBalanceOption);
     return CheckOverdraftAsync(file, accountIds, days, minimumBalance);
@@ -48,7 +47,7 @@ rootCommand.SetAction((parseResult) =>
 
 return rootCommand.Parse(args).Invoke();
 
-static async Task CheckOverdraftAsync(FileInfo file, string[] accountIdFilter, int days, decimal minimumBalance)
+static async Task CheckOverdraftAsync(FileInfo file, string? accountIdFilter, int days, decimal minimumBalance)
 {
     if (!file.Exists)
     {
@@ -77,10 +76,12 @@ static async Task CheckOverdraftAsync(FileInfo file, string[] accountIdFilter, i
 
     var accountsToCheck = db.VisibleAccounts.ToList();
 
-    if (accountIdFilter.Length > 0)
+    if (!string.IsNullOrWhiteSpace(accountIdFilter))
     {
         var accountIds = new HashSet<int>();
-        foreach (var id in accountIdFilter)
+        var idStrings = accountIdFilter.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        foreach (var id in idStrings)
         {
             if (int.TryParse(id, CultureInfo.InvariantCulture, out var accountId))
             {
@@ -88,8 +89,7 @@ static async Task CheckOverdraftAsync(FileInfo file, string[] accountIdFilter, i
             }
             else
             {
-                Console.Error.WriteLine($"Error: '{id}' is not a valid account ID.");
-                Environment.Exit(1);
+                Console.Error.WriteLine($"Warning: '{id}' is not a valid account ID and will be ignored.");
             }
         }
 
