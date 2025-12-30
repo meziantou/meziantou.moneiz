@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Meziantou.Moneiz.Cli/Meziantou.Moneiz.Cli.csproj" />
     <Project Path="src/Meziantou.Moneiz.Core/Meziantou.Moneiz.Core.csproj" />
     <Project Path="src/Meziantou.Moneiz.ExchangeRatesGenerator/Meziantou.Moneiz.ExchangeRatesGenerator.csproj" />
     <Project Path="src/Meziantou.Moneiz/Meziantou.Moneiz.csproj" />
