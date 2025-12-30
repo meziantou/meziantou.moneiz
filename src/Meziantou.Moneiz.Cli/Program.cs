@@ -108,6 +108,9 @@ static async Task CheckOverdraftAsync(FileInfo file, string? accountIdFilter, in
     var today = Database.GetToday();
     var targetDate = today.AddDays(days);
 
+    // Process scheduled transactions up to the target date
+    db.ProcessScheduledTransactions(days);
+
     Console.WriteLine($"Checking accounts for overdraft from {today:yyyy-MM-dd} to {targetDate:yyyy-MM-dd} ({days} days)");
     Console.WriteLine($"Minimum balance threshold: {minimumBalance:N2}");
     Console.WriteLine();

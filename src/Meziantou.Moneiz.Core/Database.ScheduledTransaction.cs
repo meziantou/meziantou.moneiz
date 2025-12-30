@@ -41,10 +41,15 @@ public partial class Database
 
     public void ProcessScheduledTransactions()
     {
+        ProcessScheduledTransactions(5);
+    }
+
+    public void ProcessScheduledTransactions(int daysAhead)
+    {
         using (DeferEvents())
         {
             var utcNow = GetToday();
-            var date = utcNow.AddDays(5);
+            var date = utcNow.AddDays(daysAhead);
 
             foreach (var scheduledTransaction in ScheduledTransactions.ToList())
             {
