@@ -24,7 +24,7 @@ on:
 
 jobs:
   check-overdraft:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
 
     steps:
       - name: Checkout repository
