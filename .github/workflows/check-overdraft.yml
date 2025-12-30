@@ -1,0 +1,43 @@
+name: Check Account Overdraft
+
+on:
+  workflow_call:
+    inputs:
+      database-path:
+        description: 'Path to the database file'
+        required: true
+        type: string
+      account:
+        description: 'Account name or ID to check (optional - if not provided, all accounts will be checked)'
+        required: false
+        type: string
+        default: ''
+      overdraft-period-days:
+        description: 'Number of days to project into the future'
+        required: true
+        type: number
+
+jobs:
+  check-overdraft:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install Meziantou.Moneiz tool
+        run: dotnet tool update --global Meziantou.Moneiz.Cli
+
+      - name: Check for overdraft
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrEmpty("${{ inputs.account }}")) {
+            meziantou.moneiz --file "${{ inputs.database-path }}" --days ${{ inputs.overdraft-period-days }}
+          } else {
+            meziantou.moneiz --file "${{ inputs.database-path }}" --accounts "${{ inputs.account }}" --days ${{ inputs.overdraft-period-days }}
+          }
