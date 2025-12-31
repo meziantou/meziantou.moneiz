@@ -229,6 +229,15 @@ th.bigtable-totals {
     opacity: 0.7;
     font-size: var(--font-size-small);
 }
+
+/* Account filter list */
+ul.unstyled label {
+    cursor: pointer;
+}
+
+ul.unstyled label:hover {
+    color: var(--link-color);
+}
 .dropdown-toggle {
   display: block;
   cursor: pointer;

@@ -53,10 +53,12 @@
 
 		<h2>Period</h2>
 		<div class="form-group">
-			<a @onclick="() => SelectCurrentMonth()">This month</a> -
-			<a @onclick="() => SelectCurrentYear()">This year</a> -
-			<a @onclick="() => SelectLastXDays(30)">Last 30 days</a> -
-			<a @onclick="() => SelectLastXDays(365)">Last 365 days</a>
+			<div class="chip-group">
+				<span class="chip @(IsPeriodSelected("month") ? "selected" : "")" @onclick="() => SelectCurrentMonth()">This month</span>
+				<span class="chip @(IsPeriodSelected("year") ? "selected" : "")" @onclick="() => SelectCurrentYear()">This year</span>
+				<span class="chip @(IsPeriodSelected("30") ? "selected" : "")" @onclick="() => SelectLastXDays(30)">Last 30 days</span>
+				<span class="chip @(IsPeriodSelected("365") ? "selected" : "")" @onclick="() => SelectLastXDays(365)">Last 365 days</span>
+			</div>
 		</div>
 
 		<div class="form-group">
@@ -231,6 +233,19 @@
 		if (selectedCount == accountList.Count)
 			return "selected";
 		return "partial";
+	}
+
+	private bool IsPeriodSelected(string period)
+	{
+		var today = Database.GetToday();
+		return period switch
+		{
+			"month" => options.FromDate == new DateOnly(today.Year, today.Month, 1) && options.ToDate == today,
+			"year" => options.FromDate == new DateOnly(today.Year, 1, 1) && options.ToDate == today,
+			"30" => options.FromDate == today.AddDays(-30) && options.ToDate == today,
+			"365" => options.FromDate == today.AddDays(-365) && options.ToDate == today,
+			_ => false
+		};
 	}
 
 	public void Dispose()
