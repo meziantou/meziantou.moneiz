@@ -9,26 +9,12 @@ var fileOption = new Option<FileInfo>("--file")
 
 var accountIdsOption = new Option<string>("--account-id")
 {
-    Description = "Account IDs to check (comma-separated, e.g., '1,2,3'). If not specified, all accounts will be checked."
-};
-
-var daysOption = new Option<int>("--days")
-{
-    DefaultValueFactory = _ => 3,
-    Description = "Number of days to project into the future"
-};
-
-var minimumBalanceOption = new Option<decimal>("--minimum-balance")
-{
-    DefaultValueFactory = _ => 0,
-    Description = "Minimum balance threshold. Accounts below this balance will be flagged."
+    Description = "Account IDs to check (comma-separated, e.g., '1,2,3'). If not specified, all accounts with notifications enabled will be checked."
 };
 
 var rootCommand = new RootCommand("Check if accounts will be overdraft in the following days");
 rootCommand.Options.Add(fileOption);
 rootCommand.Options.Add(accountIdsOption);
-rootCommand.Options.Add(daysOption);
-rootCommand.Options.Add(minimumBalanceOption);
 
 rootCommand.SetAction((parseResult) =>
 {
@@ -40,24 +26,16 @@ rootCommand.SetAction((parseResult) =>
     }
 
     var accountIds = parseResult.GetValue(accountIdsOption);
-    var days = parseResult.GetValue(daysOption);
-    var minimumBalance = parseResult.GetValue(minimumBalanceOption);
-    return CheckOverdraftAsync(file, accountIds, days, minimumBalance);
+    return CheckOverdraftAsync(file, accountIds);
 });
 
 return rootCommand.Parse(args).Invoke();
 
-static async Task CheckOverdraftAsync(FileInfo file, string? accountIdFilter, int days, decimal minimumBalance)
+static async Task CheckOverdraftAsync(FileInfo file, string? accountIdFilter)
 {
     if (!file.Exists)
     {
         Console.Error.WriteLine($"Error: Database file '{file.FullName}' not found.");
-        Environment.Exit(1);
-    }
-
-    if (days < 0)
-    {
-        Console.Error.WriteLine($"Error: Days must be a positive number.");
         Environment.Exit(1);
     }
 
@@ -74,7 +52,9 @@ static async Task CheckOverdraftAsync(FileInfo file, string? accountIdFilter, in
         return;
     }
 
-    var accountsToCheck = db.VisibleAccounts.ToList();
+    var accountsToCheck = db.VisibleAccounts
+        .Where(a => a.OverdraftNotificationEnabled)
+        .ToList();
 
     if (!string.IsNullOrWhiteSpace(accountIdFilter))
     {
@@ -100,26 +80,35 @@ static async Task CheckOverdraftAsync(FileInfo file, string? accountIdFilter, in
 
         if (missingIds.Count > 0)
         {
-            Console.Error.WriteLine($"Error: Account ID(s) not found: {string.Join(", ", missingIds)}");
+            Console.Error.WriteLine($"Error: Account ID(s) not found or notification not enabled: {string.Join(", ", missingIds)}");
             Environment.Exit(1);
         }
     }
 
+    if (accountsToCheck.Count == 0)
+    {
+        Console.WriteLine("No accounts with overdraft notifications enabled.");
+        return;
+    }
+
     var today = Database.GetToday();
-    var targetDate = today.AddDays(days);
 
-    // Process scheduled transactions up to the target date
-    db.ProcessScheduledTransactions(days);
-
-    Console.WriteLine($"Checking accounts for overdraft from {today:yyyy-MM-dd} to {targetDate:yyyy-MM-dd} ({days} days)");
-    Console.WriteLine($"Minimum balance threshold: {minimumBalance:N2}");
+    Console.WriteLine("Checking accounts for overdraft using their configured notification settings");
     Console.WriteLine();
 
     var hasOverdraft = false;
 
     foreach (var account in accountsToCheck)
     {
-        var currentBalance = db.GetTodayBalance(account);
+        var days = account.OverdraftNotificationCheckPeriodDays;
+        var minimumBalance = account.OverdraftNotificationAmount;
+        var targetDate = today.AddDays(days);
+
+        // Process scheduled transactions up to the target date for this account
+        var tempDb = db;
+        tempDb.ProcessScheduledTransactions(days);
+
+        var currentBalance = tempDb.GetTodayBalance(account);
 
         // Check balance for each day in the period
         DateOnly? overdraftDate = null;
@@ -128,7 +117,7 @@ static async Task CheckOverdraftAsync(FileInfo file, string? accountIdFilter, in
         for (var i = 0; i <= days; i++)
         {
             var checkDate = today.AddDays(i);
-            var balance = db.GetBalance(account, checkDate);
+            var balance = tempDb.GetBalance(account, checkDate);
 
             if (balance < minimumBalance)
             {
@@ -156,6 +145,8 @@ static async Task CheckOverdraftAsync(FileInfo file, string? accountIdFilter, in
             Console.ResetColor();
         }
 
+        Console.WriteLine($"  Check period: {days} days (until {targetDate:yyyy-MM-dd})");
+        Console.WriteLine($"  Minimum balance threshold: {FormatAmount(minimumBalance, account.CurrencyIsoCode)}");
         Console.WriteLine($"  Current balance: {FormatAmount(currentBalance, account.CurrencyIsoCode)}");
 
         if (willOverdraft && overdraftDate.HasValue && lowestBalance.HasValue)
@@ -167,7 +158,7 @@ static async Task CheckOverdraftAsync(FileInfo file, string? accountIdFilter, in
         }
         else
         {
-            var projectedBalance = db.GetBalance(account, targetDate);
+            var projectedBalance = tempDb.GetBalance(account, targetDate);
             Console.WriteLine($"  Projected balance ({targetDate:yyyy-MM-dd}): {FormatAmount(projectedBalance, account.CurrencyIsoCode)}");
         }
 

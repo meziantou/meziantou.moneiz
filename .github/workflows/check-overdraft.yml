@@ -8,19 +8,10 @@ on:
         required: true
         type: string
       account-ids:
-        description: 'Account IDs to check, space or comma-separated (e.g., "1 2 3" or "1,2,3"). If not provided, all accounts will be checked.'
+        description: 'Account IDs to check, space or comma-separated (e.g., "1 2 3" or "1,2,3"). If not provided, all accounts with notifications enabled will be checked.'
         required: false
         type: string
         default: ''
-      overdraft-period-days:
-        description: 'Number of days to project into the future'
-        required: true
-        type: number
-      minimum-balance:
-        description: 'Minimum balance threshold (default: 0)'
-        required: false
-        type: number
-        default: 0
 
 jobs:
   check-overdraft:
@@ -46,7 +37,8 @@ jobs:
         shell: pwsh
         run: |
           if ([string]::IsNullOrEmpty("${{ inputs.account-ids }}")) {
-            meziantou.moneiz --file "${{ inputs.database-path }}" --days ${{ inputs.overdraft-period-days }} --minimum-balance ${{ inputs.minimum-balance }}
+            meziantou.moneiz --file "${{ inputs.database-path }}"
           } else {
-            meziantou.moneiz --file "${{ inputs.database-path }}" --account-id "${{ inputs.account-ids }}" --days ${{ inputs.overdraft-period-days }} --minimum-balance ${{ inputs.minimum-balance }}
+            meziantou.moneiz --file "${{ inputs.database-path }}" --account-id "${{ inputs.account-ids }}"
           }
+

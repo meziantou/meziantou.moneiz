@@ -14,6 +14,7 @@
                 <tr>
                     <th>Name</th>
                     <th>Currency</th>
+                    <th>Overdraft Warning</th>
                     <th></th>
                 </tr>
             </thead>
@@ -32,6 +33,14 @@
                 <td>@account</td>
             }
             <td>@account.CurrencyIsoCode</td>
+            <td>
+                @if (account.OverdraftNotificationEnabled && GetOverdraftWarning(account) is { } warning)
+                {
+                    <span class="overdraft-warning-cell" title="@warning.Details">
+                        <i class="fas fa-exclamation-triangle" style="color: #f0ad4e;"></i> @warning.Message
+                    </span>
+                }
+            </td>
             <td class="commands">
                 <Dropdown>
                     <li><a class="view-transactions" href="/accounts/@account.Id/transactions"><i class="fas fa-search"></i> View Transactions</a></li>
@@ -52,6 +61,53 @@
     {
         database = await DatabaseProvider.GetDatabase();
     }
+
+    private OverdraftWarningInfo? GetOverdraftWarning(Account account)
+    {
+        if (database == null || !account.OverdraftNotificationEnabled)
+            return null;
+
+        var today = Database.GetToday();
+        var days = account.OverdraftNotificationCheckPeriodDays;
+        var minimumBalance = account.OverdraftNotificationAmount;
+
+        DateOnly? overdraftDate = null;
+        decimal? lowestBalance = null;
+
+        for (var i = 0; i <= days; i++)
+        {
+            var checkDate = today.AddDays(i);
+            var balance = database.GetBalance(account, checkDate);
+
+            if (balance < minimumBalance)
+            {
+                if (!overdraftDate.HasValue || balance < lowestBalance)
+                {
+                    overdraftDate = checkDate;
+                    lowestBalance = balance;
+                }
+            }
+        }
+
+        if (overdraftDate.HasValue && lowestBalance.HasValue)
+        {
+            var daysUntil = overdraftDate.Value.DayNumber - today.DayNumber;
+            var message = daysUntil == 0 ? "Today" : $"In {daysUntil} day{(daysUntil == 1 ? "" : "s")}";
+            var details = $"Will fall below {FormatAmount(minimumBalance, account.CurrencyIsoCode)} on {overdraftDate.Value:yyyy-MM-dd}. Lowest balance: {FormatAmount(lowestBalance.Value, account.CurrencyIsoCode)}";
+            return new OverdraftWarningInfo(message, details);
+        }
+
+        return null;
+    }
+
+    private static string FormatAmount(decimal amount, string? currencyCode)
+    {
+        var sign = amount >= 0 ? "" : "-";
+        var absAmount = Math.Abs(amount);
+        return $"{sign}{absAmount:N2} {currencyCode ?? ""}".Trim();
+    }
+
+    private record OverdraftWarningInfo(string Message, string Details);
 
     public async Task MoveUp(Account account)
     {

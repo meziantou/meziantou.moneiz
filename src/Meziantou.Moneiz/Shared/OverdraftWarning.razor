@@ -1,0 +1,112 @@
+@using Meziantou.Moneiz.Core
+@inject DatabaseProvider DatabaseProvider
+@implements IDisposable
+
+@if (hasOverdraftAccounts)
+{
+    <div class="overdraft-warning-container">
+        <div class="container">
+            <div class="alert alert-warning overdraft-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Overdraft Warning:</strong>
+                @if (overdraftAccounts.Count == 1)
+                {
+                    <span>Account <strong>@overdraftAccounts[0].Name</strong> will fall below <strong>@FormatAmount(overdraftAccounts[0].OverdraftNotificationAmount, overdraftAccounts[0].CurrencyIsoCode)</strong> in the next @overdraftAccounts[0].OverdraftNotificationCheckPeriodDays days.</span>
+                }
+                else
+                {
+                    <span>
+                        @foreach (var account in overdraftAccounts)
+                        {
+                            if (account != overdraftAccounts[0])
+                            {
+                                <text>, </text>
+                            }
+                            <strong>@account.Name</strong> <text>(</text>@FormatAmount(account.OverdraftNotificationAmount, account.CurrencyIsoCode)<text>)</text>
+                        }
+                        <text> will fall below their minimum balance thresholds.</text>
+                    </span>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Account> overdraftAccounts = new();
+    private bool hasOverdraftAccounts;
+    private System.Threading.Timer? timer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        DatabaseProvider.DatabaseChanged += OnDatabaseChanged;
+        timer = new System.Threading.Timer(CheckOverdraft, state: null, TimeSpan.Zero, TimeSpan.FromMinutes(5));
+        await CheckForOverdraft();
+    }
+
+    public void Dispose()
+    {
+        DatabaseProvider.DatabaseChanged -= OnDatabaseChanged;
+        timer?.Dispose();
+    }
+
+    private void OnDatabaseChanged(object? sender, EventArgs e)
+    {
+        InvokeAsync(CheckForOverdraft);
+    }
+
+    private void CheckOverdraft(object? state)
+    {
+        InvokeAsync(CheckForOverdraft);
+    }
+
+    private async Task CheckForOverdraft()
+    {
+        try
+        {
+            var db = await DatabaseProvider.GetDatabase();
+            var today = Database.GetToday();
+
+            overdraftAccounts.Clear();
+
+            foreach (var account in db.VisibleAccounts.Where(a => a.OverdraftNotificationEnabled))
+            {
+                var days = account.OverdraftNotificationCheckPeriodDays;
+                var minimumBalance = account.OverdraftNotificationAmount;
+
+                // Check balance for each day in the period
+                var willOverdraft = false;
+                for (var i = 0; i <= days; i++)
+                {
+                    var checkDate = today.AddDays(i);
+                    var balance = db.GetBalance(account, checkDate);
+
+                    if (balance < minimumBalance)
+                    {
+                        willOverdraft = true;
+                        break;
+                    }
+                }
+
+                if (willOverdraft)
+                {
+                    overdraftAccounts.Add(account);
+                }
+            }
+
+            hasOverdraftAccounts = overdraftAccounts.Count > 0;
+            StateHasChanged();
+        }
+        catch
+        {
+            // Ignore errors during check
+        }
+    }
+
+    private static string FormatAmount(decimal amount, string? currencyCode)
+    {
+        var sign = amount >= 0 ? "" : "-";
+        var absAmount = Math.Abs(amount);
+        return $"{sign}{absAmount:N2} {currencyCode ?? ""}".Trim();
+    }
+}

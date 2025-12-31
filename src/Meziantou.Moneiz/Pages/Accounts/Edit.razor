@@ -98,6 +98,33 @@
 			</label>
 		</div>
 
+		<hr />
+		<h3>Overdraft Notifications</h3>
+
+		<div class="form-group">
+			<label>
+				Enable overdraft notifications
+				<InputCheckbox @bind-Value="model.OverdraftNotificationEnabled" />
+			</label>
+		</div>
+
+		@if (model.OverdraftNotificationEnabled)
+		{
+			<div class="form-group">
+				<label>
+					Minimum balance threshold
+					<InputNumber @bind-Value="model.OverdraftNotificationAmount" />
+				</label>
+			</div>
+
+			<div class="form-group">
+				<label>
+					Check period (days)
+					<InputNumber @bind-Value="model.OverdraftNotificationCheckPeriodDays" />
+				</label>
+			</div>
+		}
+
 		<button type="submit">Submit</button>
 	</EditForm>
 </LoadingIndicator>
@@ -137,6 +164,9 @@
 				DefaultCashFlow = account.DefaultCashFlow,
 				DefaultTransactionState = account.DefaultTransactionState,
 				Closed = account.Closed,
+				OverdraftNotificationEnabled = account.OverdraftNotificationEnabled,
+				OverdraftNotificationAmount = account.OverdraftNotificationAmount,
+				OverdraftNotificationCheckPeriodDays = account.OverdraftNotificationCheckPeriodDays,
 			};
 		}
 	}
@@ -155,6 +185,9 @@
 		account.DefaultCashFlow = model.DefaultCashFlow;
 		account.DefaultTransactionState = model.DefaultTransactionState;
 		account.Closed = model.Closed;
+		account.OverdraftNotificationEnabled = model.OverdraftNotificationEnabled;
+		account.OverdraftNotificationAmount = model.OverdraftNotificationAmount;
+		account.OverdraftNotificationCheckPeriodDays = model.OverdraftNotificationCheckPeriodDays;
 
 		database.SaveAccount(account);
 		await DatabaseProvider.Save();
@@ -173,5 +206,8 @@
 		public CashFlow DefaultCashFlow { get; set; }
 		public TransactionState DefaultTransactionState { get; set; }
 		public bool Closed { get; set; }
+		public bool OverdraftNotificationEnabled { get; set; }
+		public decimal OverdraftNotificationAmount { get; set; }
+		public int OverdraftNotificationCheckPeriodDays { get; set; } = 3;
 	}
 }

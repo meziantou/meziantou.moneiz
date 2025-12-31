@@ -37,6 +37,15 @@ public sealed class Account
     [JsonPropertyName("k")]
     public string? Bank { get; set; }
 
+    [JsonPropertyName("l")]
+    public bool OverdraftNotificationEnabled { get; set; }
+
+    [JsonPropertyName("m")]
+    public decimal OverdraftNotificationAmount { get; set; }
+
+    [JsonPropertyName("n")]
+    public int OverdraftNotificationCheckPeriodDays { get; set; } = 3;
+
     public override string ToString()
     {
         if (!string.IsNullOrEmpty(Bank))

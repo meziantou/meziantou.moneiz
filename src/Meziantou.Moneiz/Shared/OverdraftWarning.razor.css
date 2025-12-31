@@ -1,0 +1,49 @@
+.overdraft-warning-container {
+    background-color: #fcf8e3;
+    border-bottom: 1px solid #faebcc;
+}
+
+.overdraft-warning {
+    background-color: #fcf8e3;
+    border: none;
+    border-left: 4px solid #f0ad4e;
+    color: #8a6d3b;
+    padding: 12px 20px;
+    margin: 0;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.overdraft-warning i {
+    color: #f0ad4e;
+    font-size: 16px;
+}
+
+.overdraft-warning strong {
+    font-weight: 700;
+}
+
+.overdraft-warning .alert-link {
+    margin-left: 10px;
+    color: #8a6d3b;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.overdraft-warning .alert-link:hover {
+    color: #66512c;
+}
+
+.alert {
+    padding: 15px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+
+.alert-warning {
+    background-color: #fcf8e3;
+    border-color: #faebcc;
+    color: #8a6d3b;
+}

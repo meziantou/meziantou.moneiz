@@ -22,21 +22,20 @@ body {
 }
 
 .site-header {
-    position: fixed;
+    position: sticky;
     top: 0;
     left: 0;
     right: 0;
     height: var(--navbar-height);
+    z-index: 1000;
 }
 
 .site-sidebar {
-    padding-top: var(--navbar-padding);
     grid-column-start: 1;
     grid-column-end: 1;
 }
 
 .site-main {
-    padding-top: var(--navbar-padding);
     grid-column-start: 2;
     grid-column-end: 3;
 }

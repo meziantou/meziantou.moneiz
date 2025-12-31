@@ -46,8 +46,8 @@
   <ItemGroup>
     <UpToDateCheckInput Include="wwwroot/src/**/*" />
   </ItemGroup>
-  
-  <Target Name="ConcatenateScripts" BeforeTargets="CopyFilesToOutputDirectory,ResolveProjectStaticWebAssets,Build,Publish">
+
+  <Target Name="ConcatenateScripts" BeforeTargets="CopyFilesToOutputDirectory;ResolveProjectStaticWebAssets;Build;Publish">
     <ItemGroup>
       <ConcatFiles Include="wwwroot/css/*.css" Exclude="wwwroot/css/site.css" />
     </ItemGroup>
