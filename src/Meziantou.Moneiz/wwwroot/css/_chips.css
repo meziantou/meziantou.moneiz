@@ -1,0 +1,49 @@
+.chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    font-size: var(--font-size-small);
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s ease;
+}
+
+.chip:hover {
+    background-color: var(--hover-bg);
+    border-color: var(--link-color);
+}
+
+.chip.selected {
+    background-color: var(--link-color);
+    border-color: var(--link-color);
+    color: #fff;
+}
+
+.chip.selected:hover {
+    opacity: 0.85;
+}
+
+.chip.partial {
+    background-color: transparent;
+    border-color: var(--link-color);
+    color: var(--link-color);
+}
+
+.chip-label {
+    font-weight: 500;
+    margin-right: 16px;
+    color: var(--text-color);
+    opacity: 0.7;
+    font-size: var(--font-size-small);
+}

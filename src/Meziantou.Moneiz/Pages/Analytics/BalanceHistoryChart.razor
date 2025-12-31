@@ -1,8 +1,13 @@
-﻿<div>
+﻿@inject ChartService ChartService
+@implements IAsyncDisposable
+
+<div>
     @foreach (var chart in Series)
     {
         <h2>@chart.Name</h2>
-        <MudChart ChartType="ChartType.Line" ChartSeries="@chart.Series" XAxisLabels="@xAxis" Width="100%" Height="350px" ChartOptions="new() { LineStrokeWidth = 2 }" />
+        <div style="width: 100%; height: 350px; position: relative;">
+            <canvas @key="chart.Id" @ref="chart.CanvasRef" style="width: 100%; height: 100%;"></canvas>
+        </div>
     }
 </div>
 
@@ -12,7 +17,16 @@
 
     MoneizDisplaySettings displaySettings = new();
     private string[] xAxis = Array.Empty<string>();
-    private List<(string Name, List<ChartSeries> Series)> Series = new();
+    private List<ChartInfo> Series = new();
+    private HashSet<string> _renderedCharts = new();
+
+    class ChartInfo
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString("N");
+        public string Name { get; set; } = string.Empty;
+        public ElementReference CanvasRef { get; set; }
+        public List<ChartDataset> Datasets { get; set; } = new();
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -21,43 +35,91 @@
 
     protected override void OnParametersSet()
     {
+        // Clear old charts
+        foreach (var chart in Series.ToList())
+        {
+            ChartService.DestroyChart(chart.CanvasRef);
+        }
         Series.Clear();
+        _renderedCharts.Clear();
 
         if (Model != null && Model.BalancesByAccount.Count > 0)
         {
-            var currencySeries = new List<ChartSeries>();
-            Series.Add(("Balance by currencies", currencySeries));
+            var currencyDatasets = new List<ChartDataset>();
+            Series.Add(new ChartInfo { Name = "Balance by currencies", Datasets = currencyDatasets });
 
             var length = Model.BalancesByAccount.First().Balances!.Length;
 
+            // Generate all date labels for tooltips
             xAxis = new string[length];
-            Array.Fill(xAxis, "");
-            var xAxisCount = 7;
-            for (var i = 0; i <= xAxisCount; i++)
+            for (var i = 0; i < length; i++)
             {
-                var index = i * (xAxis.Length / xAxisCount);
-                index = Math.Clamp(index, 0, xAxis.Length - 1);
-                xAxis[index] = displaySettings.FormatDate(Model.StartDate.AddDays(index));
+                xAxis[i] = displaySettings.FormatDate(Model.StartDate.AddDays(i));
             }
 
             foreach (var group in Model.BalancesByAccount.GroupBy(i => i.Currency))
             {
-                var currencySerie = new ChartSeries { Name = group.Key!, Data = new double[length] };
-                currencySeries.Add(currencySerie);
+                var currencyLabel = !string.IsNullOrEmpty(group.Key) ? group.Key : "No currency";
+                var currencyDataset = new ChartDataset { Label = currencyLabel, Data = new double[length] };
+                currencyDatasets.Add(currencyDataset);
 
-                var series = new List<ChartSeries>();
+                var datasets = new List<ChartDataset>();
                 foreach (var balanceHistory in group)
                 {
-                    series.Add(new() { Name = balanceHistory.Account!.ToString(), Data = balanceHistory.Balances!.Select(value => (double)value).ToArray() });
+                    datasets.Add(new() { Label = balanceHistory.Account!.ToString(), Data = balanceHistory.Balances!.Select(value => (double)value).ToArray() });
 
                     for (var i = 0; i < balanceHistory.Balances!.Length; i++)
                     {
-                        currencySerie.Data[i] += (double)balanceHistory.Balances[i];
+                        currencyDataset.Data[i] += (double)balanceHistory.Balances[i];
                     }
                 }
 
-                Series.Add(($"Balance - {group.Key}", series));
+                Series.Add(new ChartInfo { Name = $"Balance - {currencyLabel}", Datasets = datasets });
             }
         }
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (Series.Count == 0)
+            return;
+
+        // Render charts that haven't been rendered yet using ElementReference
+        foreach (var chart in Series.ToList())
+        {
+            if (!_renderedCharts.Contains(chart.Id))
+            {
+                try
+                {
+                    Console.WriteLine($"[Chart] Attempting to render chart: {chart.Name}");
+                    var success = ChartService.CreateLineChart(chart.CanvasRef, xAxis, chart.Datasets);
+                    Console.WriteLine($"[Chart] Render result: {success}");
+                    if (success)
+                    {
+                        _renderedCharts.Add(chart.Id);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Chart] Error rendering: {ex.Message}");
+                }
+            }
+        }
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        foreach (var chart in Series.ToList())
+        {
+            try
+            {
+                ChartService.DestroyChart(chart.CanvasRef);
+            }
+            catch
+            {
+                // Ignore disposal errors
+            }
+        }
+        return ValueTask.CompletedTask;
     }
 }

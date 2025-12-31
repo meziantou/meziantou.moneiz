@@ -27,7 +27,6 @@
     <PackageReference Include="Meziantou.Framework.ValueStopwatch" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all" />
-    <PackageReference Include="MudBlazor" />
   </ItemGroup>
 
   <ItemGroup>

@@ -8,24 +8,31 @@
 	<LoadingIndicator IsLoading="database == null">
 		<h2>Accounts</h2>
 		<div class="form-group">
-			<div style="display: flex; gap: 12px">
-				<a @onclick="() => SelectAll()">All</a>
+			<div class="chip-group">
+				<span class="chip-label">Quick:</span>
+				<span class="chip @(IsAllSelected() ? "selected" : "")" @onclick="() => SelectAll()">All</span>
 				@if (allAccounts!.Any(a => a.Closed))
 				{
-					<a @onclick="() => SelectActives()">Active</a>
-					<a @onclick="() => SelectClosed()">Closed</a>
+					<span class="chip @(GetChipState(allAccounts!.Where(a => !a.Closed)))" @onclick="() => SelectActives()">Active</span>
+					<span class="chip @(GetChipState(allAccounts!.Where(a => a.Closed)))" @onclick="() => SelectClosed()">Closed</span>
 				}
-				<a @onclick="() => UnselectAll()">None</a>
+				<span class="chip @(options.SelectedAccounts.Count == 0 ? "selected" : "")" @onclick="() => UnselectAll()">None</span>
 			</div>
-			<div style="display: flex; gap: 12px">
-				@foreach (var currency in allAccounts!.Select(a => a.CurrencyIsoCode).Distinct().OrderBy(c => c))
+			<div class="chip-group">
+				<span class="chip-label">Currency:</span>
+				@foreach (var currency in allAccounts!.Select(a => a.CurrencyIsoCode).Where(c => !string.IsNullOrEmpty(c)).Distinct().OrderBy(c => c))
 				{
-					<a @onclick="() => SelectByCurrency(currency)">@currency</a>
+					<span class="chip @(GetChipState(allAccounts!.Where(a => a.CurrencyIsoCode == currency)))" @onclick="() => SelectByCurrency(currency)">@currency</span>
+				}
+				@if (allAccounts!.Any(a => string.IsNullOrEmpty(a.CurrencyIsoCode)))
+				{
+					<span class="chip @(GetChipState(allAccounts!.Where(a => string.IsNullOrEmpty(a.CurrencyIsoCode))))" @onclick="() => SelectByCurrency(null)">No currency</span>
 				}
 			</div>
-			<div style="display: flex; gap: 12px">
-				<a @onclick="() => SelectByType(AccountType.Current)">Current</a>
-				<a @onclick="() => SelectByType(AccountType.Saving)">Saving</a>
+			<div class="chip-group">
+				<span class="chip-label">Type:</span>
+				<span class="chip @(GetChipState(allAccounts!.Where(a => a.AccountType == AccountType.Current)))" @onclick="() => SelectByType(AccountType.Current)">Current</span>
+				<span class="chip @(GetChipState(allAccounts!.Where(a => a.AccountType == AccountType.Saving)))" @onclick="() => SelectByType(AccountType.Saving)">Saving</span>
 			</div>
 			<ul class="unstyled" style="margin-top: 15px">
 				@foreach (var account in allAccounts!)
@@ -33,7 +40,7 @@
 					<li>
 						<label>
 							<input name="Accounts" type="checkbox" checked="@options.SelectedAccounts.Contains(account)" @onclick="() => Toggle(account)">
-							<span>@account (@account.CurrencyIsoCode)</span>
+							<span>@account @(!string.IsNullOrEmpty(account.CurrencyIsoCode) ? $"({account.CurrencyIsoCode})" : "")</span>
 							@if (account.Closed)
 							{
 								<span> (closed)</span>
@@ -144,7 +151,9 @@
 	private void SelectByCurrency(string? currency)
 	{
 		Debug.Assert(allAccounts is not null);
-		var accounts = allAccounts.Where(a => a.CurrencyIsoCode == currency);
+		var accounts = allAccounts.Where(a => string.IsNullOrEmpty(currency)
+			? string.IsNullOrEmpty(a.CurrencyIsoCode)
+			: a.CurrencyIsoCode == currency);
 		if (options.SelectedAccounts.Intersect(accounts).Count() != accounts.Count())
 		{
 			options.SelectedAccounts.AddRange(accounts);
@@ -205,6 +214,23 @@
 	{
 		Debug.Assert(database is not null);
 		model = AnalyticsModel.Build(database, options);
+	}
+
+	private bool IsAllSelected()
+	{
+		Debug.Assert(allAccounts is not null);
+		return options.SelectedAccounts.Count == allAccounts.Count;
+	}
+
+	private string GetChipState(IEnumerable<Account> accounts)
+	{
+		var accountList = accounts.ToList();
+		var selectedCount = options.SelectedAccounts.Intersect(accountList).Count();
+		if (selectedCount == 0)
+			return "";
+		if (selectedCount == accountList.Count)
+			return "selected";
+		return "partial";
 	}
 
 	public void Dispose()

@@ -1,7 +1,7 @@
 ﻿@using Meziantou.Moneiz.Core.Analytics
 
 <tr class="@(Entry.Account == null ? "balancehistory-currency" : "")">
-    <td>@(Entry.Account?.ToString() ?? Entry.Currency)</td>
+    <td>@(Entry.Account?.ToString() ?? (!string.IsNullOrEmpty(Entry.Currency) ? Entry.Currency : "No currency"))</td>
     <td><Amount Value="Entry.MinBalance" /></td>
     <td><Amount Value="Entry.MaxBalance" /></td>
     <td><Amount Value="Entry.StartBalance" /></td>
