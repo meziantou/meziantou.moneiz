@@ -6,6 +6,28 @@
     --color-error: #a94442;
     --font-size: 14px;
     --font-size-small: 12px;
+    
+    /* Light theme colors */
+    --bg-color: #fafafa;
+    --text-color: #000;
+    --border-color: #ddd;
+    --border-light: #eee;
+    --table-bg: transparent;
+    --link-color: #337ab7;
+    --hover-bg: #f5f5f5;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        /* Dark theme colors */
+        --bg-color: #1e1e1e;
+        --text-color: #e0e0e0;
+        --border-color: #404040;
+        --border-light: #333;
+        --table-bg: #252525;
+        --link-color: #58a6ff;
+        --hover-bg: #2d2d2d;
+    }
 }
 
 .full-width{
@@ -13,16 +35,18 @@
 }
 
 body {
-    background: #fafafa;
+    background: var(--bg-color);
+    color: var(--text-color);
     font-family: 'Roboto', sans-serif;
     font-size: var(--font-size);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 hr {
     margin-top: 20px;
     margin-bottom: 20px;
     border: 0;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--border-light);
 }
 
 h2 {
@@ -42,7 +66,7 @@ li {
 }
 
 a {
-    color: #337ab7;
+    color: var(--link-color);
 }
 
 a:hover {
@@ -58,7 +82,7 @@ ul.unstyled > li {
 
 .bigtable-categorygroup,
 .balancehistory-currency {
-    background-color: rgb(221, 221, 221);
+    background-color: var(--border-color);
 }
 
 .bigtable thead th {
@@ -77,13 +101,13 @@ ul.unstyled > li {
 
 tr.bigtable-totals {
     border-top-style: double;
-    border-top-color: black;
+    border-top-color: var(--text-color);
 }
 
 td.bigtable-totals,
 th.bigtable-totals {
     border-left-style: double;
-    border-left-color: black;
+    border-left-color: var(--text-color);
 }
 
 .bigtable .details > span {
@@ -160,7 +184,7 @@ th.bigtable-totals {
   display: block;
   cursor: pointer;
   padding: 0;
-  color: #333;
+  color: var(--text-color);
   white-space: nowrap;
   background: none;
   border: none;
@@ -173,19 +197,20 @@ th.bigtable-totals {
   .dropdown-toggle:focus,
   .dropdown-toggle:hover {
     text-decoration: none;
-    color: #262626;
-    background-color: #f5f5f5;
+    color: var(--text-color);
+    background-color: var(--hover-bg);
   }
 
 
 .dropdown-content {
   position: absolute;
   transform: translateX(-100%);
-  background-color: #fff;
+  background-color: var(--table-bg);
   min-width: 160px;
   box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
   padding: 5px 0;
   margin: 0;
+  border: 1px solid var(--border-color);
 }
 
   .dropdown-content li {
@@ -198,7 +223,7 @@ th.bigtable-totals {
   .dropdown-content .btn-link,
   .navbar .dropdown-content a {
     padding: 3px 20px;
-    color: #333;
+    color: var(--text-color);
     white-space: nowrap;
     display: block;
     background: none;
@@ -219,8 +244,8 @@ th.bigtable-totals {
     .dropdown-content .btn-link:focus,
     .dropdown-content .btn-link:hover {
       text-decoration: none;
-      color: #262626;
-      background-color: #f5f5f5;
+      color: var(--text-color);
+      background-color: var(--hover-bg);
     }
 label {
   display: block;
@@ -239,8 +264,9 @@ select {
   padding-bottom: 6px;
   padding-left: 12px;
   padding-right: 12px;
-  color: #555;
-  border: 1px solid #ccc;
+  color: var(--text-color);
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
 }
 
@@ -469,7 +495,7 @@ body {
     overflow: hidden;
   }
 .site-sidebar {
-    background: #f5f5f5;
+    background: var(--hover-bg);
 }
 
     .site-sidebar nav li {
@@ -485,12 +511,12 @@ body {
     }
 
         .site-sidebar nav a:hover {
-            background-color: #d8d8d8;
+            background-color: var(--border-color);
         }
 
     .site-sidebar a .fa,
     .site-sidebar a .fas {
-        color: black;
+        color: var(--text-color);
         width: 30px;
     }
 
@@ -511,17 +537,17 @@ body {
         overflow: hidden;
     }
 table {
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   width: 100%;
   max-width: 100%;
   margin-bottom: 20px;
-  background-color: transparent;
+  background-color: var(--table-bg);
   border-collapse: collapse;
   border-spacing: 0;
 }
 
 thead th {
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   vertical-align: bottom;
   border-bottom-width: 2px;
   border-top: 0;
@@ -533,7 +559,7 @@ th, td {
 }
 
 td {
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   vertical-align: top;
 }
 

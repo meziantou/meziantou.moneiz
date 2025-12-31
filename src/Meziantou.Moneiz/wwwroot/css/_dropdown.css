@@ -2,7 +2,7 @@
   display: block;
   cursor: pointer;
   padding: 0;
-  color: #333;
+  color: var(--text-color);
   white-space: nowrap;
   background: none;
   border: none;
@@ -15,19 +15,20 @@
   .dropdown-toggle:focus,
   .dropdown-toggle:hover {
     text-decoration: none;
-    color: #262626;
-    background-color: #f5f5f5;
+    color: var(--text-color);
+    background-color: var(--hover-bg);
   }
 
 
 .dropdown-content {
   position: absolute;
   transform: translateX(-100%);
-  background-color: #fff;
+  background-color: var(--table-bg);
   min-width: 160px;
   box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
   padding: 5px 0;
   margin: 0;
+  border: 1px solid var(--border-color);
 }
 
   .dropdown-content li {
@@ -40,7 +41,7 @@
   .dropdown-content .btn-link,
   .navbar .dropdown-content a {
     padding: 3px 20px;
-    color: #333;
+    color: var(--text-color);
     white-space: nowrap;
     display: block;
     background: none;
@@ -61,6 +62,6 @@
     .dropdown-content .btn-link:focus,
     .dropdown-content .btn-link:hover {
       text-decoration: none;
-      color: #262626;
-      background-color: #f5f5f5;
+      color: var(--text-color);
+      background-color: var(--hover-bg);
     }

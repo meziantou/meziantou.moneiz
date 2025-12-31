@@ -1,15 +1,15 @@
 ﻿table {
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   width: 100%;
   max-width: 100%;
   margin-bottom: 20px;
-  background-color: transparent;
+  background-color: var(--table-bg);
   border-collapse: collapse;
   border-spacing: 0;
 }
 
 thead th {
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   vertical-align: bottom;
   border-bottom-width: 2px;
   border-top: 0;
@@ -21,7 +21,7 @@ th, td {
 }
 
 td {
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   vertical-align: top;
 }
 

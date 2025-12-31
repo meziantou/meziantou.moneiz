@@ -4,7 +4,7 @@
 
 .bigtable-categorygroup,
 .balancehistory-currency {
-    background-color: rgb(221, 221, 221);
+    background-color: var(--border-color);
 }
 
 .bigtable thead th {
@@ -23,13 +23,13 @@
 
 tr.bigtable-totals {
     border-top-style: double;
-    border-top-color: black;
+    border-top-color: var(--text-color);
 }
 
 td.bigtable-totals,
 th.bigtable-totals {
     border-left-style: double;
-    border-left-color: black;
+    border-left-color: var(--text-color);
 }
 
 .bigtable .details > span {
