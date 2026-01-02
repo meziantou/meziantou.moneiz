@@ -1,0 +1,188 @@
+/* Input Select Category - Filterable Dropdown Component */
+
+.input-select-category {
+  position: relative;
+  width: 100%;
+}
+
+.input-select-category-control {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 12px;
+  color: var(--text-color);
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.15s ease-in-out;
+}
+
+.input-select-category-control:hover {
+  border-color: var(--primary-color, #0066cc);
+}
+
+.input-select-category-control:focus {
+  outline: none;
+  border-color: var(--primary-color, #0066cc);
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+}
+
+.input-select-category.is-open .input-select-category-control {
+  border-color: var(--primary-color, #0066cc);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.input-select-category-value {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-color);
+}
+
+.input-select-category-value:empty::before {
+  content: "Select a category...";
+  color: var(--text-muted, #999);
+}
+
+.input-select-category-arrow {
+  margin-left: 8px;
+  font-size: 10px;
+  transition: transform 0.2s ease;
+  color: var(--text-muted, #666);
+}
+
+.input-select-category.is-open .input-select-category-arrow {
+  transform: rotate(180deg);
+}
+
+/* Dropdown */
+.input-select-category-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  max-height: 300px;
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Search Input */
+.input-select-category-search {
+  padding: 8px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-color);
+}
+
+.input-select-category-search-input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 14px;
+  color: var(--text-color);
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  outline: none;
+}
+
+.input-select-category-search-input:focus {
+  border-color: var(--primary-color, #0066cc);
+  box-shadow: 0 0 0 1px rgba(0, 102, 204, 0.2);
+}
+
+/* Options List */
+.input-select-category-options {
+  overflow-y: auto;
+  max-height: 250px;
+}
+
+/* Group Header */
+.input-select-category-group {
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--text-muted, #666);
+  background-color: var(--bg-secondary, #f5f5f5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Option Item */
+.input-select-category-option {
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+  color: var(--text-color);
+}
+
+.input-select-category-option:hover,
+.input-select-category-option.is-highlighted {
+  background-color: var(--hover-bg-color, #e9ecef);
+}
+
+.input-select-category-option.is-selected {
+  background-color: var(--primary-color-light, #cce5ff);
+  font-weight: 600;
+}
+
+.input-select-category-option.is-selected.is-highlighted {
+  background-color: var(--primary-color, #0066cc);
+  color: white;
+}
+
+/* Empty State */
+.input-select-category-empty {
+  padding: 12px;
+  text-align: center;
+  color: var(--text-muted, #999);
+  font-style: italic;
+}
+
+/* Invalid State */
+.input-select-category.invalid .input-select-category-control {
+  border-color: var(--color-error);
+}
+
+/* Scrollbar Styling */
+.input-select-category-options::-webkit-scrollbar {
+  width: 8px;
+}
+
+.input-select-category-options::-webkit-scrollbar-track {
+  background: var(--bg-color);
+}
+
+.input-select-category-options::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.input-select-category-options::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted, #666);
+}
+
+/* Dark mode support - adjust colors if you have dark mode variables */
+@media (prefers-color-scheme: dark) {
+  .input-select-category-group {
+    background-color: var(--bg-secondary, #2a2a2a);
+  }
+  
+  .input-select-category-option:hover,
+  .input-select-category-option.is-highlighted {
+    background-color: var(--hover-bg-color, #3a3a3a);
+  }
+}

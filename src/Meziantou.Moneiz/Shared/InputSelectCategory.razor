@@ -1,0 +1,276 @@
+@using Meziantou.Moneiz.Core
+@using Meziantou.Moneiz.Services
+@inherits InputBase<Category?>
+@inject DatabaseProvider DatabaseProvider
+
+<input type="hidden" value="@CurrentValueAsString" />
+
+<div class="input-select-category @CssClass @(_isOpen ? "is-open" : "")" @attributes="AdditionalAttributes">
+    <div class="input-select-category-control" 
+         @onclick="ToggleDropdown" 
+         tabindex="0" 
+         @onkeydown="OnControlKeyDown">
+        <span class="input-select-category-value">
+            @GetDisplayText(CurrentValue)
+        </span>
+        <span class="input-select-category-arrow">▼</span>
+    </div>
+
+    @if (_isOpen && _database is not null)
+    {
+        <div class="input-select-category-dropdown" @ref="_dropdown">
+            <div class="input-select-category-search">
+                <input type="text"
+                       class="input-select-category-search-input"
+                       placeholder="Search categories..."
+                       value="@_searchText"
+                       @oninput="OnSearchInput"
+                       @onkeydown="OnKeyDown"
+                       @onblur="CloseDropdown"
+                       @ref="_searchInput" />
+            </div>
+
+            <div class="input-select-category-options">
+                @if (IsOptional)
+                {
+                    var isSelected = CurrentValue is null;
+                    var isHighlighted = _highlightedIndex == -1;
+                    
+                    <div class="input-select-category-option @(isSelected ? "is-selected" : "") @(isHighlighted ? "is-highlighted" : "")"
+                         @onmousedown="() => SelectCategory(null)"
+                         @onmouseenter="() => _highlightedIndex = -1">
+                        (None)
+                    </div>
+                }
+
+                @if (_filteredCategories is not null)
+                {
+                    var currentIndex = 0;
+                    string? currentGroup = null;
+
+                    @foreach (var category in _filteredCategories)
+                    {
+                        @if (category.GroupName != currentGroup)
+                        {
+                            currentGroup = category.GroupName;
+                            if (!string.IsNullOrEmpty(currentGroup))
+                            {
+                                <div class="input-select-category-group">@currentGroup</div>
+                            }
+                        }
+
+                        var isSelected = CurrentValue?.Id == category.Id;
+                        var isHighlighted = _highlightedIndex == currentIndex;
+                        var capturedIndex = currentIndex;
+
+                        <div class="input-select-category-option @(isSelected ? "is-selected" : "") @(isHighlighted ? "is-highlighted" : "")"
+                             @onmousedown="() => SelectCategory(category)"
+                             @onmouseenter="() => _highlightedIndex = capturedIndex">
+                            @category.Name
+                        </div>
+
+                        currentIndex++;
+                    }
+
+                    @if (_filteredCategories.Count == 0)
+                    {
+                        <div class="input-select-category-empty">No categories found</div>
+                    }
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private Database? _database;
+    private bool _isOpen;
+    private string _searchText = string.Empty;
+    private ElementReference _searchInput;
+    private ElementReference _dropdown;
+    private List<Category>? _filteredCategories;
+    private int _highlightedIndex = -1;
+
+    [Parameter]
+    public bool IsOptional { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _database = await DatabaseProvider.GetDatabase();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_isOpen && _searchInput.Id is not null)
+        {
+            await Task.Delay(10); // Small delay to ensure DOM is ready
+            // Focus would require JS interop
+        }
+    }
+
+    protected override string? FormatValueAsString(Category? value) 
+        => value?.Id.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+    protected override bool TryParseValueFromString(string? value, [MaybeNullWhen(false)] out Category? result, [NotNullWhen(false)] out string? validationErrorMessage)
+    {
+        if (int.TryParse(value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var resultInt))
+        {
+            System.Diagnostics.Debug.Assert(_database is not null);
+            result = _database.GetCategoryById(resultInt);
+            validationErrorMessage = null;
+            return true;
+        }
+        else
+        {
+            if (IsOptional)
+            {
+                result = null;
+                validationErrorMessage = null;
+                return true;
+            }
+
+            result = default;
+            validationErrorMessage = "The chosen value is not a valid number.";
+            return false;
+        }
+    }
+
+    private void ToggleDropdown()
+    {
+        _isOpen = !_isOpen;
+        if (_isOpen)
+        {
+            _searchText = string.Empty;
+            FilterCategories();
+            _highlightedIndex = CurrentValue is not null ? 
+                (_filteredCategories?.FindIndex(c => c.Id == CurrentValue.Id) ?? -1) : -1;
+        }
+    }
+
+    private void FilterCategories()
+    {
+        if (_database is null)
+        {
+            _filteredCategories = null;
+            return;
+        }
+
+        var searchText = _searchText.Trim();
+        if (string.IsNullOrWhiteSpace(searchText))
+        {
+            _filteredCategories = _database.Categories.OrderBy(c => c.GroupName).ThenBy(c => c.Name).ToList();
+            return;
+        }
+
+        // Split search text into multiple terms
+        var searchTerms = searchText.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Select(term => term.ToLowerInvariant())
+            .ToArray();
+
+        _filteredCategories = _database.Categories
+            .Where(c =>
+            {
+                // Build the full searchable text as "Group::Category" or just "Category"
+                var fullText = string.IsNullOrEmpty(c.GroupName)
+                    ? c.Name.ToLowerInvariant()
+                    : $"{c.GroupName}::{c.Name}".ToLowerInvariant();
+
+                // All search terms must be present in the full text
+                return searchTerms.All(term => fullText.Contains(term));
+            })
+            .OrderBy(c => c.GroupName)
+            .ThenBy(c => c.Name)
+            .ToList();
+    }
+
+    private void OnSearchInput(ChangeEventArgs e)
+    {
+        _searchText = e.Value?.ToString() ?? string.Empty;
+        FilterCategories();
+        _highlightedIndex = _filteredCategories?.Count > 0 ? 0 : -1;
+    }
+
+    private void SelectCategory(Category? category)
+    {
+        CurrentValue = category;
+        _isOpen = false;
+        _searchText = string.Empty;
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (!_isOpen) return;
+
+        var maxIndex = (_filteredCategories?.Count ?? 0) - 1;
+        if (IsOptional) maxIndex++;
+
+        switch (e.Key)
+        {
+            case "ArrowDown":
+                if (_highlightedIndex < maxIndex)
+                {
+                    _highlightedIndex++;
+                }
+                break;
+
+            case "ArrowUp":
+                if (_highlightedIndex > (IsOptional ? -1 : 0))
+                {
+                    _highlightedIndex--;
+                }
+                break;
+
+            case "Enter":
+                if (_highlightedIndex == -1 && IsOptional)
+                {
+                    SelectCategory(null);
+                }
+                else if (_filteredCategories is not null && _highlightedIndex >= 0 && _highlightedIndex < _filteredCategories.Count)
+                {
+                    SelectCategory(_filteredCategories[_highlightedIndex]);
+                }
+                break;
+
+            case "Escape":
+                _isOpen = false;
+                _searchText = string.Empty;
+                break;
+        }
+
+        await Task.CompletedTask;
+    }
+
+    private async Task OnControlKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" || e.Key == " ")
+        {
+            ToggleDropdown();
+        }
+        else if (_isOpen)
+        {
+            await OnKeyDown(e);
+        }
+    }
+
+    private async Task CloseDropdown()
+    {
+        await Task.Delay(200); // Delay to allow click events to fire
+        _isOpen = false;
+        StateHasChanged();
+    }
+
+    private string GetDisplayText(Category? category)
+    {
+        if (category is null)
+        {
+            return IsOptional ? "Select a category..." : "";
+        }
+
+        if (!string.IsNullOrEmpty(category.GroupName))
+        {
+            return $"{category.GroupName}::{category.Name}";
+        }
+
+        return category.Name;
+    }
+}
