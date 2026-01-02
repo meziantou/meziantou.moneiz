@@ -1,4 +1,4 @@
-﻿@inject DatabaseProvider DatabaseProvider
+@inject DatabaseProvider DatabaseProvider
 @implements IDisposable
 
 <aside class="site-sidebar">
@@ -12,13 +12,13 @@
 
             <ItemTemplate Context="account">
                 <li>
-                    <a href="accounts/@account.Id/transactions">@account</a>
+                    <a href="accounts/@account.Id/transactions" title="@account">@account</a>
                     <Amount Value="@database!.GetTodayBalance(account)" Currency="@account.CurrencyIsoCode" />
                 </li>
             </ItemTemplate>
         </Repeater>
     </div>
-
+    <hr />
     <nav>
         <ul>
             <li><NavLink href="/transactions"><i class="fas fa-list"></i><span>All transactions</span></NavLink></li>

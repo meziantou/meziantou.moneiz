@@ -554,6 +554,8 @@ body {
   }
 .site-sidebar {
     background: var(--hover-bg);
+    border-radius: 8px;
+    margin-top: 15px;
 }
 
     .site-sidebar nav li {
