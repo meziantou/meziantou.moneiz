@@ -349,6 +349,194 @@ button[type=submit] {
 .validation-summary-errors li {
   list-style: none;
 }
+/* Input Select Account - Filterable Dropdown Component */
+
+.input-select-account {
+  position: relative;
+  width: 100%;
+}
+
+.input-select-account-control {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 12px;
+  color: var(--text-color);
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.15s ease-in-out;
+}
+
+.input-select-account-control:hover {
+  border-color: var(--primary-color, #0066cc);
+}
+
+.input-select-account-control:focus {
+  outline: none;
+  border-color: var(--primary-color, #0066cc);
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+}
+
+.input-select-account.is-open .input-select-account-control {
+  border-color: var(--primary-color, #0066cc);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.input-select-account-value {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-color);
+}
+
+.input-select-account-value:empty::before {
+  content: "Select an account...";
+  color: var(--text-muted, #999);
+}
+
+.input-select-account-arrow {
+  margin-left: 8px;
+  font-size: 10px;
+  transition: transform 0.2s ease;
+  color: var(--text-muted, #666);
+}
+
+.input-select-account.is-open .input-select-account-arrow {
+  transform: rotate(180deg);
+}
+
+/* Dropdown */
+.input-select-account-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  max-height: 300px;
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Search Input */
+.input-select-account-search {
+  padding: 8px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-color);
+}
+
+.input-select-account-search-input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 14px;
+  color: var(--text-color);
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  outline: none;
+}
+
+.input-select-account-search-input:focus {
+  border-color: var(--primary-color, #0066cc);
+  box-shadow: 0 0 0 1px rgba(0, 102, 204, 0.2);
+}
+
+/* Options List */
+.input-select-account-options {
+  overflow-y: auto;
+  max-height: 250px;
+}
+
+/* Group Header (Bank Name) */
+.input-select-account-group {
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--text-muted, #666);
+  background-color: var(--bg-secondary, #f5f5f5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Option Item */
+.input-select-account-option {
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+  color: var(--text-color);
+}
+
+.input-select-account-option:hover,
+.input-select-account-option.is-highlighted {
+  background-color: var(--hover-bg-color, #e9ecef);
+}
+
+.input-select-account-option.is-selected {
+  background-color: var(--primary-color-light, #cce5ff);
+  font-weight: 600;
+}
+
+.input-select-account-option.is-selected.is-highlighted {
+  background-color: var(--primary-color, #0066cc);
+  color: white;
+}
+
+/* Empty State */
+.input-select-account-empty {
+  padding: 12px;
+  text-align: center;
+  color: var(--text-muted, #999);
+  font-style: italic;
+}
+
+/* Invalid State */
+.input-select-account.invalid .input-select-account-control {
+  border-color: var(--color-error);
+}
+
+/* Scrollbar Styling */
+.input-select-account-options::-webkit-scrollbar {
+  width: 8px;
+}
+
+.input-select-account-options::-webkit-scrollbar-track {
+  background: var(--bg-color);
+}
+
+.input-select-account-options::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.input-select-account-options::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted, #666);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .input-select-account-group {
+    background-color: var(--bg-secondary, #2a2a2a);
+  }
+  
+  .input-select-account-option:hover,
+  .input-select-account-option.is-highlighted {
+    background-color: var(--hover-bg-color, #3a3a3a);
+  }
+}
 /* Input Select Category - Filterable Dropdown Component */
 
 .input-select-category {
