@@ -1,0 +1,285 @@
+@using Microsoft.AspNetCore.Components.Forms
+@typeparam TItem where TItem : class
+@inherits InputBase<TItem?>
+
+<input type="hidden" value="@CurrentValueAsString" />
+
+<div class="@ComponentCssClass @CssClass @(_isOpen ? "is-open" : "")" @attributes="AdditionalAttributes">
+    <div class="@($"{ComponentCssClass}-control")" 
+         @onclick="ToggleDropdown" 
+         tabindex="0" 
+         @onkeydown="OnControlKeyDown">
+        <span class="@($"{ComponentCssClass}-value")">
+            @GetDisplayText(CurrentValue)
+        </span>
+        <span class="@($"{ComponentCssClass}-arrow")">▼</span>
+    </div>
+
+    @if (_isOpen)
+    {
+        <div class="@($"{ComponentCssClass}-dropdown")" @ref="_dropdown">
+            <div class="@($"{ComponentCssClass}-search")">
+                <input type="text"
+                       class="@($"{ComponentCssClass}-search-input")"
+                       placeholder="@SearchPlaceholder"
+                       value="@_searchText"
+                       @oninput="OnSearchInput"
+                       @onkeydown="OnKeyDown"
+                       @onblur="CloseDropdown"
+                       @ref="_searchInput" />
+            </div>
+
+            <div class="@($"{ComponentCssClass}-options")">
+                @if (AllowEmpty)
+                {
+                    var isSelected = CurrentValue is null;
+                    var isHighlighted = _highlightedIndex == -1;
+                    
+                    <div class="@($"{ComponentCssClass}-option") @(isSelected ? "is-selected" : "") @(isHighlighted ? "is-highlighted" : "")"
+                         @onmousedown="() => SelectItem(null)"
+                         @onmouseenter="() => _highlightedIndex = -1">
+                        @EmptyText
+                    </div>
+                }
+
+                @if (_filteredItems is not null)
+                {
+                    var currentIndex = 0;
+                    string? currentGroup = null;
+
+                    @foreach (var item in _filteredItems)
+                    {
+                        var groupName = GetGroupName(item);
+                        
+                        @if (groupName != currentGroup)
+                        {
+                            currentGroup = groupName;
+                            if (!string.IsNullOrEmpty(currentGroup))
+                            {
+                                <div class="@($"{ComponentCssClass}-group")">@currentGroup</div>
+                            }
+                        }
+
+                        var isSelected = AreItemsEqual(CurrentValue, item);
+                        var isHighlighted = _highlightedIndex == currentIndex;
+                        var capturedIndex = currentIndex;
+                        var capturedItem = item;
+
+                        <div class="@($"{ComponentCssClass}-option") @(isSelected ? "is-selected" : "") @(isHighlighted ? "is-highlighted" : "")"
+                             @onmousedown="() => SelectItem(capturedItem)"
+                             @onmouseenter="() => _highlightedIndex = capturedIndex">
+                            @GetItemDisplayName(item)
+                        </div>
+
+                        currentIndex++;
+                    }
+
+                    @if (_filteredItems.Count == 0)
+                    {
+                        <div class="@($"{ComponentCssClass}-empty")">@EmptyResultsText</div>
+                    }
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool _isOpen;
+    private string _searchText = string.Empty;
+    private ElementReference _searchInput;
+    private ElementReference _dropdown;
+    private List<TItem>? _filteredItems;
+    private int _highlightedIndex = -1;
+
+    [Parameter, EditorRequired]
+    public required IEnumerable<TItem> Items { get; set; }
+
+    [Parameter, EditorRequired]
+    public required Func<TItem?, string?> GetItemId { get; set; }
+
+    [Parameter, EditorRequired]
+    public required Func<string?, TItem?> ParseItemId { get; set; }
+
+    [Parameter, EditorRequired]
+    public required Func<TItem, string> GetItemDisplayName { get; set; }
+
+    [Parameter, EditorRequired]
+    public required Func<TItem, string?> GetGroupName { get; set; }
+
+    [Parameter, EditorRequired]
+    public required Func<TItem, string> GetSearchableText { get; set; }
+
+    [Parameter, EditorRequired]
+    public required Func<TItem?, TItem?, bool> AreItemsEqual { get; set; }
+
+    [Parameter]
+    public bool AllowEmpty { get; set; }
+
+    [Parameter]
+    public string EmptyText { get; set; } = "(None)";
+
+    [Parameter]
+    public string EmptyResultsText { get; set; } = "No items found";
+
+    [Parameter]
+    public string SearchPlaceholder { get; set; } = "Search...";
+
+    [Parameter]
+    public string EmptySelectionText { get; set; } = "Select an item...";
+
+    [Parameter]
+    public string ComponentCssClass { get; set; } = "input-select-filterable";
+
+    protected override string? FormatValueAsString(TItem? value) 
+        => GetItemId(value);
+
+    protected override bool TryParseValueFromString(string? value, [MaybeNullWhen(false)] out TItem? result, [NotNullWhen(false)] out string? validationErrorMessage)
+    {
+        result = ParseItemId(value);
+        
+        if (result is not null || AllowEmpty)
+        {
+            validationErrorMessage = null;
+            return true;
+        }
+
+        result = default;
+        validationErrorMessage = "The chosen value is not valid.";
+        return false;
+    }
+
+    private void ToggleDropdown()
+    {
+        _isOpen = !_isOpen;
+        if (_isOpen)
+        {
+            _searchText = string.Empty;
+            FilterItems();
+            _highlightedIndex = CurrentValue is not null ? 
+                (_filteredItems?.FindIndex(i => AreItemsEqual(i, CurrentValue)) ?? -1) : -1;
+        }
+    }
+
+    private void FilterItems()
+    {
+        if (Items is null)
+        {
+            _filteredItems = null;
+            return;
+        }
+
+        var searchText = _searchText.Trim();
+        if (string.IsNullOrWhiteSpace(searchText))
+        {
+            _filteredItems = Items.OrderBy(GetGroupName).ThenBy(GetItemDisplayName).ToList();
+            return;
+        }
+
+        var searchTerms = searchText.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        _filteredItems = Items
+            .Where(item =>
+            {
+                var searchableText = GetSearchableText(item);
+                return searchTerms.All(term => searchableText.Contains(term, StringComparison.OrdinalIgnoreCase));
+            })
+            .OrderBy(GetGroupName)
+            .ThenBy(GetItemDisplayName)
+            .ToList();
+    }
+
+    private void OnSearchInput(ChangeEventArgs e)
+    {
+        _searchText = e.Value?.ToString() ?? string.Empty;
+        FilterItems();
+        _highlightedIndex = _filteredItems?.Count > 0 ? 0 : -1;
+    }
+
+    private void SelectItem(TItem? item)
+    {
+        CurrentValue = item;
+        _isOpen = false;
+        _searchText = string.Empty;
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (!_isOpen) return;
+
+        var maxIndex = (_filteredItems?.Count ?? 0) - 1;
+        if (AllowEmpty) maxIndex++;
+
+        switch (e.Key)
+        {
+            case "ArrowDown":
+                if (_highlightedIndex < maxIndex)
+                {
+                    _highlightedIndex++;
+                }
+                break;
+
+            case "ArrowUp":
+                if (_highlightedIndex > (AllowEmpty ? -1 : 0))
+                {
+                    _highlightedIndex--;
+                }
+                break;
+
+            case "Enter":
+                if (_highlightedIndex == -1 && AllowEmpty)
+                {
+                    SelectItem(null);
+                }
+                else if (_filteredItems is not null && _highlightedIndex >= 0 && _highlightedIndex < _filteredItems.Count)
+                {
+                    SelectItem(_filteredItems[_highlightedIndex]);
+                }
+                break;
+
+            case "Escape":
+                _isOpen = false;
+                _searchText = string.Empty;
+                break;
+        }
+
+        await Task.CompletedTask;
+    }
+
+    private async Task OnControlKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" || e.Key == " ")
+        {
+            ToggleDropdown();
+        }
+        else if (_isOpen)
+        {
+            await OnKeyDown(e);
+        }
+    }
+
+    private async Task CloseDropdown()
+    {
+        await Task.Delay(200);
+        _isOpen = false;
+        StateHasChanged();
+    }
+
+    private string GetDisplayText(TItem? item)
+    {
+        if (item is null)
+        {
+            return AllowEmpty ? EmptySelectionText : "";
+        }
+
+        var groupName = GetGroupName(item);
+        var displayName = GetItemDisplayName(item);
+
+        if (!string.IsNullOrEmpty(groupName))
+        {
+            return $"{groupName}::{displayName}";
+        }
+
+        return displayName;
+    }
+}

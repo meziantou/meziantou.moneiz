@@ -3,100 +3,29 @@
 @inherits InputBase<Account?>
 @inject DatabaseProvider DatabaseProvider
 
-<input type="hidden" value="@CurrentValueAsString" />
-
-<div class="input-select-account @CssClass @(_isOpen ? "is-open" : "")" @attributes="AdditionalAttributes">
-    <div class="input-select-account-control" 
-         @onclick="ToggleDropdown" 
-         tabindex="0" 
-         @onkeydown="OnControlKeyDown">
-        <span class="input-select-account-value">
-            @GetDisplayText(CurrentValue)
-        </span>
-        <span class="input-select-account-arrow">▼</span>
-    </div>
-
-    @if (_isOpen && _database is not null)
-    {
-        <div class="input-select-account-dropdown" @ref="_dropdown">
-            <div class="input-select-account-search">
-                <input type="text"
-                       class="input-select-account-search-input"
-                       placeholder="Search accounts..."
-                       value="@_searchText"
-                       @oninput="OnSearchInput"
-                       @onkeydown="OnKeyDown"
-                       @onblur="CloseDropdown"
-                       @ref="_searchInput" />
-            </div>
-
-            <div class="input-select-account-options">
-                @if (_filteredAccounts is not null)
-                {
-                    var currentIndex = 0;
-                    string? currentBank = null;
-
-                    @foreach (var account in _filteredAccounts)
-                    {
-                        @if (account.Bank != currentBank)
-                        {
-                            currentBank = account.Bank;
-                            if (!string.IsNullOrEmpty(currentBank))
-                            {
-                                <div class="input-select-account-group">@currentBank</div>
-                            }
-                        }
-
-                        var isSelected = CurrentValue?.Id == account.Id;
-                        var isHighlighted = _highlightedIndex == currentIndex;
-                        var capturedIndex = currentIndex;
-
-                        <div class="input-select-account-option @(isSelected ? "is-selected" : "") @(isHighlighted ? "is-highlighted" : "")"
-                             @onmousedown="() => SelectAccount(account)"
-                             @onmouseenter="() => _highlightedIndex = capturedIndex">
-                            @if (string.IsNullOrEmpty(account.Bank))
-                            {
-                                @account.Name
-                            }
-                            else
-                            {
-                                @account.Name
-                            }
-                        </div>
-
-                        currentIndex++;
-                    }
-
-                    @if (_filteredAccounts.Count == 0)
-                    {
-                        <div class="input-select-account-empty">No accounts found</div>
-                    }
-                }
-            </div>
-        </div>
-    }
-</div>
+<InputSelectFilterable 
+    TItem="Account"
+    @bind-Value="CurrentValue"
+    Items="@(_database?.VisibleAccounts ?? Enumerable.Empty<Account>())"
+    GetItemId="@(a => a?.Id.ToString(System.Globalization.CultureInfo.InvariantCulture))"
+    ParseItemId="@ParseAccountId"
+    GetItemDisplayName="@(a => a.Name ?? "")"
+    GetGroupName="@(a => a.Bank ?? "")"
+    GetSearchableText="@GetSearchableText"
+    AreItemsEqual="@((a1, a2) => a1?.Id == a2?.Id)"
+    AllowEmpty="false"
+    EmptyResultsText="No accounts found"
+    SearchPlaceholder="Search accounts..."
+    EmptySelectionText="Select an account..."
+    ComponentCssClass="input-select-account"
+    @attributes="AdditionalAttributes" />
 
 @code {
     private Database? _database;
-    private bool _isOpen;
-    private string _searchText = string.Empty;
-    private ElementReference _searchInput;
-    private ElementReference _dropdown;
-    private List<Account>? _filteredAccounts;
-    private int _highlightedIndex = -1;
 
     protected override async Task OnInitializedAsync()
     {
         _database = await DatabaseProvider.GetDatabase();
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (_isOpen && _searchInput.Id is not null)
-        {
-            await Task.Delay(10);
-        }
     }
 
     protected override string? FormatValueAsString(Account? value) 
@@ -119,135 +48,19 @@
         }
     }
 
-    private void ToggleDropdown()
+    private Account? ParseAccountId(string? value)
     {
-        _isOpen = !_isOpen;
-        if (_isOpen)
+        if (int.TryParse(value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var id))
         {
-            _searchText = string.Empty;
-            FilterAccounts();
-            _highlightedIndex = CurrentValue is not null ? 
-                (_filteredAccounts?.FindIndex(a => a.Id == CurrentValue.Id) ?? -1) : -1;
+            return _database?.GetAccountById(id);
         }
+        return null;
     }
 
-    private void FilterAccounts()
+    private string GetSearchableText(Account account)
     {
-        if (_database is null)
-        {
-            _filteredAccounts = null;
-            return;
-        }
-
-        var searchText = _searchText.Trim();
-        if (string.IsNullOrWhiteSpace(searchText))
-        {
-            _filteredAccounts = _database.VisibleAccounts.OrderBy(a => a.Bank).ThenBy(a => a.Name).ToList();
-            return;
-        }
-
-        // Split search text into multiple terms
-        var searchTerms = searchText.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-        _filteredAccounts = _database.VisibleAccounts
-            .Where(a =>
-            {
-                // Build the full searchable text as "Bank::AccountName" or just "AccountName"
-                var fullText = string.IsNullOrEmpty(a.Bank)
-                    ? (a.Name ?? "")
-                    : $"{a.Bank}::{a.Name}";
-
-                // All search terms must be present in the full text
-                return searchTerms.All(term => fullText.Contains(term, StringComparison.OrdinalIgnoreCase));
-            })
-            .OrderBy(a => a.Bank)
-            .ThenBy(a => a.Name)
-            .ToList();
-    }
-
-    private void OnSearchInput(ChangeEventArgs e)
-    {
-        _searchText = e.Value?.ToString() ?? string.Empty;
-        FilterAccounts();
-        _highlightedIndex = _filteredAccounts?.Count > 0 ? 0 : -1;
-    }
-
-    private void SelectAccount(Account? account)
-    {
-        CurrentValue = account;
-        _isOpen = false;
-        _searchText = string.Empty;
-    }
-
-    private async Task OnKeyDown(KeyboardEventArgs e)
-    {
-        if (!_isOpen) return;
-
-        var maxIndex = (_filteredAccounts?.Count ?? 0) - 1;
-
-        switch (e.Key)
-        {
-            case "ArrowDown":
-                if (_highlightedIndex < maxIndex)
-                {
-                    _highlightedIndex++;
-                }
-                break;
-
-            case "ArrowUp":
-                if (_highlightedIndex > 0)
-                {
-                    _highlightedIndex--;
-                }
-                break;
-
-            case "Enter":
-                if (_filteredAccounts is not null && _highlightedIndex >= 0 && _highlightedIndex < _filteredAccounts.Count)
-                {
-                    SelectAccount(_filteredAccounts[_highlightedIndex]);
-                }
-                break;
-
-            case "Escape":
-                _isOpen = false;
-                _searchText = string.Empty;
-                break;
-        }
-
-        await Task.CompletedTask;
-    }
-
-    private async Task OnControlKeyDown(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter" || e.Key == " ")
-        {
-            ToggleDropdown();
-        }
-        else if (_isOpen)
-        {
-            await OnKeyDown(e);
-        }
-    }
-
-    private async Task CloseDropdown()
-    {
-        await Task.Delay(200);
-        _isOpen = false;
-        StateHasChanged();
-    }
-
-    private string GetDisplayText(Account? account)
-    {
-        if (account is null)
-        {
-            return "Select an account...";
-        }
-
-        if (!string.IsNullOrEmpty(account.Bank))
-        {
-            return $"{account.Bank}::{account.Name}";
-        }
-
-        return account.Name ?? "";
+        return string.IsNullOrEmpty(account.Bank)
+            ? account.Name ?? ""
+            : $"{account.Bank}::{account.Name}";
     }
 }
