@@ -1,4 +1,5 @@
-﻿namespace Meziantou.Moneiz.Core;
+﻿using Meziantou.Framework.Scheduling;
+namespace Meziantou.Moneiz.Core;
 
 public partial class Database
 {
