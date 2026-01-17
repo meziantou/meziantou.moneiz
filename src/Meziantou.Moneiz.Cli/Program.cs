@@ -296,7 +296,7 @@ static async Task<int> AddTransactionAsync(FileInfo file, int accountId, decimal
     }
 
     // Use today's date if not specified
-    if (!valueDate.HasValue || valueDate.Value == default)
+    if (!valueDate.HasValue)
     {
         valueDate = Database.GetToday();
     }
@@ -324,7 +324,7 @@ static async Task<int> AddTransactionAsync(FileInfo file, int accountId, decimal
 
         category = db.Categories.FirstOrDefault(c =>
             c.Name == name &&
-            (groupName == null || c.GroupName == groupName));
+            string.Equals(c.GroupName, groupName, StringComparison.Ordinal));
 
         if (category is null)
         {
