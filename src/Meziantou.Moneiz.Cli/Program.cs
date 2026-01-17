@@ -4,112 +4,119 @@ using Meziantou.Moneiz.Core;
 
 var rootCommand = new RootCommand("Moneiz CLI - Manage your personal finance database");
 
-// Check Overdraft Command
-var checkOverdraftCommand = new Command("check-overdraft", "Check if accounts will be overdraft in the following days");
-
-var checkFileOption = new Option<FileInfo>("--file")
-{
-    Description = "Path to the database file"
-};
-
-var accountIdsOption = new Option<string>("--account-id")
-{
-    Description = "Account IDs to check (comma-separated, e.g., '1,2,3'). If not specified, all accounts with notifications enabled will be checked."
-};
-
-checkOverdraftCommand.Options.Add(checkFileOption);
-checkOverdraftCommand.Options.Add(accountIdsOption);
-
-checkOverdraftCommand.SetAction((parseResult) =>
-{
-    var file = parseResult.GetValue(checkFileOption);
-    if (file is null)
-    {
-        Console.Error.WriteLine("Error: --file option is required.");
-        return Task.FromResult(1);
-    }
-
-    var accountIds = parseResult.GetValue(accountIdsOption);
-    return CheckOverdraftAsync(file, accountIds);
-});
-
-rootCommand.Subcommands.Add(checkOverdraftCommand);
-
-// Add Transaction Command
-var addTransactionCommand = new Command("add-transaction", "Add a new transaction to the database");
-
-var addFileOption = new Option<FileInfo>("--file")
-{
-    Description = "Path to the database file"
-};
-
-var addAccountIdOption = new Option<int>("--account-id")
-{
-    Description = "Account ID for the transaction"
-};
-
-var amountOption = new Option<decimal>("--amount")
-{
-    Description = "Transaction amount (positive for credit, negative for debit)"
-};
-
-var valueDateOption = new Option<DateOnly?>("--value-date")
-{
-    Description = "Transaction value date (format: yyyy-MM-dd). Defaults to today if not specified."
-};
-
-var payeeOption = new Option<string?>("--payee")
-{
-    Description = "Payee name (optional)"
-};
-
-var categoryOption = new Option<string?>("--category")
-{
-    Description = "Category name (optional, format: 'GroupName::CategoryName' or just 'CategoryName')"
-};
-
-var commentOption = new Option<string?>("--comment")
-{
-    Description = "Transaction comment (optional)"
-};
-
-var checkedOption = new Option<bool>("--checked")
-{
-    Description = "Mark transaction as checked (optional, default: false)"
-};
-
-addTransactionCommand.Options.Add(addFileOption);
-addTransactionCommand.Options.Add(addAccountIdOption);
-addTransactionCommand.Options.Add(amountOption);
-addTransactionCommand.Options.Add(valueDateOption);
-addTransactionCommand.Options.Add(payeeOption);
-addTransactionCommand.Options.Add(categoryOption);
-addTransactionCommand.Options.Add(commentOption);
-addTransactionCommand.Options.Add(checkedOption);
-
-addTransactionCommand.SetAction(async (parseResult) =>
-{
-    var file = parseResult.GetValue(addFileOption);
-    var accountId = parseResult.GetValue(addAccountIdOption);
-    var amount = parseResult.GetValue(amountOption);
-    var valueDate = parseResult.GetValue(valueDateOption);
-    var payee = parseResult.GetValue(payeeOption);
-    var category = parseResult.GetValue(categoryOption);
-    var comment = parseResult.GetValue(commentOption);
-    var isChecked = parseResult.GetValue(checkedOption);
-
-    if (file is null)
-    {
-        Console.Error.WriteLine("Error: --file option is required.");
-        return 1;
-    }
-
-    return await AddTransactionAsync(file, accountId, amount, valueDate, payee, category, comment, isChecked);
-});
-
-rootCommand.Subcommands.Add(addTransactionCommand);
+rootCommand.Subcommands.Add(CreateCheckOverdraftCommand());
+rootCommand.Subcommands.Add(CreateAddTransactionCommand());
 
 return rootCommand.Parse(args).Invoke();
+
+static Command CreateCheckOverdraftCommand()
+{
+    var checkOverdraftCommand = new Command("check-overdraft", "Check if accounts will be overdraft in the following days");
+
+    var checkFileOption = new Option<FileInfo>("--file")
+    {
+        Description = "Path to the database file"
+    };
+
+    var accountIdsOption = new Option<string>("--account-id")
+    {
+        Description = "Account IDs to check (comma-separated, e.g., '1,2,3'). If not specified, all accounts with notifications enabled will be checked."
+    };
+
+    checkOverdraftCommand.Options.Add(checkFileOption);
+    checkOverdraftCommand.Options.Add(accountIdsOption);
+
+    checkOverdraftCommand.SetAction((parseResult) =>
+    {
+        var file = parseResult.GetValue(checkFileOption);
+        if (file is null)
+        {
+            Console.Error.WriteLine("Error: --file option is required.");
+            return Task.FromResult(1);
+        }
+
+        var accountIds = parseResult.GetValue(accountIdsOption);
+        return CheckOverdraftAsync(file, accountIds);
+    });
+
+    return checkOverdraftCommand;
+}
+
+static Command CreateAddTransactionCommand()
+{
+    var addTransactionCommand = new Command("add-transaction", "Add a new transaction to the database");
+
+    var addFileOption = new Option<FileInfo>("--file")
+    {
+        Description = "Path to the database file"
+    };
+
+    var addAccountIdOption = new Option<int>("--account-id")
+    {
+        Description = "Account ID for the transaction"
+    };
+
+    var amountOption = new Option<decimal>("--amount")
+    {
+        Description = "Transaction amount (positive for credit, negative for debit)"
+    };
+
+    var valueDateOption = new Option<DateOnly?>("--value-date")
+    {
+        Description = "Transaction value date (format: yyyy-MM-dd). Defaults to today if not specified."
+    };
+
+    var payeeOption = new Option<string?>("--payee")
+    {
+        Description = "Payee name (optional)"
+    };
+
+    var categoryOption = new Option<string?>("--category")
+    {
+        Description = "Category name (optional, format: 'GroupName::CategoryName' or just 'CategoryName')"
+    };
+
+    var commentOption = new Option<string?>("--comment")
+    {
+        Description = "Transaction comment (optional)"
+    };
+
+    var checkedOption = new Option<bool>("--checked")
+    {
+        Description = "Mark transaction as checked (optional, default: false)"
+    };
+
+    addTransactionCommand.Options.Add(addFileOption);
+    addTransactionCommand.Options.Add(addAccountIdOption);
+    addTransactionCommand.Options.Add(amountOption);
+    addTransactionCommand.Options.Add(valueDateOption);
+    addTransactionCommand.Options.Add(payeeOption);
+    addTransactionCommand.Options.Add(categoryOption);
+    addTransactionCommand.Options.Add(commentOption);
+    addTransactionCommand.Options.Add(checkedOption);
+
+    addTransactionCommand.SetAction(async (parseResult) =>
+    {
+        var file = parseResult.GetValue(addFileOption);
+        var accountId = parseResult.GetValue(addAccountIdOption);
+        var amount = parseResult.GetValue(amountOption);
+        var valueDate = parseResult.GetValue(valueDateOption);
+        var payee = parseResult.GetValue(payeeOption);
+        var category = parseResult.GetValue(categoryOption);
+        var comment = parseResult.GetValue(commentOption);
+        var isChecked = parseResult.GetValue(checkedOption);
+
+        if (file is null)
+        {
+            Console.Error.WriteLine("Error: --file option is required.");
+            return 1;
+        }
+
+        return await AddTransactionAsync(file, accountId, amount, valueDate, payee, category, comment, isChecked);
+    });
+
+    return addTransactionCommand;
+}
 
 static async Task CheckOverdraftAsync(FileInfo file, string? accountIdFilter)
 {
