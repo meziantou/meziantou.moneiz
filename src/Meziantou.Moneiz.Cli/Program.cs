@@ -1,11 +1,14 @@
 #pragma warning disable CA1849 // Call async methods when in an async method
 using System.CommandLine;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Meziantou.Moneiz.Core;
 
 var rootCommand = new RootCommand("Moneiz CLI - Manage your personal finance database");
 
 rootCommand.Subcommands.Add(CreateCheckOverdraftCommand());
 rootCommand.Subcommands.Add(CreateAddTransactionCommand());
+rootCommand.Subcommands.Add(CreateGetTransactionsCommand());
 
 return rootCommand.Parse(args).Invoke();
 
@@ -458,6 +461,248 @@ static async Task<int> AddTransactionAsync(FileInfo file, int accountId, int? to
         Console.WriteLine($"  Comment: {comment}");
     if (isChecked)
         Console.WriteLine($"  Status: Checked");
+
+    return 0;
+}
+
+static Command CreateGetTransactionsCommand()
+{
+    var getTransactionsCommand = new Command("get-transactions", "Get the list of transactions from an account (output as JSON)");
+
+    var fileOption = new Option<FileInfo>("--file")
+    {
+        Description = "Path to the database file"
+    };
+
+    var accountIdOption = new Option<int?>("--account-id")
+    {
+        Description = "Filter by account ID"
+    };
+
+    var payeeIdOption = new Option<int?>("--payee-id")
+    {
+        Description = "Filter by payee ID"
+    };
+
+    var categoryIdOption = new Option<int?>("--category-id")
+    {
+        Description = "Filter by category ID"
+    };
+
+    var minAmountOption = new Option<decimal?>("--min-amount")
+    {
+        Description = "Filter by minimum amount"
+    };
+
+    var maxAmountOption = new Option<decimal?>("--max-amount")
+    {
+        Description = "Filter by maximum amount"
+    };
+
+    var fromDateOption = new Option<DateOnly?>("--from-date")
+    {
+        Description = "Filter by start date (value date, format: yyyy-MM-dd)"
+    };
+
+    var toDateOption = new Option<DateOnly?>("--to-date")
+    {
+        Description = "Filter by end date (value date, format: yyyy-MM-dd)"
+    };
+
+    var checkedOption = new Option<bool?>("--checked")
+    {
+        Description = "Filter by checked status (true/false)"
+    };
+
+    var reconciliatedOption = new Option<bool?>("--reconciliated")
+    {
+        Description = "Filter by reconciliation status (true/false)"
+    };
+
+    var linkedTransactionIdOption = new Option<int?>("--linked-transaction-id")
+    {
+        Description = "Filter by linked transaction ID"
+    };
+
+    getTransactionsCommand.Options.Add(fileOption);
+    getTransactionsCommand.Options.Add(accountIdOption);
+    getTransactionsCommand.Options.Add(payeeIdOption);
+    getTransactionsCommand.Options.Add(categoryIdOption);
+    getTransactionsCommand.Options.Add(minAmountOption);
+    getTransactionsCommand.Options.Add(maxAmountOption);
+    getTransactionsCommand.Options.Add(fromDateOption);
+    getTransactionsCommand.Options.Add(toDateOption);
+    getTransactionsCommand.Options.Add(checkedOption);
+    getTransactionsCommand.Options.Add(reconciliatedOption);
+    getTransactionsCommand.Options.Add(linkedTransactionIdOption);
+
+    getTransactionsCommand.SetAction(async (parseResult) =>
+    {
+        var file = parseResult.GetValue(fileOption);
+        var accountId = parseResult.GetValue(accountIdOption);
+        var payeeId = parseResult.GetValue(payeeIdOption);
+        var categoryId = parseResult.GetValue(categoryIdOption);
+        var minAmount = parseResult.GetValue(minAmountOption);
+        var maxAmount = parseResult.GetValue(maxAmountOption);
+        var fromDate = parseResult.GetValue(fromDateOption);
+        var toDate = parseResult.GetValue(toDateOption);
+        var isChecked = parseResult.GetValue(checkedOption);
+        var isReconciliated = parseResult.GetValue(reconciliatedOption);
+        var linkedTransactionId = parseResult.GetValue(linkedTransactionIdOption);
+
+        if (file is null)
+        {
+            Console.Error.WriteLine("Error: --file option is required.");
+            return 1;
+        }
+
+        return await GetTransactionsAsync(
+            file,
+            accountId,
+            payeeId,
+            categoryId,
+            minAmount,
+            maxAmount,
+            fromDate,
+            toDate,
+            isChecked,
+            isReconciliated,
+            linkedTransactionId);
+    });
+
+    return getTransactionsCommand;
+}
+
+static async Task<int> GetTransactionsAsync(
+    FileInfo file,
+    int? accountId,
+    int? payeeId,
+    int? categoryId,
+    decimal? minAmount,
+    decimal? maxAmount,
+    DateOnly? fromDate,
+    DateOnly? toDate,
+    bool? isChecked,
+    bool? isReconciliated,
+    int? linkedTransactionId)
+{
+    if (!file.Exists)
+    {
+        Console.Error.WriteLine($"Error: Database file '{file.FullName}' not found.");
+        return 1;
+    }
+
+    Database db;
+    try
+    {
+        await using var stream = file.OpenRead();
+        db = await Database.Load(stream);
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Error loading database: {ex.Message}");
+        return 1;
+    }
+
+    // Start with all transactions
+    IEnumerable<Transaction> transactions = db.Transactions;
+
+    // Apply filters
+    if (accountId.HasValue)
+    {
+        transactions = transactions.Where(t => t.AccountId == accountId.Value);
+    }
+
+    if (payeeId.HasValue)
+    {
+        transactions = transactions.Where(t => t.PayeeId == payeeId.Value);
+    }
+
+    if (categoryId.HasValue)
+    {
+        transactions = transactions.Where(t => t.CategoryId == categoryId.Value);
+    }
+
+    if (minAmount.HasValue)
+    {
+        transactions = transactions.Where(t => t.Amount >= minAmount.Value);
+    }
+
+    if (maxAmount.HasValue)
+    {
+        transactions = transactions.Where(t => t.Amount <= maxAmount.Value);
+    }
+
+    if (fromDate.HasValue)
+    {
+        transactions = transactions.Where(t => t.ValueDate >= fromDate.Value);
+    }
+
+    if (toDate.HasValue)
+    {
+        transactions = transactions.Where(t => t.ValueDate <= toDate.Value);
+    }
+
+    if (isChecked.HasValue)
+    {
+        if (isChecked.Value)
+        {
+            transactions = transactions.Where(t => t.CheckedDate.HasValue);
+        }
+        else
+        {
+            transactions = transactions.Where(t => !t.CheckedDate.HasValue);
+        }
+    }
+
+    if (isReconciliated.HasValue)
+    {
+        if (isReconciliated.Value)
+        {
+            transactions = transactions.Where(t => t.ReconciliationDate.HasValue);
+        }
+        else
+        {
+            transactions = transactions.Where(t => !t.ReconciliationDate.HasValue);
+        }
+    }
+
+    if (linkedTransactionId.HasValue)
+    {
+        transactions = transactions.Where(t => t.LinkedTransactionId == linkedTransactionId.Value);
+    }
+
+    // Convert to list for serialization
+    var transactionsList = transactions.ToList();
+
+    // Create a DTO for JSON serialization that includes readable information
+    var transactionsOutput = transactionsList.Select(t => new
+    {
+        Id = t.Id,
+        Amount = t.Amount,
+        Comment = t.Comment,
+        ValueDate = t.ValueDate,
+        CheckedDate = t.CheckedDate,
+        ReconciliationDate = t.ReconciliationDate,
+        AccountId = t.AccountId,
+        AccountName = t.Account?.Name,
+        PayeeId = t.PayeeId,
+        PayeeName = t.Payee?.Name,
+        CategoryId = t.CategoryId,
+        CategoryName = t.Category?.ToString(),
+        LinkedTransactionId = t.LinkedTransactionId,
+        State = t.State.ToString()
+    }).ToList();
+
+    // Serialize to JSON
+    var jsonOptions = new JsonSerializerOptions
+    {
+        WriteIndented = true,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
+
+    var json = JsonSerializer.Serialize(transactionsOutput, jsonOptions);
+    Console.WriteLine(json);
 
     return 0;
 }

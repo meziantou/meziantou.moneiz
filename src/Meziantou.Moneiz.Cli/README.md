@@ -18,6 +18,110 @@ dotnet run --project src/Meziantou.Moneiz.Cli/Meziantou.Moneiz.Cli.csproj -- [co
 
 ## Commands
 
+### get-transactions
+
+Get the list of transactions from the database with optional filters. Output is in JSON format.
+
+#### Usage
+
+```bash
+meziantou.moneiz get-transactions [options]
+```
+
+#### Options
+
+| Option | Required | Description |
+|--------|----------|-------------|
+| `--file <file>` | Yes | Path to the database file |
+| `--account-id <id>` | No | Filter by account ID |
+| `--payee-id <id>` | No | Filter by payee ID |
+| `--category-id <id>` | No | Filter by category ID |
+| `--min-amount <amount>` | No | Filter by minimum amount |
+| `--max-amount <amount>` | No | Filter by maximum amount |
+| `--from-date <date>` | No | Filter by start date (value date, format: yyyy-MM-dd) |
+| `--to-date <date>` | No | Filter by end date (value date, format: yyyy-MM-dd) |
+| `--checked <bool>` | No | Filter by checked status (true/false) |
+| `--reconciliated <bool>` | No | Filter by reconciliation status (true/false) |
+| `--linked-transaction-id <id>` | No | Filter by linked transaction ID |
+
+#### Examples
+
+**Get all transactions:**
+
+```bash
+meziantou.moneiz get-transactions --file ~/finances.moneiz
+```
+
+**Get transactions for a specific account:**
+
+```bash
+meziantou.moneiz get-transactions \
+  --file ~/finances.moneiz \
+  --account-id 1
+```
+
+**Get transactions within a date range:**
+
+```bash
+meziantou.moneiz get-transactions \
+  --file ~/finances.moneiz \
+  --from-date 2026-01-01 \
+  --to-date 2026-01-31
+```
+
+**Get unchecked transactions:**
+
+```bash
+meziantou.moneiz get-transactions \
+  --file ~/finances.moneiz \
+  --checked false
+```
+
+**Get expenses (negative amounts) for a specific payee:**
+
+```bash
+meziantou.moneiz get-transactions \
+  --file ~/finances.moneiz \
+  --payee-id 5 \
+  --max-amount 0
+```
+
+**Combine multiple filters:**
+
+```bash
+meziantou.moneiz get-transactions \
+  --file ~/finances.moneiz \
+  --account-id 1 \
+  --category-id 3 \
+  --from-date 2026-01-01 \
+  --checked true
+```
+
+#### Output Format
+
+The command outputs transactions in JSON format with the following structure:
+
+```json
+[
+  {
+    "Id": 1,
+    "Amount": -50.00,
+    "Comment": "Weekly groceries",
+    "ValueDate": "2026-01-12",
+    "CheckedDate": "2026-01-17",
+    "AccountId": 1,
+    "AccountName": "Checking Account",
+    "PayeeId": 1,
+    "PayeeName": "Supermarket",
+    "CategoryId": 1,
+    "CategoryName": "Food::Groceries",
+    "State": "Checked"
+  }
+]
+```
+
+Fields are omitted from the output if they are null.
+
 ### add-transaction
 
 Add a new transaction to the database. Supports both regular transactions and inter-account transfers.
