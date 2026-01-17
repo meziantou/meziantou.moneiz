@@ -72,7 +72,7 @@ public partial class Database
 
             if (scheduledTransaction.NextOccurenceDate == null)
             {
-                DateOnly? recurrenceDate = reccurenceRule.GetNextOccurrence(scheduledTransaction.StartDate.ToDateTime(TimeOnly.MinValue)) is DateTime nextDateTime ? DateOnly.FromDateTime(nextDateTime) : null;
+                DateOnly? recurrenceDate = reccurenceRule.GetNextOccurrences(scheduledTransaction.StartDate.ToDateTime(TimeOnly.MinValue)).FirstOrDefault() is DateTime nextDateTime ? DateOnly.FromDateTime(nextDateTime) : null;
                 scheduledTransaction.NextOccurenceDate = recurrenceDate;
                 if (scheduledTransaction.NextOccurenceDate == null)
                 {
@@ -116,7 +116,7 @@ public partial class Database
                     SaveTransaction(creditedTransaction);
                 }
 
-                DateOnly? newRecurrenceDate = reccurenceRule.GetNextOccurrence(scheduledTransaction.NextOccurenceDate.Value.AddDays(1).ToDateTime(TimeOnly.MinValue)) is DateTime nextDateTime ? DateOnly.FromDateTime(nextDateTime) : null;
+                DateOnly? newRecurrenceDate = reccurenceRule.GetNextOccurrences(scheduledTransaction.NextOccurenceDate.Value.AddDays(1).ToDateTime(TimeOnly.MinValue)).FirstOrDefault() is DateTime nextDateTime ? DateOnly.FromDateTime(nextDateTime) : null;
                 if (scheduledTransaction.NextOccurenceDate == newRecurrenceDate)
                 {
                     // Infinite loop, remove the transaction
