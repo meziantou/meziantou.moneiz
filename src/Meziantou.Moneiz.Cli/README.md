@@ -199,6 +199,87 @@ meziantou.moneiz add-transaction \
   --category "Shopping::Groceries"
 ```
 
+### update-transaction
+
+Update an existing transaction in the database. Supports updating both regular transactions and inter-account transfers.
+
+#### Usage
+
+```bash
+meziantou.moneiz update-transaction [options]
+```
+
+#### Options
+
+| Option | Required | Description |
+|--------|----------|-------------|
+| `--file <file>` | Yes | Path to the database file |
+| `--transaction-id <id>` | Yes | Transaction ID to update |
+| `--amount <amount>` | No | Transaction amount (positive for credit, negative for debit) |
+| `--value-date <date>` | No | Transaction date (format: yyyy-MM-dd) |
+| `--payee <name>` | No | Payee name (not applicable for inter-account transfers) |
+| `--category <name>` | No | Category name (format: 'GroupName::CategoryName' or 'CategoryName') |
+| `--comment <text>` | No | Transaction comment |
+| `--checked <bool>` | No | Mark transaction as checked or unchecked (true/false) |
+
+#### Examples
+
+**Update the amount of a transaction:**
+
+```bash
+meziantou.moneiz update-transaction \
+  --file ~/finances.moneiz \
+  --transaction-id 1 \
+  --amount -75.50
+```
+
+**Update multiple fields:**
+
+```bash
+meziantou.moneiz update-transaction \
+  --file ~/finances.moneiz \
+  --transaction-id 1 \
+  --amount -85.00 \
+  --comment "Updated groceries" \
+  --category "Shopping::Groceries"
+```
+
+**Mark a transaction as checked:**
+
+```bash
+meziantou.moneiz update-transaction \
+  --file ~/finances.moneiz \
+  --transaction-id 1 \
+  --checked true
+```
+
+**Update an inter-account transfer amount:**
+
+```bash
+meziantou.moneiz update-transaction \
+  --file ~/finances.moneiz \
+  --transaction-id 2 \
+  --amount -150
+```
+
+When updating a linked transaction (inter-account transfer), both transactions are automatically updated to maintain consistency.
+
+**Change category:**
+
+```bash
+meziantou.moneiz update-transaction \
+  --file ~/finances.moneiz \
+  --transaction-id 1 \
+  --category "Expenses::Food"
+```
+
+#### Notes
+
+- All options except `--file` and `--transaction-id` are optional. Only specify the fields you want to update.
+- When updating an inter-account transfer, the linked transaction is automatically updated to maintain consistency.
+- Attempting to set a payee on an inter-account transfer will show a warning and the payee will be ignored.
+- To find transaction IDs, use the `get-transactions` command.
+
 ### check-overdraft
 
 Check if accounts will fall below their minimum balance thresholds in the coming days.
