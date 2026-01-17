@@ -56,9 +56,14 @@ static Command CreateAddTransactionCommand()
         Description = "Account ID for the transaction"
     };
 
+    var toAccountIdOption = new Option<int?>("--to-account-id")
+    {
+        Description = "Destination account ID for inter-account transfers (optional). Creates a linked transaction."
+    };
+
     var amountOption = new Option<decimal>("--amount")
     {
-        Description = "Transaction amount (positive for credit, negative for debit)"
+        Description = "Transaction amount (positive for credit, negative for debit). For inter-account transfers, specify the absolute amount being transferred."
     };
 
     var valueDateOption = new Option<DateOnly?>("--value-date")
@@ -68,7 +73,7 @@ static Command CreateAddTransactionCommand()
 
     var payeeOption = new Option<string?>("--payee")
     {
-        Description = "Payee name (optional)"
+        Description = "Payee name (optional, not used for inter-account transfers)"
     };
 
     var categoryOption = new Option<string?>("--category")
@@ -88,6 +93,7 @@ static Command CreateAddTransactionCommand()
 
     addTransactionCommand.Options.Add(addFileOption);
     addTransactionCommand.Options.Add(addAccountIdOption);
+    addTransactionCommand.Options.Add(toAccountIdOption);
     addTransactionCommand.Options.Add(amountOption);
     addTransactionCommand.Options.Add(valueDateOption);
     addTransactionCommand.Options.Add(payeeOption);
@@ -99,6 +105,7 @@ static Command CreateAddTransactionCommand()
     {
         var file = parseResult.GetValue(addFileOption);
         var accountId = parseResult.GetValue(addAccountIdOption);
+        var toAccountId = parseResult.GetValue(toAccountIdOption);
         var amount = parseResult.GetValue(amountOption);
         var valueDate = parseResult.GetValue(valueDateOption);
         var payee = parseResult.GetValue(payeeOption);
@@ -112,7 +119,7 @@ static Command CreateAddTransactionCommand()
             return 1;
         }
 
-        return await AddTransactionAsync(file, accountId, amount, valueDate, payee, category, comment, isChecked);
+        return await AddTransactionAsync(file, accountId, toAccountId, amount, valueDate, payee, category, comment, isChecked);
     });
 
     return addTransactionCommand;
@@ -274,7 +281,7 @@ static string FormatAmount(decimal amount, string? currencyCode)
     return $"{sign}{absAmount:N2} {currencyCode ?? ""}".Trim();
 }
 
-static async Task<int> AddTransactionAsync(FileInfo file, int accountId, decimal amount, DateOnly? valueDate, string? payeeName, string? categoryName, string? comment, bool isChecked)
+static async Task<int> AddTransactionAsync(FileInfo file, int accountId, int? toAccountId, decimal amount, DateOnly? valueDate, string? payeeName, string? categoryName, string? comment, bool isChecked)
 {
     if (!file.Exists)
     {
@@ -294,12 +301,30 @@ static async Task<int> AddTransactionAsync(FileInfo file, int accountId, decimal
         return 1;
     }
 
-    // Get account
+    // Get source account
     var account = db.GetAccountById(accountId);
     if (account is null)
     {
         Console.Error.WriteLine($"Error: Account with ID {accountId} not found.");
         return 1;
+    }
+
+    // Get destination account for inter-account transfers
+    Account? toAccount = null;
+    if (toAccountId.HasValue)
+    {
+        toAccount = db.GetAccountById(toAccountId.Value);
+        if (toAccount is null)
+        {
+            Console.Error.WriteLine($"Error: Destination account with ID {toAccountId.Value} not found.");
+            return 1;
+        }
+
+        if (toAccountId.Value == accountId)
+        {
+            Console.Error.WriteLine("Error: Source and destination accounts cannot be the same for inter-account transfers.");
+            return 1;
+        }
     }
 
     // Use today's date if not specified
@@ -308,9 +333,9 @@ static async Task<int> AddTransactionAsync(FileInfo file, int accountId, decimal
         valueDate = Database.GetToday();
     }
 
-    // Get or create payee if specified
+    // For inter-account transfers, payee should not be specified
     Payee? payee = null;
-    if (!string.IsNullOrWhiteSpace(payeeName))
+    if (toAccount is null && !string.IsNullOrWhiteSpace(payeeName))
     {
         payee = db.GetOrCreatePayeeByName(payeeName);
     }
@@ -340,19 +365,58 @@ static async Task<int> AddTransactionAsync(FileInfo file, int accountId, decimal
         }
     }
 
-    // Create and save transaction
-    var transaction = new Transaction
-    {
-        Account = account,
-        Amount = amount,
-        ValueDate = valueDate.Value,
-        Payee = payee,
-        Category = category,
-        Comment = comment,
-        CheckedDate = isChecked ? Database.GetToday() : null
-    };
+    // Create and save transaction(s)
+    Transaction transaction;
+    Transaction? linkedTransaction = null;
 
-    db.SaveTransaction(transaction);
+    if (toAccount is not null)
+    {
+        // Inter-account transfer: create two linked transactions
+        // Debit transaction (withdraw from source account)
+        transaction = new Transaction
+        {
+            Account = account,
+            Amount = -Math.Abs(amount), // Always negative for the source account
+            ValueDate = valueDate.Value,
+            Category = category,
+            Comment = comment,
+            CheckedDate = isChecked ? Database.GetToday() : null
+        };
+
+        // Credit transaction (deposit to destination account)
+        linkedTransaction = new Transaction
+        {
+            Account = toAccount,
+            Amount = Math.Abs(amount), // Always positive for the destination account
+            ValueDate = valueDate.Value,
+            Category = category,
+            Comment = comment,
+            CheckedDate = isChecked ? Database.GetToday() : null
+        };
+
+        // Link the transactions
+        transaction.LinkedTransaction = linkedTransaction;
+        linkedTransaction.LinkedTransaction = transaction;
+
+        db.SaveTransaction(linkedTransaction);
+        db.SaveTransaction(transaction);
+    }
+    else
+    {
+        // Regular transaction
+        transaction = new Transaction
+        {
+            Account = account,
+            Amount = amount,
+            ValueDate = valueDate.Value,
+            Payee = payee,
+            Category = category,
+            Comment = comment,
+            CheckedDate = isChecked ? Database.GetToday() : null
+        };
+
+        db.SaveTransaction(transaction);
+    }
 
     // Save database back to file
     try
@@ -369,12 +433,25 @@ static async Task<int> AddTransactionAsync(FileInfo file, int accountId, decimal
     Console.ForegroundColor = ConsoleColor.Green;
     Console.WriteLine("✓ Transaction added successfully");
     Console.ResetColor();
-    Console.WriteLine($"  Transaction ID: {transaction.Id}");
-    Console.WriteLine($"  Account: {account}");
-    Console.WriteLine($"  Amount: {FormatAmount(amount, account.CurrencyIsoCode)}");
+
+    if (toAccount is not null)
+    {
+        // Inter-account transfer
+        Console.WriteLine($"  Transfer Amount: {FormatAmount(Math.Abs(amount), account.CurrencyIsoCode)}");
+        Console.WriteLine($"  From Account: {account} (Transaction ID: {transaction.Id})");
+        Console.WriteLine($"  To Account: {toAccount} (Transaction ID: {linkedTransaction!.Id})");
+    }
+    else
+    {
+        // Regular transaction
+        Console.WriteLine($"  Transaction ID: {transaction.Id}");
+        Console.WriteLine($"  Account: {account}");
+        Console.WriteLine($"  Amount: {FormatAmount(amount, account.CurrencyIsoCode)}");
+        if (payee is not null)
+            Console.WriteLine($"  Payee: {payee}");
+    }
+
     Console.WriteLine($"  Value Date: {valueDate.Value:yyyy-MM-dd}");
-    if (payee is not null)
-        Console.WriteLine($"  Payee: {payee}");
     if (category is not null)
         Console.WriteLine($"  Category: {category}");
     if (!string.IsNullOrWhiteSpace(comment))
