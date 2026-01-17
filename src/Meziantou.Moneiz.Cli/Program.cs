@@ -2,7 +2,12 @@
 using System.CommandLine;
 using Meziantou.Moneiz.Core;
 
-var fileOption = new Option<FileInfo>("--file")
+var rootCommand = new RootCommand("Moneiz CLI - Manage your personal finance database");
+
+// Check Overdraft Command
+var checkOverdraftCommand = new Command("check-overdraft", "Check if accounts will be overdraft in the following days");
+
+var checkFileOption = new Option<FileInfo>("--file")
 {
     Description = "Path to the database file"
 };
@@ -12,13 +17,12 @@ var accountIdsOption = new Option<string>("--account-id")
     Description = "Account IDs to check (comma-separated, e.g., '1,2,3'). If not specified, all accounts with notifications enabled will be checked."
 };
 
-var rootCommand = new RootCommand("Check if accounts will be overdraft in the following days");
-rootCommand.Options.Add(fileOption);
-rootCommand.Options.Add(accountIdsOption);
+checkOverdraftCommand.Options.Add(checkFileOption);
+checkOverdraftCommand.Options.Add(accountIdsOption);
 
-rootCommand.SetAction((parseResult) =>
+checkOverdraftCommand.SetAction((parseResult) =>
 {
-    var file = parseResult.GetValue(fileOption);
+    var file = parseResult.GetValue(checkFileOption);
     if (file is null)
     {
         Console.Error.WriteLine("Error: --file option is required.");
@@ -28,6 +32,82 @@ rootCommand.SetAction((parseResult) =>
     var accountIds = parseResult.GetValue(accountIdsOption);
     return CheckOverdraftAsync(file, accountIds);
 });
+
+rootCommand.Subcommands.Add(checkOverdraftCommand);
+
+// Add Transaction Command
+var addTransactionCommand = new Command("add-transaction", "Add a new transaction to the database");
+
+var addFileOption = new Option<FileInfo>("--file")
+{
+    Description = "Path to the database file"
+};
+
+var addAccountIdOption = new Option<int>("--account-id")
+{
+    Description = "Account ID for the transaction"
+};
+
+var amountOption = new Option<decimal>("--amount")
+{
+    Description = "Transaction amount (positive for credit, negative for debit)"
+};
+
+var valueDateOption = new Option<DateOnly?>("--value-date")
+{
+    Description = "Transaction value date (format: yyyy-MM-dd). Defaults to today if not specified."
+};
+
+var payeeOption = new Option<string?>("--payee")
+{
+    Description = "Payee name (optional)"
+};
+
+var categoryOption = new Option<string?>("--category")
+{
+    Description = "Category name (optional, format: 'GroupName::CategoryName' or just 'CategoryName')"
+};
+
+var commentOption = new Option<string?>("--comment")
+{
+    Description = "Transaction comment (optional)"
+};
+
+var checkedOption = new Option<bool>("--checked")
+{
+    Description = "Mark transaction as checked (optional, default: false)"
+};
+
+addTransactionCommand.Options.Add(addFileOption);
+addTransactionCommand.Options.Add(addAccountIdOption);
+addTransactionCommand.Options.Add(amountOption);
+addTransactionCommand.Options.Add(valueDateOption);
+addTransactionCommand.Options.Add(payeeOption);
+addTransactionCommand.Options.Add(categoryOption);
+addTransactionCommand.Options.Add(commentOption);
+addTransactionCommand.Options.Add(checkedOption);
+
+addTransactionCommand.SetAction(async (parseResult) =>
+{
+    var file = parseResult.GetValue(addFileOption);
+    var accountId = parseResult.GetValue(addAccountIdOption);
+    var amount = parseResult.GetValue(amountOption);
+    var valueDate = parseResult.GetValue(valueDateOption);
+    var payee = parseResult.GetValue(payeeOption);
+    var category = parseResult.GetValue(categoryOption);
+    var comment = parseResult.GetValue(commentOption);
+    var isChecked = parseResult.GetValue(checkedOption);
+
+    if (file is null)
+    {
+        Console.Error.WriteLine("Error: --file option is required.");
+        return 1;
+    }
+
+    return await AddTransactionAsync(file, accountId, amount, valueDate, payee, category, comment, isChecked);
+});
+
+rootCommand.Subcommands.Add(addTransactionCommand);
 
 return rootCommand.Parse(args).Invoke();
 
@@ -185,4 +265,115 @@ static string FormatAmount(decimal amount, string? currencyCode)
     var sign = amount >= 0 ? "" : "-";
     var absAmount = Math.Abs(amount);
     return $"{sign}{absAmount:N2} {currencyCode ?? ""}".Trim();
+}
+
+static async Task<int> AddTransactionAsync(FileInfo file, int accountId, decimal amount, DateOnly? valueDate, string? payeeName, string? categoryName, string? comment, bool isChecked)
+{
+    if (!file.Exists)
+    {
+        Console.Error.WriteLine($"Error: Database file '{file.FullName}' not found.");
+        return 1;
+    }
+
+    Database db;
+    try
+    {
+        await using var stream = file.OpenRead();
+        db = await Database.Load(stream);
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Error loading database: {ex.Message}");
+        return 1;
+    }
+
+    // Get account
+    var account = db.GetAccountById(accountId);
+    if (account is null)
+    {
+        Console.Error.WriteLine($"Error: Account with ID {accountId} not found.");
+        return 1;
+    }
+
+    // Use today's date if not specified
+    if (!valueDate.HasValue || valueDate.Value == default)
+    {
+        valueDate = Database.GetToday();
+    }
+
+    // Get or create payee if specified
+    Payee? payee = null;
+    if (!string.IsNullOrWhiteSpace(payeeName))
+    {
+        payee = db.GetOrCreatePayeeByName(payeeName);
+    }
+
+    // Parse and get category if specified
+    Category? category = null;
+    if (!string.IsNullOrWhiteSpace(categoryName))
+    {
+        string? groupName = null;
+        string? name = categoryName;
+
+        if (categoryName.Contains("::", StringComparison.Ordinal))
+        {
+            var parts = categoryName.Split("::", 2);
+            groupName = parts[0];
+            name = parts[1];
+        }
+
+        category = db.Categories.FirstOrDefault(c =>
+            c.Name == name &&
+            (groupName == null || c.GroupName == groupName));
+
+        if (category is null)
+        {
+            category = new Category { Name = name, GroupName = groupName };
+            db.SaveCategory(category);
+        }
+    }
+
+    // Create and save transaction
+    var transaction = new Transaction
+    {
+        Account = account,
+        Amount = amount,
+        ValueDate = valueDate.Value,
+        Payee = payee,
+        Category = category,
+        Comment = comment,
+        CheckedDate = isChecked ? Database.GetToday() : null
+    };
+
+    db.SaveTransaction(transaction);
+
+    // Save database back to file
+    try
+    {
+        var exportedData = db.Export();
+        await File.WriteAllBytesAsync(file.FullName, exportedData);
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Error saving database: {ex.Message}");
+        return 1;
+    }
+
+    Console.ForegroundColor = ConsoleColor.Green;
+    Console.WriteLine("✓ Transaction added successfully");
+    Console.ResetColor();
+    Console.WriteLine($"  Transaction ID: {transaction.Id}");
+    Console.WriteLine($"  Account: {account}");
+    Console.WriteLine($"  Amount: {FormatAmount(amount, account.CurrencyIsoCode)}");
+    Console.WriteLine($"  Value Date: {valueDate.Value:yyyy-MM-dd}");
+    if (payee is not null)
+        Console.WriteLine($"  Payee: {payee}");
+    if (category is not null)
+        Console.WriteLine($"  Category: {category}");
+    if (!string.IsNullOrWhiteSpace(comment))
+        Console.WriteLine($"  Comment: {comment}");
+    if (isChecked)
+        Console.WriteLine($"  Status: Checked");
+
+    return 0;
 }
