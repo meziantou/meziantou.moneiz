@@ -4,10 +4,10 @@
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Meziantou.AspNetCore.Components" Version="2.0.27" />
-    <PackageVersion Include="Meziantou.AspNetCore.Components.WebAssembly" Version="1.0.19" />
-    <PackageVersion Include="Meziantou.Framework" Version="5.0.10" />
-    <PackageVersion Include="Meziantou.Framework.RelativeDate" Version="2.1.13" />
+    <PackageVersion Include="Meziantou.AspNetCore.Components" Version="2.0.28" />
+    <PackageVersion Include="Meziantou.AspNetCore.Components.WebAssembly" Version="1.0.20" />
+    <PackageVersion Include="Meziantou.Framework" Version="5.0.11" />
+    <PackageVersion Include="Meziantou.Framework.RelativeDate" Version="2.1.14" />
     <PackageVersion Include="Meziantou.Framework.Scheduling" Version="2.0.10" />
     <PackageVersion Include="Meziantou.Framework.SimpleQueryLanguage" Version="1.0.7" />
     <PackageVersion Include="Meziantou.Framework.ValueStopwatch" Version="1.0.7" />
