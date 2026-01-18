@@ -8,6 +8,7 @@ var rootCommand = new RootCommand("Moneiz CLI - Manage your personal finance dat
 
 rootCommand.Subcommands.Add(CreateCheckOverdraftCommand());
 rootCommand.Subcommands.Add(CreateAddTransactionCommand());
+rootCommand.Subcommands.Add(CreateUpdateTransactionCommand());
 rootCommand.Subcommands.Add(CreateGetTransactionsCommand());
 
 return rootCommand.Parse(args).Invoke();
@@ -126,6 +127,82 @@ static Command CreateAddTransactionCommand()
     });
 
     return addTransactionCommand;
+}
+
+static Command CreateUpdateTransactionCommand()
+{
+    var updateTransactionCommand = new Command("update-transaction", "Update an existing transaction in the database");
+
+    var updateFileOption = new Option<FileInfo>("--file")
+    {
+        Description = "Path to the database file"
+    };
+
+    var transactionIdOption = new Option<int>("--transaction-id")
+    {
+        Description = "Transaction ID to update"
+    };
+
+    var amountOption = new Option<decimal?>("--amount")
+    {
+        Description = "Transaction amount (optional, positive for credit, negative for debit)"
+    };
+
+    var valueDateOption = new Option<DateOnly?>("--value-date")
+    {
+        Description = "Transaction value date (optional, format: yyyy-MM-dd)"
+    };
+
+    var payeeOption = new Option<string?>("--payee")
+    {
+        Description = "Payee name (optional)"
+    };
+
+    var categoryOption = new Option<string?>("--category")
+    {
+        Description = "Category name (optional, format: 'GroupName::CategoryName' or just 'CategoryName')"
+    };
+
+    var commentOption = new Option<string?>("--comment")
+    {
+        Description = "Transaction comment (optional)"
+    };
+
+    var checkedOption = new Option<bool?>("--checked")
+    {
+        Description = "Mark transaction as checked or unchecked (optional, true/false)"
+    };
+
+    updateTransactionCommand.Options.Add(updateFileOption);
+    updateTransactionCommand.Options.Add(transactionIdOption);
+    updateTransactionCommand.Options.Add(amountOption);
+    updateTransactionCommand.Options.Add(valueDateOption);
+    updateTransactionCommand.Options.Add(payeeOption);
+    updateTransactionCommand.Options.Add(categoryOption);
+    updateTransactionCommand.Options.Add(commentOption);
+    updateTransactionCommand.Options.Add(checkedOption);
+
+    updateTransactionCommand.SetAction(async (parseResult) =>
+    {
+        var file = parseResult.GetValue(updateFileOption);
+        var transactionId = parseResult.GetValue(transactionIdOption);
+        var amount = parseResult.GetValue(amountOption);
+        var valueDate = parseResult.GetValue(valueDateOption);
+        var payee = parseResult.GetValue(payeeOption);
+        var category = parseResult.GetValue(categoryOption);
+        var comment = parseResult.GetValue(commentOption);
+        var isChecked = parseResult.GetValue(checkedOption);
+
+        if (file is null)
+        {
+            Console.Error.WriteLine("Error: --file option is required.");
+            return 1;
+        }
+
+        return await UpdateTransactionAsync(file, transactionId, amount, valueDate, payee, category, comment, isChecked);
+    });
+
+    return updateTransactionCommand;
 }
 
 static async Task CheckOverdraftAsync(FileInfo file, string? accountIdFilter)
@@ -461,6 +538,221 @@ static async Task<int> AddTransactionAsync(FileInfo file, int accountId, int? to
         Console.WriteLine($"  Comment: {comment}");
     if (isChecked)
         Console.WriteLine($"  Status: Checked");
+
+    return 0;
+}
+
+static async Task<int> UpdateTransactionAsync(FileInfo file, int transactionId, decimal? amount, DateOnly? valueDate, string? payeeName, string? categoryName, string? comment, bool? isChecked)
+{
+    if (!file.Exists)
+    {
+        Console.Error.WriteLine($"Error: Database file '{file.FullName}' not found.");
+        return 1;
+    }
+
+    Database db;
+    try
+    {
+        await using var stream = file.OpenRead();
+        db = await Database.Load(stream);
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Error loading database: {ex.Message}");
+        return 1;
+    }
+
+    // Get the transaction to update
+    var transaction = db.GetTransactionById(transactionId);
+    if (transaction is null)
+    {
+        Console.Error.WriteLine($"Error: Transaction with ID {transactionId} not found.");
+        return 1;
+    }
+
+    // Check if this is a linked transaction (inter-account transfer)
+    var isLinkedTransaction = transaction.LinkedTransaction is not null;
+
+    // Update amount if specified
+    if (amount.HasValue)
+    {
+        if (isLinkedTransaction)
+        {
+            // For linked transactions, update both transactions
+            var linkedTransaction = transaction.LinkedTransaction!;
+            var absAmount = Math.Abs(amount.Value);
+
+            // Determine which is debit and which is credit
+            if (transaction.Amount < 0)
+            {
+                transaction.Amount = -absAmount;
+                linkedTransaction.Amount = absAmount;
+            }
+            else
+            {
+                transaction.Amount = absAmount;
+                linkedTransaction.Amount = -absAmount;
+            }
+
+            db.SaveTransaction(linkedTransaction);
+        }
+        else
+        {
+            transaction.Amount = amount.Value;
+        }
+    }
+
+    // Update value date if specified
+    if (valueDate.HasValue)
+    {
+        transaction.ValueDate = valueDate.Value;
+        if (isLinkedTransaction)
+        {
+            transaction.LinkedTransaction!.ValueDate = valueDate.Value;
+            db.SaveTransaction(transaction.LinkedTransaction!);
+        }
+    }
+
+    // Update payee if specified (only for non-linked transactions)
+    if (payeeName is not null)
+    {
+        if (isLinkedTransaction)
+        {
+            Console.Error.WriteLine("Warning: Cannot set payee for inter-account transfers. Payee will be ignored.");
+        }
+        else
+        {
+            if (!string.IsNullOrWhiteSpace(payeeName))
+            {
+                transaction.Payee = db.GetOrCreatePayeeByName(payeeName);
+            }
+            else
+            {
+                transaction.Payee = null;
+            }
+        }
+    }
+
+    // Update category if specified
+    if (categoryName is not null)
+    {
+        if (!string.IsNullOrWhiteSpace(categoryName))
+        {
+            string? groupName = null;
+            string? name = categoryName;
+
+            if (categoryName.Contains("::", StringComparison.Ordinal))
+            {
+                var parts = categoryName.Split("::", 2);
+                groupName = parts[0];
+                name = parts[1];
+            }
+
+            var category = db.Categories.FirstOrDefault(c =>
+                c.Name == name &&
+                string.Equals(c.GroupName, groupName, StringComparison.Ordinal));
+
+            if (category is null)
+            {
+                category = new Category { Name = name, GroupName = groupName };
+                db.SaveCategory(category);
+            }
+
+            transaction.Category = category;
+            if (isLinkedTransaction)
+            {
+                transaction.LinkedTransaction!.Category = category;
+                db.SaveTransaction(transaction.LinkedTransaction!);
+            }
+        }
+        else
+        {
+            transaction.Category = null;
+            if (isLinkedTransaction)
+            {
+                transaction.LinkedTransaction!.Category = null;
+                db.SaveTransaction(transaction.LinkedTransaction!);
+            }
+        }
+    }
+
+    // Update comment if specified
+    if (comment is not null)
+    {
+        transaction.Comment = comment;
+        if (isLinkedTransaction)
+        {
+            transaction.LinkedTransaction!.Comment = comment;
+            db.SaveTransaction(transaction.LinkedTransaction!);
+        }
+    }
+
+    // Update checked status if specified
+    if (isChecked.HasValue)
+    {
+        if (isChecked.Value)
+        {
+            transaction.CheckedDate = Database.GetToday();
+            if (isLinkedTransaction)
+            {
+                transaction.LinkedTransaction!.CheckedDate = Database.GetToday();
+                db.SaveTransaction(transaction.LinkedTransaction!);
+            }
+        }
+        else
+        {
+            transaction.CheckedDate = null;
+            if (isLinkedTransaction)
+            {
+                transaction.LinkedTransaction!.CheckedDate = null;
+                db.SaveTransaction(transaction.LinkedTransaction!);
+            }
+        }
+    }
+
+    // Save the updated transaction
+    db.SaveTransaction(transaction);
+
+    // Save database back to file
+    try
+    {
+        var exportedData = db.Export();
+        await File.WriteAllBytesAsync(file.FullName, exportedData);
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Error saving database: {ex.Message}");
+        return 1;
+    }
+
+    Console.ForegroundColor = ConsoleColor.Green;
+    Console.WriteLine("✓ Transaction updated successfully");
+    Console.ResetColor();
+
+    Console.WriteLine($"  Transaction ID: {transaction.Id}");
+    Console.WriteLine($"  Account: {transaction.Account}");
+    Console.WriteLine($"  Amount: {FormatAmount(transaction.Amount, transaction.Account?.CurrencyIsoCode)}");
+    Console.WriteLine($"  Value Date: {transaction.ValueDate:yyyy-MM-dd}");
+
+    if (transaction.Payee is not null)
+        Console.WriteLine($"  Payee: {transaction.Payee}");
+
+    if (transaction.Category is not null)
+        Console.WriteLine($"  Category: {transaction.Category}");
+
+    if (!string.IsNullOrWhiteSpace(transaction.Comment))
+        Console.WriteLine($"  Comment: {transaction.Comment}");
+
+    if (transaction.CheckedDate.HasValue)
+        Console.WriteLine($"  Status: Checked");
+    else
+        Console.WriteLine($"  Status: Not Checked");
+
+    if (isLinkedTransaction)
+    {
+        Console.WriteLine($"  Linked Transaction ID: {transaction.LinkedTransaction!.Id}");
+        Console.WriteLine($"  Linked Account: {transaction.LinkedTransaction!.Account}");
+    }
 
     return 0;
 }
