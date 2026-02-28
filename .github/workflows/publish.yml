@@ -48,7 +48,7 @@ jobs:
     - name: Publish
       run: dotnet publish src/Meziantou.Moneiz/Meziantou.Moneiz.csproj --configuration Release --output ${{ env.OUTPUT }} /bl
 
-    - uses: actions/upload-artifact@v6
+    - uses: actions/upload-artifact@v7
       if: always()
       with:
         name: binlog
@@ -85,7 +85,7 @@ jobs:
       run: dotnet pack src/Meziantou.Moneiz.Cli/Meziantou.Moneiz.Cli.csproj --configuration Release --output nupkg
 
     - name: Upload CLI package artifact
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: cli-package
         path: nupkg/*.nupkg
