@@ -11,18 +11,42 @@
                 <strong>Overdraft Warning:</strong>
                 @if (overdraftAccounts.Count == 1)
                 {
-                    <span>Account <strong>@overdraftAccounts[0].Name</strong> will fall below <strong>@FormatAmount(overdraftAccounts[0].OverdraftNotificationAmount, overdraftAccounts[0].CurrencyIsoCode)</strong> in the next @overdraftAccounts[0].OverdraftNotificationCheckPeriodDays days.</span>
+                    var info = overdraftAccounts[0];
+                    var daysUntil = info.OverdraftDate.DayNumber - today.DayNumber;
+                    <span>
+                        Account <strong>@info.Account.Name</strong> will fall below <strong>@FormatAmount(info.Account.OverdraftNotificationAmount, info.Account.CurrencyIsoCode)</strong>
+                        @if (daysUntil == 0)
+                        {
+                            <text> today</text>
+                        }
+                        else
+                        {
+                            <text> on <strong>@info.OverdraftDate.ToString("yyyy-MM-dd")</strong></text>
+                        }
+                        <text> (projected balance: <strong>@FormatAmount(info.LowestBalance, info.Account.CurrencyIsoCode)</strong>).</text>
+                    </span>
                 }
                 else
                 {
                     <span>
-                        @foreach (var account in overdraftAccounts)
+                        @foreach (var info in overdraftAccounts)
                         {
-                            if (account != overdraftAccounts[0])
+                            if (info != overdraftAccounts[0])
                             {
                                 <text>, </text>
                             }
-                            <strong>@account.Name</strong> <text>(</text>@FormatAmount(account.OverdraftNotificationAmount, account.CurrencyIsoCode)<text>)</text>
+                            var daysUntil = info.OverdraftDate.DayNumber - today.DayNumber;
+                            <strong>@info.Account.Name</strong>
+                            <text> (</text>
+                            @if (daysUntil == 0)
+                            {
+                                <text>today</text>
+                            }
+                            else
+                            {
+                                <text>on @info.OverdraftDate.ToString("yyyy-MM-dd")</text>
+                            }
+                            <text>, balance: @FormatAmount(info.LowestBalance, info.Account.CurrencyIsoCode))</text>
                         }
                         <text> will fall below their minimum balance thresholds.</text>
                     </span>
@@ -33,8 +57,11 @@
 }
 
 @code {
-    private List<Account> overdraftAccounts = new();
+    private record OverdraftAccountInfo(Account Account, DateOnly OverdraftDate, decimal LowestBalance);
+
+    private List<OverdraftAccountInfo> overdraftAccounts = new();
     private bool hasOverdraftAccounts;
+    private DateOnly today;
     private System.Threading.Timer? timer;
 
     protected override async Task OnInitializedAsync()
@@ -65,7 +92,7 @@
         try
         {
             var db = await DatabaseProvider.GetDatabase();
-            var today = Database.GetToday();
+            today = Database.GetToday();
 
             overdraftAccounts.Clear();
 
@@ -74,8 +101,9 @@
                 var days = account.OverdraftNotificationCheckPeriodDays;
                 var minimumBalance = account.OverdraftNotificationAmount;
 
-                // Check balance for each day in the period
-                var willOverdraft = false;
+                DateOnly? overdraftDate = null;
+                decimal lowestBalance = decimal.MaxValue;
+
                 for (var i = 0; i <= days; i++)
                 {
                     var checkDate = today.AddDays(i);
@@ -83,14 +111,17 @@
 
                     if (balance < minimumBalance)
                     {
-                        willOverdraft = true;
-                        break;
+                        overdraftDate ??= checkDate;
+                        if (balance < lowestBalance)
+                        {
+                            lowestBalance = balance;
+                        }
                     }
                 }
 
-                if (willOverdraft)
+                if (overdraftDate.HasValue)
                 {
-                    overdraftAccounts.Add(account);
+                    overdraftAccounts.Add(new OverdraftAccountInfo(account, overdraftDate.Value, lowestBalance));
                 }
             }
 
