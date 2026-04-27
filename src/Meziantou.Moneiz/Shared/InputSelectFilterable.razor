@@ -176,12 +176,15 @@
             return;
         }
 
-        var searchTerms = searchText.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var searchTerms = searchText
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Select(static term => term.RemoveDiacritics())
+            .ToArray();
 
         _filteredItems = Items
             .Where(item =>
             {
-                var searchableText = GetSearchableText(item);
+                var searchableText = GetSearchableText(item).RemoveDiacritics();
                 return searchTerms.All(term => searchableText.Contains(term, StringComparison.OrdinalIgnoreCase));
             })
             .OrderBy(GetGroupName)
