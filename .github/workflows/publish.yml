@@ -16,10 +16,10 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
     - name: Setup .NET Core
-      uses: actions/setup-dotnet@v5
+      uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2 # v5
 
     - name: Install WASM workload
       run: dotnet workload install wasm-tools
@@ -34,10 +34,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-and-test
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
     - name: Setup .NET Core
-      uses: actions/setup-dotnet@v5
+      uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2 # v5
 
     - name: Install WASM workload
       run: dotnet workload install wasm-tools
@@ -48,7 +48,7 @@ jobs:
     - name: Publish
       run: dotnet publish src/Meziantou.Moneiz/Meziantou.Moneiz.csproj --configuration Release --output ${{ env.OUTPUT }} /bl
 
-    - uses: actions/upload-artifact@v7
+    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       if: always()
       with:
         name: binlog
@@ -60,7 +60,7 @@ jobs:
     - name: Build And Deploy
       if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
       id: builddeploy
-      uses: Azure/static-web-apps-deploy@v1
+      uses: Azure/static-web-apps-deploy@1a947af9992250f3bc2e68ad0754c0b0c11566c9 # v1
       with:
         azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
         repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -76,22 +76,22 @@ jobs:
       contents: read
       id-token: write
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
     - name: Setup .NET Core
-      uses: actions/setup-dotnet@v5
+      uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2 # v5
 
     - name: Pack CLI tool
       run: dotnet pack src/Meziantou.Moneiz.Cli/Meziantou.Moneiz.Cli.csproj --configuration Release --output nupkg
 
     - name: Upload CLI package artifact
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       with:
         name: cli-package
         path: nupkg/*.nupkg
 
     - name: NuGet login (OIDC → temp API key)
-      uses: NuGet/login@v1
+      uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1
       id: login
       with:
         user: meziantou
