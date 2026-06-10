@@ -12,11 +12,6 @@ internal sealed partial class DatabaseJsonContext : JsonSerializerContext
 
 public sealed partial class Database
 {
-    private static readonly JsonSerializerOptions DatabaseV1JsonOptions = new()
-    {
-        ReferenceHandler = ReferenceHandler.Preserve,
-    };
-
     private int _deferredEventCount;
     private bool _deferredEventCalled;
 
@@ -82,12 +77,7 @@ public sealed partial class Database
         Database? db;
         if (buffer[0] == 1)
         {
-            await using var compressedStream = new GZipStream(stream, CompressionMode.Decompress);
-            using var textReader = new StreamReader(compressedStream);
-            var json = await textReader.ReadToEndAsync();
-            var db1 = JsonSerializer.Deserialize<V1.Database>(json, DatabaseV1JsonOptions);
-
-            db = db1?.ToDatabase2();
+            throw new InvalidOperationException("database version 1 is not supported anymore");
         }
         else if (buffer[0] == 2)
         {
