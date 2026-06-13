@@ -74,6 +74,62 @@ public class DatabaseTests
     }
 
     [Fact]
+    public void GetPayeeSuggestionsMatchesAndRanksNames()
+    {
+        var account = new Account { Id = 1 };
+        var database = new Database
+        {
+            Payees =
+            {
+                new Payee { Id = 1, Name = "Café Central" },
+                new Payee { Id = 2, Name = "Central Market" },
+                new Payee { Id = 3, Name = "The Central Café" },
+                new Payee { Id = 4, Name = "Coffee Shop" },
+            },
+        };
+
+        Assert.Equal(["Café Central", "The Central Café"], database.GetPayeeSuggestions(account, "cafe central", 10).Select(payee => payee.Name));
+        Assert.Equal(["Central Market", "Café Central", "The Central Café"], database.GetPayeeSuggestions(account, "central", 10).Select(payee => payee.Name));
+        Assert.Equal(["The Central Café"], database.GetPayeeSuggestions(account, "cafe the", 10).Select(payee => payee.Name));
+        Assert.Equal(["Coffee Shop"], database.GetPayeeSuggestions(account, "cofee", 10).Select(payee => payee.Name));
+        Assert.Empty(database.GetPayeeSuggestions(account, "cxfx", 10));
+    }
+
+    [Fact]
+    public void GetPayeeSuggestionsUsesAccountUsageAsTieBreaker()
+    {
+        var selectedAccount = new Account { Id = 1 };
+        var otherAccount = new Account { Id = 2 };
+        var popular = new Payee { Id = 1, Name = "Popular Market" };
+        var recent = new Payee { Id = 2, Name = "Recent Market" };
+        var older = new Payee { Id = 3, Name = "Older Market" };
+        var unused = new Payee { Id = 4, Name = "Unused Market" };
+        var otherAccountPayee = new Payee { Id = 5, Name = "Other Market" };
+        var exact = new Payee { Id = 6, Name = "Market" };
+        var database = new Database
+        {
+            Accounts = { selectedAccount, otherAccount },
+            Payees = { popular, recent, older, unused, otherAccountPayee, exact },
+            Transactions =
+            {
+                new Transaction { Account = selectedAccount, Payee = popular, ValueDate = new DateOnly(2025, 1, 1) },
+                new Transaction { Account = selectedAccount, Payee = popular, ValueDate = new DateOnly(2025, 1, 2) },
+                new Transaction { Account = selectedAccount, Payee = recent, ValueDate = new DateOnly(2025, 2, 1) },
+                new Transaction { Account = selectedAccount, Payee = older, ValueDate = new DateOnly(2025, 1, 1) },
+                new Transaction { Account = otherAccount, Payee = otherAccountPayee, ValueDate = new DateOnly(2025, 3, 1) },
+            },
+        };
+
+        Assert.Equal(
+            ["Popular Market", "Recent Market", "Older Market", "Market"],
+            database.GetPayeeSuggestions(selectedAccount, null, 4).Select(payee => payee.Name));
+        Assert.Equal(
+            ["Market", "Popular Market", "Recent Market", "Older Market"],
+            database.GetPayeeSuggestions(selectedAccount, "market", 4).Select(payee => payee.Name));
+        Assert.Empty(database.GetPayeeSuggestions(selectedAccount, null, 0));
+    }
+
+    [Fact]
     [SuppressMessage("Performance", "CA1869:Cache and reuse 'JsonSerializerOptions' instances")]
     public void DateOnlyJsonConverter()
     {

@@ -77,15 +77,8 @@
             <div class="form-group">
                 <label>
                     Payee
-                    <InputText @bind-Value="_model.Payee" list="Payees" @onfocusout="OnPayeeChanged" />
+                    <InputPayee @bind-Value="_model.Payee" Account="_model.DebitedAccount" ValueCommitted="OnPayeeChanged" />
                 </label>
-
-                <datalist id="Payees">
-                    @foreach (var payee in _database.Payees.OrderBy(p => p.Name))
-                    {
-                        <option value="@payee" />
-                    }
-                </datalist>
             </div>
         }
 

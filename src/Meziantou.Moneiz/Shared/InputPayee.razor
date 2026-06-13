@@ -1,0 +1,188 @@
+@inherits InputBase<string?>
+@inject DatabaseProvider DatabaseProvider
+
+<div class="input-payee @(_isOpen ? "is-open" : "")">
+    <input type="text"
+           class="@CssClass"
+           value="@CurrentValueAsString"
+           autocomplete="off"
+           role="combobox"
+           aria-autocomplete="list"
+           aria-expanded="@_isOpen.ToString().ToLowerInvariant()"
+           aria-controls="@_listId"
+           aria-activedescendant="@GetActiveOptionId()"
+           @attributes="AdditionalAttributes"
+           @oninput="OnInput"
+           @onfocus="Open"
+           @onkeydown="OnKeyDown"
+           @onblur="OnBlur" />
+
+    @if (_isOpen)
+    {
+        <div class="input-payee-suggestions" id="@_listId" role="listbox">
+            @if (_suggestions.Count == 0)
+            {
+                <div class="input-payee-empty">No matching payees</div>
+            }
+            else
+            {
+                @for (var index = 0; index < _suggestions.Count; index++)
+                {
+                    var suggestion = _suggestions[index];
+                    var suggestionIndex = index;
+                    var isHighlighted = suggestionIndex == _highlightedIndex;
+
+                    <div class="input-payee-suggestion @(isHighlighted ? "is-highlighted" : "")"
+                         id="@GetOptionId(suggestionIndex)"
+                         role="option"
+                         aria-selected="@isHighlighted.ToString().ToLowerInvariant()"
+                         @onmousedown="() => SelectSuggestion(suggestion)"
+                         @onmouseenter="() => _highlightedIndex = suggestionIndex">
+                        @suggestion.Name
+                    </div>
+                }
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private const int MaximumSuggestionCount = 10;
+    private readonly string _listId = "input-payee-" + Guid.NewGuid().ToString("N");
+    private Database? _database;
+    private IReadOnlyList<Payee> _suggestions = [];
+    private bool _isOpen;
+    private bool _hasTypedSinceFocus;
+    private int _highlightedIndex = -1;
+
+    [Parameter]
+    public Account? Account { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> ValueCommitted { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _database = await DatabaseProvider.GetDatabase();
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (_isOpen)
+        {
+            UpdateSuggestions();
+        }
+    }
+
+    protected override bool TryParseValueFromString(string? value, [MaybeNullWhen(false)] out string? result, [NotNullWhen(false)] out string? validationErrorMessage)
+    {
+        result = value;
+        validationErrorMessage = null;
+        return true;
+    }
+
+    private void Open()
+    {
+        _isOpen = true;
+        _hasTypedSinceFocus = false;
+        UpdateSuggestions();
+    }
+
+    private void OnInput(ChangeEventArgs eventArgs)
+    {
+        CurrentValueAsString = eventArgs.Value?.ToString();
+        _hasTypedSinceFocus = true;
+        _isOpen = true;
+        UpdateSuggestions();
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs eventArgs)
+    {
+        switch (eventArgs.Key)
+        {
+            case "ArrowDown":
+                if (EnsureOpen())
+                    break;
+
+                if (_suggestions.Count > 0)
+                {
+                    _highlightedIndex = Math.Min(_highlightedIndex + 1, _suggestions.Count - 1);
+                }
+                break;
+
+            case "ArrowUp":
+                if (EnsureOpen())
+                    break;
+
+                if (_suggestions.Count > 0)
+                {
+                    _highlightedIndex = Math.Max(_highlightedIndex - 1, 0);
+                }
+                break;
+
+            case "Enter":
+                if (_isOpen && _highlightedIndex >= 0 && _highlightedIndex < _suggestions.Count)
+                {
+                    await SelectSuggestion(_suggestions[_highlightedIndex]);
+                }
+                else
+                {
+                    await CommitValue();
+                }
+                break;
+
+            case "Escape":
+                _isOpen = false;
+                break;
+        }
+    }
+
+    private async Task SelectSuggestion(Payee payee)
+    {
+        CurrentValueAsString = payee.Name;
+        _isOpen = false;
+        _highlightedIndex = -1;
+        await CommitValue();
+    }
+
+    private async Task OnBlur()
+    {
+        await Task.Delay(150);
+        _isOpen = false;
+        await CommitValue();
+        StateHasChanged();
+    }
+
+    private Task CommitValue()
+    {
+        return ValueCommitted.InvokeAsync(CurrentValue);
+    }
+
+    private void UpdateSuggestions()
+    {
+        _suggestions = _database?.GetPayeeSuggestions(Account, _hasTypedSinceFocus ? CurrentValue : null, MaximumSuggestionCount) ?? [];
+        _highlightedIndex = _suggestions.Count > 0 ? 0 : -1;
+    }
+
+    private bool EnsureOpen()
+    {
+        if (!_isOpen)
+        {
+            _isOpen = true;
+            UpdateSuggestions();
+            return true;
+        }
+
+        return false;
+    }
+
+    private string? GetActiveOptionId()
+    {
+        return _isOpen && _highlightedIndex >= 0 ? GetOptionId(_highlightedIndex) : null;
+    }
+
+    private string GetOptionId(int index)
+    {
+        return $"{_listId}-option-{index.ToString(CultureInfo.InvariantCulture)}";
+    }
+}
