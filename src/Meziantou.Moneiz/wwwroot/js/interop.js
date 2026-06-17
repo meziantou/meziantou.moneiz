@@ -37,6 +37,29 @@ async function MoneizUpdate() {
   location.reload(true);
 }
 
+function MoneizTrapEnterKey(element) {
+  if (!element || element.moneizTrapEnterKey) {
+    return;
+  }
+
+  element.moneizTrapEnterKey = function (event) {
+    if (event.key === "Enter" && element.getAttribute("aria-expanded") === "true" && element.getAttribute("aria-activedescendant")) {
+      event.preventDefault();
+    }
+  };
+
+  element.addEventListener("keydown", element.moneizTrapEnterKey);
+}
+
+function MoneizReleaseTrapEnterKey(element) {
+  if (!element || !element.moneizTrapEnterKey) {
+    return;
+  }
+
+  element.removeEventListener("keydown", element.moneizTrapEnterKey);
+  delete element.moneizTrapEnterKey;
+}
+
 (function () {
   let state = false;
 
