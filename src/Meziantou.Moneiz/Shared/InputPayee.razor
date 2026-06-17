@@ -1,8 +1,11 @@
 @inherits InputBase<string?>
+@implements IAsyncDisposable
 @inject DatabaseProvider DatabaseProvider
+@inject IJSRuntime JSRuntime
 
 <div class="input-payee @(_isOpen ? "is-open" : "")">
     <input type="text"
+           @ref="_input"
            class="@CssClass"
            value="@CurrentValueAsString"
            autocomplete="off"
@@ -50,6 +53,7 @@
     private const int MaximumSuggestionCount = 10;
     private readonly string _listId = "input-payee-" + Guid.NewGuid().ToString("N");
     private Database? _database;
+    private ElementReference _input;
     private IReadOnlyList<Payee> _suggestions = [];
     private bool _isOpen;
     private bool _hasTypedSinceFocus;
@@ -79,6 +83,25 @@
         result = value;
         validationErrorMessage = null;
         return true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("MoneizTrapEnterKey", _input);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("MoneizReleaseTrapEnterKey", _input);
+        }
+        catch (JSDisconnectedException)
+        {
+        }
     }
 
     private void Open()
