@@ -4,7 +4,7 @@
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Meziantou.AspNetCore.Components" Version="2.0.38" />
+    <PackageVersion Include="Meziantou.AspNetCore.Components" Version="2.0.39" />
     <PackageVersion Include="Meziantou.AspNetCore.Components.WebAssembly" Version="1.0.28" />
     <PackageVersion Include="Meziantou.Framework" Version="5.0.23" />
     <PackageVersion Include="Meziantou.Framework.RelativeDate" Version="3.0.1" />
