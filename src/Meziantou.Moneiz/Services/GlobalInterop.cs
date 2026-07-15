@@ -24,6 +24,9 @@ public static partial class GlobalInterop
     [JSImport("globalThis.MoneizGetValue")]
     public static partial Task<string> GetValue(string name);
 
+    [JSImport("globalThis.MoneizHasUpdateAvailable")]
+    public static partial Task<bool> HasUpdateAvailable();
+ 
     public static async Task<bool> GetValue(string name, bool defaultValue)
     {
         var value = await GetValue(name);

@@ -31,10 +31,37 @@ function MoneizDownloadFile(name, content) {
 }
 
 async function MoneizUpdate() {
+  if (!("serviceWorker" in navigator)) {
+    location.reload();
+    return;
+  }
+
   const serviceWorker = await navigator.serviceWorker.ready;
   await serviceWorker.update();
-  await serviceWorker.unregister();
-  location.reload(true);
+  if (serviceWorker.waiting) {
+    const controllerChange = new Promise(resolve => {
+      navigator.serviceWorker.addEventListener("controllerchange", resolve, { once: true });
+    });
+
+    serviceWorker.waiting.postMessage({ type: "SKIP_WAITING" });
+    await controllerChange;
+  }
+
+  location.reload();
+}
+
+async function MoneizHasUpdateAvailable() {
+  if (!("serviceWorker" in navigator)) {
+    return false;
+  }
+
+  const registration = await navigator.serviceWorker.getRegistration();
+  if (!registration) {
+    return false;
+  }
+
+  await registration.update();
+  return !!registration.waiting;
 }
 
 function MoneizTrapEnterKey(element) {
