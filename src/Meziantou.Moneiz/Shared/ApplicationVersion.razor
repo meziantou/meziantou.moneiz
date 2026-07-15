@@ -1,9 +1,9 @@
 ﻿<p>
 	<span style="font-size: 10px" title="@(MoneizAppContext.BuildDate)">Moneiz v@(MoneizAppContext.Version) built on @(BuildDateAttribute.Get()?.ToString("yyyy-MM-dd"))</span>
 
-	@if (!isLastVersion)
+	@if (isUpdateAvailable)
 	{
-		<a href="javascript:MoneizUpdate()" class="new-version-available"><i class="fas fa-sync"></i> Update to the lastest version</a>
+		<a href="javascript:MoneizUpdate()" class="new-version-available"><i class="fas fa-sync"></i> Update to the latest version</a>
 	}
 	else
 	{
@@ -15,39 +15,31 @@
 	<a href="https://github.com/meziantou/meziantou.moneiz/issues" target="_blank"><i class="fas fa-bug"></i> Report issues</a>
 </p>
 
+@implements IDisposable
+
 @code {
-	bool isLastVersion = true;
+	private bool isUpdateAvailable;
+	private System.Threading.Timer? timer;
 
 	protected override async Task OnInitializedAsync()
 	{
-		if (MoneizAppContext.Hash == null)
-			return;
-
-		try
-		{
-			using var client = new HttpClient();
-			var commits = await client.GetFromJsonAsync<Commit[]>("https://api.github.com/repos/meziantou/meziantou.moneiz/commits");
-			if (commits == null)
-				throw new InvalidOperationException("Cannot get commits from GitHub.");
-
-			var lastCommit = commits.FirstOrDefault();
-			if (lastCommit != null)
-			{
-				if (!lastCommit.Sha.EqualsIgnoreCase(MoneizAppContext.Hash))
-				{
-					isLastVersion = false;
-				}
-			}
-		}
-		catch (Exception ex)
-		{
-			Console.WriteLine(ex);
-		}
+		timer = new System.Threading.Timer(CheckForUpdateAvailability, state: null, TimeSpan.FromSeconds(60), TimeSpan.FromMinutes(5));
+		await RefreshUpdateAvailability();
 	}
 
-	private sealed class Commit
+	public void Dispose()
 	{
-		[System.Text.Json.Serialization.JsonPropertyName("sha")]
-		public string? Sha { get; set; }
+		timer?.Dispose();
+	}
+
+	private void CheckForUpdateAvailability(object? state)
+	{
+		InvokeAsync(RefreshUpdateAvailability);
+	}
+
+	private async Task RefreshUpdateAvailability()
+	{
+		isUpdateAvailable = await GlobalInterop.HasUpdateAvailable();
+		StateHasChanged();
 	}
 }
