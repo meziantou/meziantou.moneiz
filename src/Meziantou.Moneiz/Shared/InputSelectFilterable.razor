@@ -1,13 +1,11 @@
 @using Microsoft.AspNetCore.Components.Forms
 @typeparam TItem where TItem : class
 @inherits InputBase<TItem?>
-@inject IJSRuntime JS
 
 <input type="hidden" value="@CurrentValueAsString" />
 
 <div class="@ComponentCssClass @CssClass @(_isOpen ? "is-open" : "")" @attributes="AdditionalAttributes">
     <div class="@($"{ComponentCssClass}-control")"
-         @ref="_control"
          @onclick="ToggleDropdown"
          tabindex="0"
          @onkeydown="OnControlKeyDown">
@@ -19,7 +17,7 @@
 
     @if (_isOpen)
     {
-        <div class="@($"{ComponentCssClass}-dropdown")" style="@_dropdownStyle" @ref="_dropdown">
+        <div class="@($"{ComponentCssClass}-dropdown")" @ref="_dropdown">
             <div class="@($"{ComponentCssClass}-search")">
                 <input type="text"
                        class="@($"{ComponentCssClass}-search-input")"
@@ -89,12 +87,10 @@
 @code {
     private bool _isOpen;
     private string _searchText = string.Empty;
-    private ElementReference _control;
     private ElementReference _searchInput;
     private ElementReference _dropdown;
     private List<TItem>? _filteredItems;
     private int _highlightedIndex = -1;
-    private string? _dropdownStyle;
 
     [Parameter, EditorRequired]
     public required IEnumerable<TItem> Items { get; set; }
@@ -153,7 +149,7 @@
         return false;
     }
 
-    private async Task ToggleDropdown()
+    private void ToggleDropdown()
     {
         _isOpen = !_isOpen;
         if (_isOpen)
@@ -162,13 +158,6 @@
             FilterItems();
             _highlightedIndex = CurrentValue is not null ?
                 (_filteredItems?.FindIndex(i => AreItemsEqual(i, CurrentValue)) ?? -1) : -1;
-
-            var rect = await JS.InvokeAsync<DropdownPosition>("MoneizGetBoundingClientRect", _control);
-            _dropdownStyle = FormattableString.Invariant($"position: fixed; top: {rect.Bottom}px; left: {rect.Left}px; width: {rect.Width}px; right: auto;");
-        }
-        else
-        {
-            _dropdownStyle = null;
         }
     }
 
@@ -264,7 +253,7 @@
     {
         if (e.Key == "Enter" || e.Key == " ")
         {
-            await ToggleDropdown();
+            ToggleDropdown();
         }
         else if (_isOpen)
         {
@@ -276,7 +265,6 @@
     {
         await Task.Delay(200);
         _isOpen = false;
-        _dropdownStyle = null;
         StateHasChanged();
     }
 
@@ -297,6 +285,4 @@
 
         return displayName;
     }
-
-    private sealed record DropdownPosition(double Bottom, double Left, double Width);
 }

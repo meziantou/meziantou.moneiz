@@ -72,3 +72,8 @@
     position: relative;
     z-index: 1;
   }
+
+.inline-category-editor-overlay {
+  position: fixed;
+  z-index: 2000;
+}

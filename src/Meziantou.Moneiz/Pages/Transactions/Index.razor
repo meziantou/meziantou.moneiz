@@ -9,6 +9,7 @@
 @inject DatabaseProvider DatabaseProvider
 @inject UrlService UrlService
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 
 @if (account is not null)
 {
@@ -141,14 +142,13 @@ else
                     {
                         <td title="@transaction.Account!.ToString()">@transaction.Account.ToString()</td>
                     }
-                    <td class="@GetInlineEditCellClass(transaction, EditColumn.Category)"
+                    <td id="@GetCategoryEditorCellId(transaction)"
+                        class="@GetInlineEditCellClass(transaction, EditColumn.Category)"
                         title="@transaction.Category?.Name"
                         @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Category)">
                         @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Category)
                         {
-                            <EditForm Model="currentEdit" Context="editContext">
-                                <InputSelectCategory @bind-Value="currentEdit.Category" @bind-Value:after="EndInlineEdit" IsOptional="true" />
-                            </EditForm>
+                            @currentEdit.Category?.Name
                         }
                         else
                         {
@@ -227,6 +227,15 @@ else
             </tr>
         }
     </table>
+
+    @if (currentEdit is not null && editColumn == EditColumn.Category && inlineCategoryEditorStyle is not null)
+    {
+        <div class="inline-category-editor-overlay" style="@inlineCategoryEditorStyle">
+            <EditForm Model="currentEdit" Context="editContext">
+                <InputSelectCategory @bind-Value="currentEdit.Category" @bind-Value:after="EndInlineEdit" IsOptional="true" />
+            </EditForm>
+        </div>
+    }
 }
 
 
@@ -240,6 +249,7 @@ else
     TransactionEdit? currentEdit = null;
     EditColumn editColumn;
     ElementReference inlineEditorInput;
+    string? inlineCategoryEditorStyle;
 
     [Parameter]
     public int? AccountId { get; set; }
@@ -443,11 +453,21 @@ else
         Console.WriteLine($"LoadTransactions: {sw.ElapsedMilliseconds}ms");
     }
 
-    private void BeginInlineEdit(Transaction transaction, EditColumn column)
+    private async Task BeginInlineEdit(Transaction transaction, EditColumn column)
     {
         currentEdit = TransactionEdit.FromTransaction(transaction, editCurrentTransaction: true);
         editColumn = column;
+        inlineCategoryEditorStyle = null;
+
+        if (column == EditColumn.Category)
+        {
+            var rect = await JSRuntime.InvokeAsync<BoundingClientRect>("MoneizGetBoundingClientRectById", GetCategoryEditorCellId(transaction));
+            inlineCategoryEditorStyle = FormattableString.Invariant($"top: {rect.Bottom}px; left: {rect.Left}px; width: {rect.Width}px;");
+        }
     }
+
+    private static string GetCategoryEditorCellId(Transaction transaction)
+        => FormattableString.Invariant($"transaction-category-cell-{transaction.Id}");
 
     private string? GetInlineEditCellClass(Transaction transaction, EditColumn column)
         => currentEdit?.Id == transaction.Id && editColumn == column ? "inline-editing" : null;
@@ -461,6 +481,7 @@ else
         else if (e.Key == "Escape")
         {
             currentEdit = null;
+            inlineCategoryEditorStyle = null;
         }
     }
 
@@ -472,6 +493,7 @@ else
             currentEdit.Save(database);
             await DatabaseProvider.Save();
             currentEdit = null;
+            inlineCategoryEditorStyle = null;
             LoadTransactions();
         }
     }
@@ -493,4 +515,5 @@ else
     }
 
     private record struct TransactionWithAccountBalance(Transaction Transaction, decimal AccountBalanceAfterTransaction);
+    private record struct BoundingClientRect(double Bottom, double Left, double Width);
 }

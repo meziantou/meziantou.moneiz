@@ -87,9 +87,10 @@ function MoneizReleaseTrapEnterKey(element) {
   delete element.moneizTrapEnterKey;
 }
 
-function MoneizGetBoundingClientRect(element) {
-    const rect = element.getBoundingClientRect();
-    return { bottom: rect.bottom, left: rect.left, width: rect.width };
+function MoneizGetBoundingClientRectById(id) {
+  const element = document.getElementById(id);
+  const rect = element.getBoundingClientRect();
+  return { bottom: rect.bottom, left: rect.left, width: rect.width };
 }
 
 (function () {
