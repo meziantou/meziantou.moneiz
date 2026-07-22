@@ -223,7 +223,7 @@ else
 
     @if (currentEdit is not null && inlineEditorStyle is not null)
     {
-        <div class="inline-editor-overlay" style="@inlineEditorStyle">
+        <div class="inline-editor-overlay" style="@inlineEditorStyle" @onkeydown="InlineEditorKeyDown">
             @if (editColumn == EditColumn.Date)
             {
                 <input type="date" @ref="inlineEditorInput"
@@ -492,14 +492,14 @@ else
 
     private async Task InlineEditorKeyDown(KeyboardEventArgs e)
     {
-        if (e.Key == "Enter")
-        {
-            await EndInlineEdit();
-        }
-        else if (e.Key == "Escape")
+        if (e.Key == "Escape")
         {
             currentEdit = null;
             inlineEditorStyle = null;
+        }
+        else if (e.Key == "Enter" && editColumn != EditColumn.Category)
+        {
+            await EndInlineEdit();
         }
     }
 
