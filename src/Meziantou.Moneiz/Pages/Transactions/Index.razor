@@ -123,7 +123,7 @@ else
                             <div class="btn-transaction-status far fa-square" title="@transaction.State" @onclick="() => Check(transaction)"></div>
                         }
                     </td>
-                    <td @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Date)">
+                    <td class="@GetInlineEditCellClass(transaction, EditColumn.Date)" @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Date)">
                         @if (currentEdit?.Id == transaction.Id && editColumn is EditColumn.Date)
                         {
                             <input type="date" @ref="inlineEditorInput"
@@ -141,7 +141,7 @@ else
                     {
                         <td title="@transaction.Account!.Name">@transaction.Account.Name</td>
                     }
-                    <td class="@(currentEdit?.Id == transaction.Id && editColumn == EditColumn.Category ? "inline-editing-category" : null)"
+                    <td class="@GetInlineEditCellClass(transaction, EditColumn.Category)"
                         title="@transaction.Category?.Name"
                         @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Category)">
                         @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Category)
@@ -156,7 +156,7 @@ else
                         }
                     </td>
                     <td title="@transaction.FinalTitle">@transaction.FinalTitle</td>
-                    <td @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Amount)">
+                    <td class="@GetInlineEditCellClass(transaction, EditColumn.Amount)" @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Amount)">
                         @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Amount)
                         {
                             <input type="number" @ref="inlineEditorInput"
@@ -175,7 +175,7 @@ else
                     {
                         <td><Amount Value="@accountBalance" Currency="@transaction.Account!.CurrencyIsoCode" /></td>
                     }
-                    <td @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Comment)">
+                    <td class="@GetInlineEditCellClass(transaction, EditColumn.Comment)" @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Comment)">
                         @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Comment)
                         {
                             <input type="text" @ref="inlineEditorInput"
@@ -437,6 +437,9 @@ else
         currentEdit = TransactionEdit.FromTransaction(transaction, editCurrentTransaction: true);
         editColumn = column;
     }
+
+    private string? GetInlineEditCellClass(Transaction transaction, EditColumn column)
+        => currentEdit?.Id == transaction.Id && editColumn == column ? "inline-editing" : null;
 
     private async Task InlineEditorKeyDown(KeyboardEventArgs e)
     {
