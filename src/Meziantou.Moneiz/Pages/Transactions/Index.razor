@@ -9,6 +9,7 @@
 @inject DatabaseProvider DatabaseProvider
 @inject UrlService UrlService
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 
 @if (account is not null)
 {
@@ -123,14 +124,12 @@ else
                             <div class="btn-transaction-status far fa-square" title="@transaction.State" @onclick="() => Check(transaction)"></div>
                         }
                     </td>
-                    <td class="@GetInlineEditCellClass(transaction, EditColumn.Date)" @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Date)">
+                    <td id="@GetInlineEditorCellId(transaction, EditColumn.Date)"
+                        class="@GetInlineEditCellClass(transaction, EditColumn.Date)"
+                        @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Date)">
                         @if (currentEdit?.Id == transaction.Id && editColumn is EditColumn.Date)
                         {
-                            <input type="date" @ref="inlineEditorInput"
-                                   value="@BindConverter.FormatValue(currentEdit.ValueDate, "yyyy-MM-dd", CultureInfo.InvariantCulture)"
-                                   @oninput="e => currentEdit.ValueDate = ParseDate((string?)e.Value, currentEdit.ValueDate)"
-                                   @onkeydown="e => InlineEditorKeyDown(e)"
-                                   @onblur="e => EndInlineEdit()" />
+                            <UserDate Date="@transaction.ValueDate" />
                         }
                         else
                         {
@@ -141,14 +140,13 @@ else
                     {
                         <td title="@transaction.Account!.ToString()">@transaction.Account.ToString()</td>
                     }
-                    <td class="@GetInlineEditCellClass(transaction, EditColumn.Category)"
+                    <td id="@GetInlineEditorCellId(transaction, EditColumn.Category)"
+                        class="@GetInlineEditCellClass(transaction, EditColumn.Category)"
                         title="@transaction.Category?.Name"
                         @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Category)">
                         @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Category)
                         {
-                            <EditForm Model="currentEdit" Context="editContext">
-                                <InputSelectCategory @bind-Value="currentEdit.Category" @bind-Value:after="EndInlineEdit" IsOptional="true" />
-                            </EditForm>
+                            @currentEdit.Category?.Name
                         }
                         else
                         {
@@ -156,15 +154,12 @@ else
                         }
                     </td>
                     <td title="@transaction.FinalTitle">@transaction.FinalTitle</td>
-                    <td class="@GetInlineEditCellClass(transaction, EditColumn.Amount)" @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Amount)">
+                    <td id="@GetInlineEditorCellId(transaction, EditColumn.Amount)"
+                        class="@GetInlineEditCellClass(transaction, EditColumn.Amount)"
+                        @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Amount)">
                         @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Amount)
                         {
-                            <input type="number" @ref="inlineEditorInput"
-                                   step="0.01"
-                                   value="@currentEdit.Amount.ToString(CultureInfo.InvariantCulture)"
-                                   @oninput="e => { if (decimal.TryParse((string?)e.Value, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture, out var parsedAmount)) currentEdit.Amount = parsedAmount; }"
-                                   @onkeydown="e => InlineEditorKeyDown(e)"
-                                   @onblur="e => EndInlineEdit()" />
+                            <Amount Value="@transaction.Amount" Currency="@transaction.Account!.CurrencyIsoCode" />
                         }
                         else
                         {
@@ -175,14 +170,12 @@ else
                     {
                         <td><Amount Value="@accountBalance" Currency="@transaction.Account!.CurrencyIsoCode" /></td>
                     }
-                    <td class="@GetInlineEditCellClass(transaction, EditColumn.Comment)" @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Comment)">
+                    <td id="@GetInlineEditorCellId(transaction, EditColumn.Comment)"
+                        class="@GetInlineEditCellClass(transaction, EditColumn.Comment)"
+                        @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Comment)">
                         @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Comment)
                         {
-                            <input type="text" @ref="inlineEditorInput"
-                                   value="@currentEdit.Comment"
-                                   @oninput="e => currentEdit.Comment = (string?)e.Value"
-                                   @onkeydown="e => InlineEditorKeyDown(e)"
-                                   @onblur="e => EndInlineEdit()" />
+                            @transaction.Comment
                         }
                         else
                         {
@@ -227,6 +220,43 @@ else
             </tr>
         }
     </table>
+
+    @if (currentEdit is not null && inlineEditorStyle is not null)
+    {
+        <div class="inline-editor-overlay" style="@inlineEditorStyle" @onkeydown="InlineEditorKeyDown">
+            @if (editColumn == EditColumn.Date)
+            {
+                <input type="date" @ref="inlineEditorInput"
+                       value="@BindConverter.FormatValue(currentEdit.ValueDate, "yyyy-MM-dd", CultureInfo.InvariantCulture)"
+                       @oninput="e => currentEdit.ValueDate = ParseDate((string?)e.Value, currentEdit.ValueDate)"
+                       @onkeydown="e => InlineEditorKeyDown(e)"
+                       @onblur="e => EndInlineEdit()" />
+            }
+            else if (editColumn == EditColumn.Category)
+            {
+                <EditForm Model="currentEdit" Context="editContext">
+                    <InputSelectCategory @bind-Value="currentEdit.Category" @bind-Value:after="EndInlineEdit" IsOptional="true" />
+                </EditForm>
+            }
+            else if (editColumn == EditColumn.Amount)
+            {
+                <input type="number" @ref="inlineEditorInput"
+                       step="0.01"
+                       value="@currentEdit.Amount.ToString(CultureInfo.InvariantCulture)"
+                       @oninput="e => { if (decimal.TryParse((string?)e.Value, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture, out var parsedAmount)) currentEdit.Amount = parsedAmount; }"
+                       @onkeydown="e => InlineEditorKeyDown(e)"
+                       @onblur="e => EndInlineEdit()" />
+            }
+            else if (editColumn == EditColumn.Comment)
+            {
+                <input type="text" @ref="inlineEditorInput"
+                       value="@currentEdit.Comment"
+                       @oninput="e => currentEdit.Comment = (string?)e.Value"
+                       @onkeydown="e => InlineEditorKeyDown(e)"
+                       @onblur="e => EndInlineEdit()" />
+            }
+        </div>
+    }
 }
 
 
@@ -240,6 +270,8 @@ else
     TransactionEdit? currentEdit = null;
     EditColumn editColumn;
     ElementReference inlineEditorInput;
+    string? inlineEditorStyle;
+    bool focusInlineEditorRequested;
 
     [Parameter]
     public int? AccountId { get; set; }
@@ -282,9 +314,10 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (currentEdit is not null && editColumn != EditColumn.Category && inlineEditorInput.Id is not null)
+        if (focusInlineEditorRequested && currentEdit is not null && editColumn != EditColumn.Category)
         {
-            await inlineEditorInput.FocusAsync();
+            await JSRuntime.InvokeVoidAsync("MoneizFocusIfConnected", inlineEditorInput);
+            focusInlineEditorRequested = false;
         }
     }
 
@@ -443,24 +476,34 @@ else
         Console.WriteLine($"LoadTransactions: {sw.ElapsedMilliseconds}ms");
     }
 
-    private void BeginInlineEdit(Transaction transaction, EditColumn column)
+    private async Task BeginInlineEdit(Transaction transaction, EditColumn column)
     {
         currentEdit = TransactionEdit.FromTransaction(transaction, editCurrentTransaction: true);
         editColumn = column;
+        inlineEditorStyle = null;
+        focusInlineEditorRequested = column != EditColumn.Category;
+
+        var rect = await JSRuntime.InvokeAsync<BoundingClientRect>("MoneizGetElementDocumentRectById", GetInlineEditorCellId(transaction, column));
+        inlineEditorStyle = FormattableString.Invariant($"top: {rect.Top}px; left: {rect.Left}px; min-width: {rect.Width}px;");
     }
+
+    private static string GetInlineEditorCellId(Transaction transaction, EditColumn column)
+        => FormattableString.Invariant($"transaction-inline-editor-{transaction.Id}-{column}");
 
     private string? GetInlineEditCellClass(Transaction transaction, EditColumn column)
         => currentEdit?.Id == transaction.Id && editColumn == column ? "inline-editing" : null;
 
     private async Task InlineEditorKeyDown(KeyboardEventArgs e)
     {
-        if (e.Key == "Enter")
-        {
-            await EndInlineEdit();
-        }
-        else if (e.Key == "Escape")
+        if (e.Key == "Escape")
         {
             currentEdit = null;
+            inlineEditorStyle = null;
+            focusInlineEditorRequested = false;
+        }
+        else if (e.Key == "Enter" && editColumn != EditColumn.Category)
+        {
+            await EndInlineEdit();
         }
     }
 
@@ -472,6 +515,8 @@ else
             currentEdit.Save(database);
             await DatabaseProvider.Save();
             currentEdit = null;
+            inlineEditorStyle = null;
+            focusInlineEditorRequested = false;
             LoadTransactions();
         }
     }
@@ -493,4 +538,5 @@ else
     }
 
     private record struct TransactionWithAccountBalance(Transaction Transaction, decimal AccountBalanceAfterTransaction);
+    private record struct BoundingClientRect(double Top, double Left, double Width);
 }

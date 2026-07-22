@@ -5,9 +5,9 @@
 <input type="hidden" value="@CurrentValueAsString" />
 
 <div class="@ComponentCssClass @CssClass @(_isOpen ? "is-open" : "")" @attributes="AdditionalAttributes">
-    <div class="@($"{ComponentCssClass}-control")" 
-         @onclick="ToggleDropdown" 
-         tabindex="0" 
+    <div class="@($"{ComponentCssClass}-control")"
+         @onclick="ToggleDropdown"
+         tabindex="0"
          @onkeydown="OnControlKeyDown">
         <span class="@($"{ComponentCssClass}-value")">
             @GetDisplayText(CurrentValue)
@@ -156,7 +156,7 @@
         {
             _searchText = string.Empty;
             FilterItems();
-            _highlightedIndex = CurrentValue is not null ? 
+            _highlightedIndex = CurrentValue is not null ?
                 (_filteredItems?.FindIndex(i => AreItemsEqual(i, CurrentValue)) ?? -1) : -1;
         }
     }

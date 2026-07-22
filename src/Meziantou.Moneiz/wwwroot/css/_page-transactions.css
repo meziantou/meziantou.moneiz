@@ -72,3 +72,13 @@
     position: relative;
     z-index: 1;
   }
+
+.inline-editor-overlay {
+  position: absolute;
+  z-index: 2000;
+}
+
+.inline-editor-overlay input {
+  box-sizing: border-box;
+  width: 100%;
+}
