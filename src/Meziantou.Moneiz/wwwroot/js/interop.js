@@ -97,6 +97,14 @@ function MoneizGetElementDocumentRectById(id) {
   };
 }
 
+function MoneizFocusIfConnected(element) {
+  if (!element || !element.isConnected) {
+    return;
+  }
+
+  element.focus();
+}
+
 (function () {
   let state = false;
 

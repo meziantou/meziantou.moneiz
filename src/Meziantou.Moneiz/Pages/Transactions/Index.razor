@@ -271,6 +271,7 @@ else
     EditColumn editColumn;
     ElementReference inlineEditorInput;
     string? inlineEditorStyle;
+    bool focusInlineEditorRequested;
 
     [Parameter]
     public int? AccountId { get; set; }
@@ -313,9 +314,10 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (currentEdit is not null && editColumn != EditColumn.Category && inlineEditorInput.Id is not null)
+        if (focusInlineEditorRequested && currentEdit is not null && editColumn != EditColumn.Category)
         {
-            await inlineEditorInput.FocusAsync();
+            await JSRuntime.InvokeVoidAsync("MoneizFocusIfConnected", inlineEditorInput);
+            focusInlineEditorRequested = false;
         }
     }
 
@@ -479,6 +481,7 @@ else
         currentEdit = TransactionEdit.FromTransaction(transaction, editCurrentTransaction: true);
         editColumn = column;
         inlineEditorStyle = null;
+        focusInlineEditorRequested = column != EditColumn.Category;
 
         var rect = await JSRuntime.InvokeAsync<BoundingClientRect>("MoneizGetElementDocumentRectById", GetInlineEditorCellId(transaction, column));
         inlineEditorStyle = FormattableString.Invariant($"top: {rect.Top}px; left: {rect.Left}px; min-width: {rect.Width}px;");
@@ -496,6 +499,7 @@ else
         {
             currentEdit = null;
             inlineEditorStyle = null;
+            focusInlineEditorRequested = false;
         }
         else if (e.Key == "Enter" && editColumn != EditColumn.Category)
         {
@@ -512,6 +516,7 @@ else
             await DatabaseProvider.Save();
             currentEdit = null;
             inlineEditorStyle = null;
+            focusInlineEditorRequested = false;
             LoadTransactions();
         }
     }
