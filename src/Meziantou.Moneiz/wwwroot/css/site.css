@@ -1211,6 +1211,11 @@ body {
     position: relative;
     z-index: 1;
   }
+
+.inline-category-editor-overlay {
+  position: fixed;
+  z-index: 2000;
+}
 .site-sidebar {
     background: var(--hover-bg);
     border-radius: 8px;
