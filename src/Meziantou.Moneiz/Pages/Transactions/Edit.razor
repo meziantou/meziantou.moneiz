@@ -58,9 +58,43 @@
 		<div class="form-group">
 			<label>
 				Category
-				<InputSelectCategory IsOptional="true" @bind-Value="model.Category" />
+				@if (!_isQuickCreateCategoryVisible)
+				{
+					<InputSelectCategory IsOptional="true" @bind-Value="model.Category" />
+				}
 			</label>
+			<button type="button" class="btn-link" @onclick="ToggleQuickCreateCategory">@(_isQuickCreateCategoryVisible ? "Cancel category creation" : "Create category")</button>
 		</div>
+
+		@if (_isQuickCreateCategoryVisible)
+		{
+			<div class="form-group">
+				<label>
+					Category group
+					<InputText @bind-Value="_quickCreateCategoryGroupName" list="categorygroups-quick-create" />
+					<datalist id="categorygroups-quick-create">
+						@foreach (var group in database!.CategoryGroups.OrderBy(item => item))
+						{
+							<option>@group</option>
+						}
+					</datalist>
+				</label>
+			</div>
+
+			<div class="form-group">
+				<label>
+					Category name
+					<InputText @bind-Value="_quickCreateCategoryName" />
+				</label>
+
+				@if (_quickCreateCategoryErrorMessage is not null)
+				{
+					<div class="validation-message">@_quickCreateCategoryErrorMessage</div>
+				}
+
+				<button type="button" class="btn-link" @onclick="CreateCategory">Save category</button>
+			</div>
+		}
 
 		<div class="form-group">
 			<label>
@@ -94,6 +128,10 @@
 @code {
 	Database? database;
 	TransactionEdit? model;
+	string? _quickCreateCategoryName;
+	string? _quickCreateCategoryGroupName;
+	string? _quickCreateCategoryErrorMessage;
+	bool _isQuickCreateCategoryVisible;
 
 	[Parameter]
 	public int? Id { get; set; }
@@ -129,10 +167,75 @@
 	{
 		Debug.Assert(database != null);
 		Debug.Assert(model != null);
+		if (!await EnsureQuickCreatedCategoryAssigned(displayErrors: false))
+		{
+			return;
+		}
 
 		model.Save(database);
 		await DatabaseProvider.Save();
 		NavigationManager.NavigateToReturnUrlOrHome();
+	}
+
+	private void ToggleQuickCreateCategory()
+	{
+		_isQuickCreateCategoryVisible = !_isQuickCreateCategoryVisible;
+		_quickCreateCategoryErrorMessage = null;
+	}
+
+	private async Task CreateCategory()
+	{
+		if (!await EnsureQuickCreatedCategoryAssigned(displayErrors: true))
+		{
+			return;
+		}
+
+		_quickCreateCategoryName = null;
+		_quickCreateCategoryGroupName = null;
+		_quickCreateCategoryErrorMessage = null;
+		_isQuickCreateCategoryVisible = false;
+	}
+
+	private async Task<bool> EnsureQuickCreatedCategoryAssigned(bool displayErrors)
+	{
+		Debug.Assert(database != null);
+		Debug.Assert(model != null);
+
+		if (!_isQuickCreateCategoryVisible)
+		{
+			return true;
+		}
+
+		var categoryName = _quickCreateCategoryName.TrimAndNullify();
+		if (categoryName is null)
+		{
+			if (displayErrors)
+			{
+				_quickCreateCategoryErrorMessage = "Category name is required";
+			}
+
+			return true;
+		}
+
+		var categoryGroupName = _quickCreateCategoryGroupName.TrimAndNullify();
+		var category = database.Categories.FirstOrDefault(item =>
+			string.Equals(item.Name, categoryName, StringComparison.Ordinal) &&
+			string.Equals(item.GroupName, categoryGroupName, StringComparison.Ordinal));
+
+		if (category is null)
+		{
+			category = new Category
+			{
+				Name = categoryName,
+				GroupName = categoryGroupName,
+			};
+
+			database.SaveCategory(category);
+			await DatabaseProvider.Save();
+		}
+
+		model.Category = category;
+		return true;
 	}
 
 	private void OnPayeeChanged()

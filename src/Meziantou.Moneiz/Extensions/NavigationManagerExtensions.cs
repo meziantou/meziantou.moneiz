@@ -11,6 +11,17 @@ public static class NavigationManagerExtensions
     public static void NavigateToCategories(this NavigationManager navigationManager) => navigationManager.NavigateTo("categories");
     public static void NavigateToPayees(this NavigationManager navigationManager) => navigationManager.NavigateTo("payees");
     public static void NavigateToScheduler(this NavigationManager navigationManager) => navigationManager.NavigateTo("scheduler");
+    public static void NavigateToReturnUrlOrCategories(this NavigationManager navigationManager)
+    {
+        if (navigationManager.TryGetQueryString("returnUrl", out string? url))
+        {
+            navigationManager.NavigateTo(url);
+        }
+        else
+        {
+            navigationManager.NavigateToCategories();
+        }
+    }
 
     public static void NavigateToReturnUrlOrHome(this NavigationManager navigationManager)
     {
