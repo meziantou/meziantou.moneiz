@@ -2,6 +2,10 @@
     padding-left: 20px;
 }
 
+.bigtable-actions button + button {
+    margin-left: 8px;
+}
+
 .bigtable-categorygroup,
 .balancehistory-currency {
     background-color: var(--border-color);

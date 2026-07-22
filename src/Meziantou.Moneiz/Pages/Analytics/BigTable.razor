@@ -1,5 +1,14 @@
 ﻿@using Meziantou.Moneiz.Core.Analytics
 
+@if (HasCollapsibleGroups)
+{
+	<div class="form-group bigtable-actions">
+		<button type="button" @onclick="CollapseAllGroups" disabled="@AreAllGroupsCollapsed">Collapse all</button>
+		<button type="button" @onclick="ExpandAllGroups" disabled="@AreAllGroupsExpanded">Expand all</button>
+	</div>
+}
+
+
 <table class="bigtable">
 	<thead>
 		<tr>
@@ -72,4 +81,19 @@
 
 	[CascadingParameter]
 	public Meziantou.Moneiz.Core.Analytics.AnalyticsOptions Options { get; set; } = null!;
+
+	private IEnumerable<BigTableCategoryGroup> CollapsibleGroups => Model.CategoryGroups.Where(group => !group.IsUnclassified);
+	private bool HasCollapsibleGroups => CollapsibleGroups.Any();
+	private bool AreAllGroupsCollapsed => CollapsibleGroups.All(group => Options.IsGroupCollapsed(group.Name));
+	private bool AreAllGroupsExpanded => CollapsibleGroups.All(group => !Options.IsGroupCollapsed(group.Name));
+
+	private void CollapseAllGroups()
+	{
+		Options.CollapseCategoryGroups(CollapsibleGroups.Select(group => group.Name));
+	}
+
+	private void ExpandAllGroups()
+	{
+		Options.ExpandAllCategoryGroups();
+	}
 }

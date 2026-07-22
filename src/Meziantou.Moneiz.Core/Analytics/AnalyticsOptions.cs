@@ -47,4 +47,22 @@ public sealed class AnalyticsOptions
 
         OptionChanged?.Invoke(this, EventArgs.Empty);
     }
+
+    public void CollapseCategoryGroups(IEnumerable<string?> names)
+    {
+        BigTableCollapsedCategoryGroups.Clear();
+
+        foreach (var name in names)
+        {
+            _ = BigTableCollapsedCategoryGroups.Add(name ?? "");
+        }
+
+        OptionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void ExpandAllCategoryGroups()
+    {
+        BigTableCollapsedCategoryGroups.Clear();
+        OptionChanged?.Invoke(this, EventArgs.Empty);
+    }
 }
