@@ -3,6 +3,10 @@ name: CI
 on:
   push:
 
+concurrency:
+  group: ${{ github.ref == 'refs/heads/main' && 'deploy-main' || github.run_id }}
+  cancel-in-progress: false
+
 env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
   DOTNET_NOLOGO: true
