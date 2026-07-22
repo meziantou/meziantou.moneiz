@@ -139,7 +139,7 @@ else
                     </td>
                     @if (AccountId is null)
                     {
-                        <td title="@transaction.Account!.Name">@transaction.Account.Name</td>
+                        <td title="@transaction.Account!.ToString()">@transaction.Account.ToString()</td>
                     }
                     <td title="@transaction.Category?.Name" @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Category)">
                         @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Category)
