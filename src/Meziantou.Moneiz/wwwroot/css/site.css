@@ -130,6 +130,31 @@ th.bigtable-totals {
 .bigtable-disabled {
     opacity: 50%;
 }
+
+.bigtable-collapse-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0 4px 0 0;
+    line-height: 1;
+    color: inherit;
+    vertical-align: middle;
+}
+
+.bigtable-collapse-icon {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid currentColor;
+    transition: transform 0.15s ease;
+    vertical-align: middle;
+}
+
+    .bigtable-collapse-icon--collapsed {
+        transform: rotate(-90deg);
+    }
 #blazor-error-ui {
     background: lightyellow;
     bottom: 0;

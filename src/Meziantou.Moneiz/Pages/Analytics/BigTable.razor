@@ -15,9 +15,18 @@
 	<tbody>
 		@foreach (var group in Model.CategoryGroups)
 		{
+			var collapsed = Options.IsGroupCollapsed(group.Name);
 			<tr class="bigtable-categorygroup @(!Options.IsGroupEnabled(group.Name) ? "bigtable-disabled" : "")">
 				<td class="bigtable-checkbox"><label><input type="checkbox" @onclick="() => Options.ToggleDisabledCategoryGroup(group.Name)" checked="@Options.IsGroupEnabled(group.Name)" /></label></td>
-				<td class="bigtable-categorygroupname">@group.DisplayName</td>
+				<td class="bigtable-categorygroupname">
+					@if (!group.IsUnclassified)
+					{
+						<button class="bigtable-collapse-btn" title="@(collapsed ? "Expand" : "Collapse")" @onclick="() => Options.ToggleCollapsedCategoryGroup(group.Name)">
+							<span class="bigtable-collapse-icon @(collapsed ? "bigtable-collapse-icon--collapsed" : "")"></span>
+						</button>
+					}
+					@group.DisplayName
+				</td>
 				@foreach (var total in group.Totals)
 				{
 					<td><BigTableCell Cell="total" ShowDetails="ShowDetails" /></td>
@@ -25,7 +34,7 @@
 				<td class="bigtable-totals"><BigTableCell Cell="group.Total" ShowDetails="ShowDetails" /></td>
 			</tr>
 
-			@if (!group.IsUnclassified)
+			@if (!group.IsUnclassified && !collapsed)
 			{
 				@foreach (var category in group.Categories)
 				{

@@ -10,9 +10,11 @@ public sealed class AnalyticsOptions
 
     public ISet<int> BigTableDisabledCategories { get; } = new HashSet<int>();
     public ISet<string> BigTableDisabledCategoryGroups { get; } = new HashSet<string>(StringComparer.Ordinal);
+    public ISet<string> BigTableCollapsedCategoryGroups { get; } = new HashSet<string>(StringComparer.Ordinal);
 
     public bool IsGroupEnabled(string? name) => !BigTableDisabledCategoryGroups.Contains(name ?? "");
     public bool IsCategoryEnabled(int categoryId) => !BigTableDisabledCategories.Contains(categoryId);
+    public bool IsGroupCollapsed(string? name) => BigTableCollapsedCategoryGroups.Contains(name ?? "");
 
     public void ToggleDisabledCategory(int categoryId)
     {
@@ -30,6 +32,17 @@ public sealed class AnalyticsOptions
         if (!BigTableDisabledCategoryGroups.Remove(name))
         {
             _ = BigTableDisabledCategoryGroups.Add(name);
+        }
+
+        OptionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void ToggleCollapsedCategoryGroup(string? name)
+    {
+        name ??= "";
+        if (!BigTableCollapsedCategoryGroups.Remove(name))
+        {
+            _ = BigTableCollapsedCategoryGroups.Add(name);
         }
 
         OptionChanged?.Invoke(this, EventArgs.Empty);
