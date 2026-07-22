@@ -48,8 +48,6 @@ public sealed class AnalyticsOptions
 
         OptionChanged?.Invoke(this, EventArgs.Empty);
     }
-<<<<<<< HEAD
-
     public void CollapseCategoryGroups(IEnumerable<string?> names)
     {
         BigTableCollapsedCategoryGroups.Clear();
