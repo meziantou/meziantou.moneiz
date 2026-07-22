@@ -139,7 +139,7 @@ else
                     </td>
                     @if (AccountId is null)
                     {
-                        <td title="@transaction.Account!.Name">@transaction.Account.Name</td>
+                        <td title="@transaction.Account!.ToString()">@transaction.Account.ToString()</td>
                     }
                     <td class="@GetInlineEditCellClass(transaction, EditColumn.Category)"
                         title="@transaction.Category?.Name"
