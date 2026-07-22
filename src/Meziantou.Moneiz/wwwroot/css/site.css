@@ -1205,6 +1205,12 @@ body {
     text-overflow: ellipsis;
     overflow: hidden;
   }
+
+  .transaction-list td.inline-editing {
+    overflow: visible;
+    position: relative;
+    z-index: 1;
+  }
 .site-sidebar {
     background: var(--hover-bg);
     border-radius: 8px;

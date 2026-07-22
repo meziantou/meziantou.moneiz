@@ -66,3 +66,9 @@
     text-overflow: ellipsis;
     overflow: hidden;
   }
+
+  .transaction-list td.inline-editing {
+    overflow: visible;
+    position: relative;
+    z-index: 1;
+  }
