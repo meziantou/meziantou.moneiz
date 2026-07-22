@@ -7,13 +7,26 @@
 	<a class="btn" href="/payees/create">Create payee</a>
 </div>
 
-<Repeater Items="@database?.Payees.OrderBy(c => c.Name)">
+<Repeater Items="@SortedPayees">
 	<RepeaterContainerTemplate>
 		<table>
 			<thead>
 				<tr>
-					<th>Name</th>
-					<th>Default category</th>
+					<th>
+						<button type="button" style="background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer;" @onclick="() => SetSort(SortColumn.Name)">
+							Name@SortDirectionIcon(SortColumn.Name)
+						</button>
+					</th>
+					<th>
+						<button type="button" style="background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer;" @onclick="() => SetSort(SortColumn.DefaultCategory)">
+							Default category@SortDirectionIcon(SortColumn.DefaultCategory)
+						</button>
+					</th>
+					<th style="text-align: right">
+						<button type="button" style="background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer;" @onclick="() => SetSort(SortColumn.Transactions)">
+							# Transactions@SortDirectionIcon(SortColumn.Transactions)
+						</button>
+					</th>
 					<th></th>
 				</tr>
 			</thead>
@@ -21,10 +34,14 @@
 		</table>
 	</RepeaterContainerTemplate>
 
-	<ItemTemplate Context="payee">
+	<ItemTemplate Context="payeeRow">
 		<tr>
+			@{
+				var payee = payeeRow.Payee;
+			}
 			<td>@payee</td>
 			<td>@payee.DefaultCategory</td>
+			<td style="text-align: right">@payeeRow.TransactionCount</td>
 			<td class="commands">
 				<Dropdown>
 					<li><a class="view-transactions" href="/payees/@payee.Id/transactions"><i class="fas fa-search"></i> View Transactions</a></li>
@@ -38,10 +55,26 @@
 
 @code {
 	Database? database;
+	SortColumn sortColumn = SortColumn.Name;
+	bool sortAscending = true;
 
 	protected override async Task OnInitializedAsync()
 	{
 		database = await DatabaseProvider.GetDatabase();
+	}
+
+	private IEnumerable<PayeeRow>? SortedPayees
+	{
+		get
+		{
+			if (database is null)
+				return null;
+
+			var payees = database.Payees
+				.Select(payee => new PayeeRow(payee, database.Transactions.Count(transaction => transaction.Payee == payee)))
+				.ToList();
+			return GetSortedPayees(payees);
+		}
 	}
 
 	private async Task Delete(Payee payee)
@@ -53,4 +86,54 @@
 			await DatabaseProvider.Save();
 		}
 	}
+
+	private void SetSort(SortColumn column)
+	{
+		if (sortColumn == column)
+		{
+			sortAscending = !sortAscending;
+		}
+		else
+		{
+			sortColumn = column;
+			sortAscending = true;
+		}
+	}
+
+	private IEnumerable<PayeeRow> GetSortedPayees(IEnumerable<PayeeRow> payees)
+	{
+		return sortColumn switch
+		{
+			SortColumn.Name => SortBy(payees, payee => payee.Payee.Name),
+			SortColumn.DefaultCategory => SortBy(payees, payee => payee.Payee.DefaultCategory?.Name),
+			SortColumn.Transactions => sortAscending
+				? payees.OrderBy(payee => payee.TransactionCount).ThenBy(payee => payee.Payee.Name, StringComparer.OrdinalIgnoreCase)
+				: payees.OrderByDescending(payee => payee.TransactionCount).ThenBy(payee => payee.Payee.Name, StringComparer.OrdinalIgnoreCase),
+			_ => payees.OrderBy(payee => payee.Payee.Name, StringComparer.OrdinalIgnoreCase),
+		};
+	}
+
+	private IEnumerable<PayeeRow> SortBy(IEnumerable<PayeeRow> payees, Func<PayeeRow, string?> selector)
+	{
+		return sortAscending
+			? payees.OrderBy(selector, StringComparer.OrdinalIgnoreCase).ThenBy(payee => payee.Payee.Name, StringComparer.OrdinalIgnoreCase)
+			: payees.OrderByDescending(selector, StringComparer.OrdinalIgnoreCase).ThenBy(payee => payee.Payee.Name, StringComparer.OrdinalIgnoreCase);
+	}
+
+	private string SortDirectionIcon(SortColumn column)
+	{
+		if (sortColumn != column)
+			return "";
+
+		return sortAscending ? " ↑" : " ↓";
+	}
+
+	private enum SortColumn
+	{
+		Name,
+		DefaultCategory,
+		Transactions,
+	}
+
+	private readonly record struct PayeeRow(Payee Payee, int TransactionCount);
 }
