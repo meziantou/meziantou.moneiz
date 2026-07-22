@@ -36,7 +36,7 @@ internal static class TransactionQueries
 
         builder.SetTextFilterHandler((transaction, text) =>
         {
-            var amount = ExtractDecimalValues(text)?.LastOrDefault();
+            var amount = ExtractDecimalValues(text).Select(static value => (decimal?)value).LastOrDefault();
             if (MatchStringValue(transaction.FinalTitle, text))
                 return true;
 
