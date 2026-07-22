@@ -16,7 +16,8 @@
 
                 <ul class="navbar-nav navbar-nav-right">
                     <li><DatabaseNotExported /></li>
-                    <li><a @onclick="() => ToggleFullWidth()"><i class="fas @(fullWidth ? "fa-compress-alt" : "fa-expand-alt")"></i></a></li>
+                    <li><a @onclick="ToggleSidebar"><i class="fas @(sidebarCollapsed ? "fa-angle-double-right" : "fa-angle-double-left")"></i></a></li>
+                    <li><a @onclick="ToggleFullWidth"><i class="fas @(fullWidth ? "fa-compress-alt" : "fa-expand-alt")"></i></a></li>
                     <li>
                         <Dropdown MenuText="My account" MenuIcon="fa-caret-down">
                             <li><a href="/database">Import/Export database</a></li>
@@ -31,7 +32,7 @@
 
     <OverdraftWarning />
 
-    <div class="grid-container container">
+    <div class="grid-container container @(sidebarCollapsed ? "sidebar-collapsed" : "")">
         <NavMenu />
 
         <main class="site-main">
@@ -42,11 +43,13 @@
 
 @code {
     bool fullWidth;
+    bool sidebarCollapsed;
 
     protected override async Task OnInitializedAsync()
     {
         var settings = await SettingsProvider.GetDisplaySettings();
         fullWidth = settings.FullWidth;
+        sidebarCollapsed = settings.SidebarCollapsed;
     }
 
     private async Task ToggleFullWidth()
@@ -54,6 +57,14 @@
         fullWidth = !fullWidth;
         var settings = await SettingsProvider.GetDisplaySettings();
         settings.FullWidth = fullWidth;
+        await SettingsProvider.SetDisplaySettings(settings);
+    }
+
+    private async Task ToggleSidebar()
+    {
+        sidebarCollapsed = !sidebarCollapsed;
+        var settings = await SettingsProvider.GetDisplaySettings();
+        settings.SidebarCollapsed = sidebarCollapsed;
         await SettingsProvider.SetDisplaySettings(settings);
     }
 }
