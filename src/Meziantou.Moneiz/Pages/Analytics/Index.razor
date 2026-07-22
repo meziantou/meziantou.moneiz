@@ -71,6 +71,15 @@
 			<input type="date" id="PeriodTo" @bind-value="@options.ToDate" />
 		</div>
 
+		<div class="form-group">
+			<label for="BigTableDateGrouping">Big table grouping</label>
+			<select id="BigTableDateGrouping" @bind="@options.BigTableDateGrouping">
+				<option value="@BigTableDateGrouping.Month">Month</option>
+				<option value="@BigTableDateGrouping.Quarter">Quarter</option>
+				<option value="@BigTableDateGrouping.Year">Year</option>
+			</select>
+		</div>
+
 		<button type="button" @onclick="() => Generate()">Generate</button>
 
 		@if (model != null)
