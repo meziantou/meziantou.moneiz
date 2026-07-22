@@ -141,7 +141,18 @@ else
                     {
                         <td title="@transaction.Account!.Name">@transaction.Account.Name</td>
                     }
-                    <td title="@transaction.Category">@transaction.Category?.Name</td>
+                    <td title="@transaction.Category?.Name" @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Category)">
+                        @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Category)
+                        {
+                            <EditForm Model="currentEdit" Context="editContext">
+                                <InputSelectCategory @bind-Value="currentEdit.Category" @bind-Value:after="EndInlineEdit" IsOptional="true" />
+                            </EditForm>
+                        }
+                        else
+                        {
+                            @transaction.Category?.Name
+                        }
+                    </td>
                     <td title="@transaction.FinalTitle">@transaction.FinalTitle</td>
                     <td @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Amount)">
                         @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Amount)
@@ -268,7 +279,7 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (currentEdit is not null && inlineEditorInput.Id is not null)
+        if (currentEdit is not null && editColumn != EditColumn.Category && inlineEditorInput.Id is not null)
         {
             await inlineEditorInput.FocusAsync();
         }
@@ -462,6 +473,7 @@ else
         Amount,
         Comment,
         Date,
+        Category,
     }
 
     private record struct TransactionWithAccountBalance(Transaction Transaction, decimal AccountBalanceAfterTransaction);
