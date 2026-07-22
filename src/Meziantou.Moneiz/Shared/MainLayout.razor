@@ -31,7 +31,7 @@
 
     <OverdraftWarning />
 
-    <div class="grid-container container">
+    <div class="grid-container container" style="@(sidebarMaxWidth.HasValue ? $"--sidebar-max-width: {sidebarMaxWidth.Value}px" : "")">
         <NavMenu />
 
         <main class="site-main">
@@ -42,11 +42,13 @@
 
 @code {
     bool fullWidth;
+    int? sidebarMaxWidth;
 
     protected override async Task OnInitializedAsync()
     {
         var settings = await SettingsProvider.GetDisplaySettings();
         fullWidth = settings.FullWidth;
+        sidebarMaxWidth = settings.SidebarMaxWidth;
     }
 
     private async Task ToggleFullWidth()
