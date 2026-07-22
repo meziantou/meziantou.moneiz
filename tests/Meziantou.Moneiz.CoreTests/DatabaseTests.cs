@@ -130,6 +130,38 @@ public class DatabaseTests
     }
 
     [Fact]
+    public void MoveAccountBeforeReordersAccounts()
+    {
+        var database = new Database();
+        var account1 = new Account { Name = "Account 1" };
+        var account2 = new Account { Name = "Account 2" };
+        var account3 = new Account { Name = "Account 3" };
+        database.SaveAccount(account1);
+        database.SaveAccount(account2);
+        database.SaveAccount(account3);
+
+        var updated = database.MoveAccountBefore(account3, account1);
+
+        Assert.True(updated);
+        Assert.Equal([account3, account1, account2], database.VisibleAccounts);
+    }
+
+    [Fact]
+    public void MoveAccountBeforeDoesNotMoveAcrossOpenAndClosedAccounts()
+    {
+        var database = new Database();
+        var openedAccount = new Account { Name = "Opened account" };
+        var closedAccount = new Account { Name = "Closed account", Closed = true };
+        database.SaveAccount(openedAccount);
+        database.SaveAccount(closedAccount);
+
+        var updated = database.MoveAccountBefore(closedAccount, openedAccount);
+
+        Assert.False(updated);
+        Assert.Equal([openedAccount, closedAccount], database.Accounts.Sort());
+    }
+
+    [Fact]
     [SuppressMessage("Performance", "CA1869:Cache and reuse 'JsonSerializerOptions' instances")]
     public void DateOnlyJsonConverter()
     {
