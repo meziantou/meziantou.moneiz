@@ -1212,9 +1212,14 @@ body {
     z-index: 1;
   }
 
-.inline-category-editor-overlay {
-  position: fixed;
+.inline-editor-overlay {
+  position: absolute;
   z-index: 2000;
+}
+
+.inline-editor-overlay input {
+  box-sizing: border-box;
+  width: 100%;
 }
 .site-sidebar {
     background: var(--hover-bg);
