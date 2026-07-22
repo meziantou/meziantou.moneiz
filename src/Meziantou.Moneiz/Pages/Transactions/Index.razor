@@ -141,7 +141,9 @@ else
                     {
                         <td title="@transaction.Account!.Name">@transaction.Account.Name</td>
                     }
-                    <td title="@transaction.Category?.Name" @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Category)">
+                    <td class="@(currentEdit?.Id == transaction.Id && editColumn == EditColumn.Category ? "inline-editing-category" : null)"
+                        title="@transaction.Category?.Name"
+                        @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Category)">
                         @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Category)
                         {
                             <EditForm Model="currentEdit" Context="editContext">
