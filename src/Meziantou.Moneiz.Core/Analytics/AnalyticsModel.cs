@@ -74,19 +74,27 @@ public sealed class AnalyticsModel
     {
         var fromDate = options.FromDate;
         var toDate = options.ToDate;
+        var dateGrouping = options.BigTableDateGrouping;
 
         var transactionGroups = database.Transactions
             .Where(t => t.Account is not null && options.SelectedAccounts.Contains(t.Account) && t.ValueDate >= fromDate && t.ValueDate <= toDate)
             .GroupBy(c => c.Category);
 
+        var firstBucketDate = GetDateBucketStart(fromDate, dateGrouping);
+        var lastBucketDate = GetDateBucketStart(toDate, dateGrouping);
+        var bucketIncrementInMonths = GetBucketIncrementInMonths(dateGrouping);
+        var dates = new List<DateOnly>();
+        for (var date = firstBucketDate; date <= lastBucketDate; date = date.AddMonths(bucketIncrementInMonths))
+        {
+            dates.Add(date);
+        }
+
         var bigTable = new BigTable
         {
-            Dates = new DateOnly[((toDate.Year - fromDate.Year) * 12) + (toDate.Month - fromDate.Month) + 1],
+            DateGrouping = dateGrouping,
+            Dates = [.. dates],
         };
-        for (var i = 0; i < bigTable.Dates.Length; i++)
-        {
-            bigTable.Dates[i] = fromDate.AddMonths(i);
-        }
+        var dateToIndex = bigTable.Dates.Select((date, index) => (date, index)).ToDictionary(value => value.date, value => value.index);
 
         foreach (var group in transactionGroups)
         {
@@ -121,7 +129,8 @@ public sealed class AnalyticsModel
             {
                 if (options.IsCategoryEnabled(transaction.CategoryId ?? -1) && options.IsGroupEnabled(transaction.Category?.GroupName ?? ""))
                 {
-                    var index = ((transaction.ValueDate.Year - fromDate.Year) * 12) + (transaction.ValueDate.Month - fromDate.Month);
+                    var bucketDate = GetDateBucketStart(transaction.ValueDate, dateGrouping);
+                    var index = dateToIndex[bucketDate];
                     bigTableCategory.Totals[index].Add(transaction.Amount);
                 }
             }
@@ -135,6 +144,28 @@ public sealed class AnalyticsModel
         }
 
         return bigTable;
+    }
+
+    private static int GetBucketIncrementInMonths(BigTableDateGrouping bigTableDateGrouping)
+    {
+        return bigTableDateGrouping switch
+        {
+            BigTableDateGrouping.Month => 1,
+            BigTableDateGrouping.Quarter => 3,
+            BigTableDateGrouping.Year => 12,
+            _ => throw new ArgumentOutOfRangeException(nameof(bigTableDateGrouping)),
+        };
+    }
+
+    private static DateOnly GetDateBucketStart(DateOnly value, BigTableDateGrouping bigTableDateGrouping)
+    {
+        return bigTableDateGrouping switch
+        {
+            BigTableDateGrouping.Month => new DateOnly(value.Year, value.Month, 1),
+            BigTableDateGrouping.Quarter => new DateOnly(value.Year, ((value.Month - 1) / 3 * 3) + 1, 1),
+            BigTableDateGrouping.Year => new DateOnly(value.Year, 1, 1),
+            _ => throw new ArgumentOutOfRangeException(nameof(bigTableDateGrouping)),
+        };
     }
 
     private sealed class NameComparer : IComparer<BigTableCategoryGroup>, IComparer<BigTableCategory>, IComparer<string>

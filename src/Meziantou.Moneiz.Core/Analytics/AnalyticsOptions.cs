@@ -6,6 +6,7 @@ public sealed class AnalyticsOptions
 
     public DateOnly FromDate { get; set; } = Database.GetToday().AddDays(-30);
     public DateOnly ToDate { get; set; } = Database.GetToday();
+    public BigTableDateGrouping BigTableDateGrouping { get; set; } = BigTableDateGrouping.Month;
     public ISet<Account> SelectedAccounts { get; } = new HashSet<Account>();
 
     public ISet<int> BigTableDisabledCategories { get; } = new HashSet<int>();
@@ -47,7 +48,6 @@ public sealed class AnalyticsOptions
 
         OptionChanged?.Invoke(this, EventArgs.Empty);
     }
-
     public void CollapseCategoryGroups(IEnumerable<string?> names)
     {
         BigTableCollapsedCategoryGroups.Clear();
@@ -65,4 +65,11 @@ public sealed class AnalyticsOptions
         BigTableCollapsedCategoryGroups.Clear();
         OptionChanged?.Invoke(this, EventArgs.Empty);
     }
+}
+
+public enum BigTableDateGrouping
+{
+    Month,
+    Quarter,
+    Year,
 }

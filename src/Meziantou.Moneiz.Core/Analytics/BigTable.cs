@@ -3,6 +3,7 @@
 public sealed class BigTable
 {
     public DateOnly[] Dates { get; set; } = [];
+    public BigTableDateGrouping DateGrouping { get; set; }
     public List<BigTableCategoryGroup> CategoryGroups { get; } = [];
 
     public BigTableValue[] Totals { get; private set; } = [];
