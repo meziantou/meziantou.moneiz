@@ -12,6 +12,7 @@
         <table>
             <thead>
                 <tr>
+                    <th></th>
                     <th>Name</th>
                     <th>Currency</th>
                     <th>Overdraft Warning</th>
@@ -23,7 +24,17 @@
     </RepeaterContainerTemplate>
 
     <ItemTemplate Context="account">
-        <tr>
+        <tr @key="account.Id"
+            class="account-row @(draggedAccount == account ? "dragging" : "")"
+            draggable="true"
+            @ondragstart="() => OnDragStart(account)"
+            @ondragend="OnDragEnd"
+            @ondragover:preventDefault
+            @ondrop:preventDefault
+            @ondrop="() => OnDrop(account)">
+            <td class="drag-handle" title="Drag and drop to reorder">
+                <i class="fas fa-grip-vertical"></i>
+            </td>
             @if (account.Closed)
             {
                 <td>@account (<i class="fas fa-times"></i> closed)</td>
@@ -56,6 +67,7 @@
 
 @code {
     Database? database;
+    Account? draggedAccount;
 
     protected override async Task OnInitializedAsync()
     {
@@ -124,12 +136,35 @@
     }
 
     public async Task Delete(Account account)
-	{
-		Debug.Assert(database != null);
+    {
+        Debug.Assert(database != null);
         if (GlobalInterop.Confirm($"Do you really want to delete '{account}'?"))
         {
             database.RemoveAccount(account);
             await DatabaseProvider.Save();
         }
+    }
+
+    private void OnDragStart(Account account)
+    {
+        draggedAccount = account;
+    }
+
+    private void OnDragEnd()
+    {
+        draggedAccount = null;
+    }
+
+    private async Task OnDrop(Account targetAccount)
+    {
+        if (database is null || draggedAccount is null)
+            return;
+
+        if (database.MoveAccountBefore(draggedAccount, targetAccount))
+        {
+            await DatabaseProvider.Save();
+        }
+
+        draggedAccount = null;
     }
 }

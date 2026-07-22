@@ -35,6 +35,33 @@ public partial class Database
 
     public void MoveDownAccount(Account account) => MoveAccount(account, 1);
 
+    public bool MoveAccountBefore(Account account, Account targetAccount)
+    {
+        if (account == targetAccount || account.Closed != targetAccount.Closed)
+            return false;
+
+        var accounts = Accounts
+            .Where(a => a.Closed == account.Closed)
+            .OrderBy(a => a.SortOrder)
+            .ThenBy(a => a.Name, StringComparer.Ordinal)
+            .ToList();
+
+        if (!accounts.Contains(account) || !accounts.Contains(targetAccount))
+            return false;
+
+        _ = accounts.Remove(account);
+        var targetIndex = accounts.IndexOf(targetAccount);
+        accounts.Insert(targetIndex, account);
+
+        for (var i = 0; i < accounts.Count; i++)
+        {
+            accounts[i].SortOrder = i;
+        }
+
+        RaiseDatabaseChanged();
+        return true;
+    }
+
     private void MoveAccount(Account account, int direction)
     {
         var accounts = Accounts.Sort().ToList();

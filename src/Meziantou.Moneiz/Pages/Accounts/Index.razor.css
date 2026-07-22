@@ -1,0 +1,14 @@
+.account-row {
+  cursor: grab;
+}
+
+.account-row.dragging {
+  opacity: 0.5;
+}
+
+.drag-handle {
+  width: 1%;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--text-color-muted, #888);
+}
