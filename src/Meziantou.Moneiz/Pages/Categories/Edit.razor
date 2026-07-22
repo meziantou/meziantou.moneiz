@@ -76,7 +76,7 @@
 
         database.SaveCategory(category);
         await DatabaseProvider.Save();
-        NavigationManager.NavigateToCategories();
+        NavigationManager.NavigateToReturnUrlOrCategories();
     }
 
     private sealed class EditModel
