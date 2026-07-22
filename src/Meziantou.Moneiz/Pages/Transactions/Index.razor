@@ -189,7 +189,8 @@ else
                     </td>
                     <td class="commands">
                         <Dropdown>
-                            <li><a href="@UrlService.DuplicateTransaction(transaction)" class="duplicate"><i class="fas fa-copy"></i> Duplicate</a></li>
+                            <li><button type="button" class="btn-link duplicate" @onclick="() => QuickDuplicate(transaction)"><i class="fas fa-copy"></i> Quick duplicate</button></li>
+                            <li><a href="@UrlService.DuplicateTransaction(transaction)" class="duplicate"><i class="fas fa-copy"></i> Duplicate and Edit</a></li>
                             <li><a href="@UrlService.EditTransaction(transaction)" class="view-transactions"><i class="fas fa-pencil-alt"></i> Edit</a></li>
                             <li><button type="button" class="btn-link" @onclick="() => Delete(transaction)"><i class="fas fa-trash" style="color: red"></i> Delete</button></li>
 
@@ -325,6 +326,16 @@ else
             await DatabaseProvider.Save();
             LoadTransactions();
         }
+    }
+
+    private async Task QuickDuplicate(Transaction transaction)
+    {
+		Debug.Assert(database != null);
+        var duplicatedTransaction = TransactionEdit.FromTransaction(transaction, createNewTransaction: true);
+        duplicatedTransaction.ValueDate = Database.GetToday();
+        duplicatedTransaction.Save(database);
+        await DatabaseProvider.Save();
+        LoadTransactions();
     }
 
     private async Task Reconcile()
