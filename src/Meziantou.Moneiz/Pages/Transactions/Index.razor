@@ -147,8 +147,8 @@ else
                         @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Amount)
                         {
                             <input type="number" @ref="inlineEditorInput"
-                                   value="@currentEdit.Amount"
-                                   @oninput="e => currentEdit.Amount = Convert.ToDecimal(e.Value)"
+                                   value="@currentEdit.Amount.ToString(CultureInfo.InvariantCulture)"
+                                   @oninput="e => { if (decimal.TryParse((string?)e.Value, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture, out var parsedAmount)) currentEdit.Amount = parsedAmount; }"
                                    @onkeydown="e => InlineEditorKeyDown(e)"
                                    @onblur="e => EndInlineEdit()" />
                         }
