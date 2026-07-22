@@ -8,6 +8,7 @@ public class MoneizDisplaySettings
     public string? DateFormat { get; set; }
     public bool FullWidth { get; set; }
     public bool SidebarCollapsed { get; set; }
+    public int? SidebarMaxWidth { get; set; } = 400;
 
     public string FormatDate(DateOnly date) => DateFormat is null ? date.ToShortDateString() : date.ToString(DateFormat, CultureInfo.InvariantCulture);
     public string? FormatDate(DateOnly? date) => DateFormat is null ? date?.ToShortDateString() : date?.ToString(DateFormat, CultureInfo.InvariantCulture);

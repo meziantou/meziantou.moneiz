@@ -1,3 +1,11 @@
 ﻿.new-version-available {
   background-color: yellow;
 }
+
+.version-text {
+  font-size: 10px;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

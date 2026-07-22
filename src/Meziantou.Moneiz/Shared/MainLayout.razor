@@ -32,7 +32,7 @@
 
     <OverdraftWarning />
 
-    <div class="grid-container container @(sidebarCollapsed ? "sidebar-collapsed" : "")">
+    <div class="grid-container container @(sidebarCollapsed ? "sidebar-collapsed" : "")" style="@(sidebarMaxWidth.HasValue ? $"--sidebar-max-width: {sidebarMaxWidth.Value}px" : "")">
         <NavMenu />
 
         <main class="site-main">
@@ -44,12 +44,14 @@
 @code {
     bool fullWidth;
     bool sidebarCollapsed;
+    int? sidebarMaxWidth;
 
     protected override async Task OnInitializedAsync()
     {
         var settings = await SettingsProvider.GetDisplaySettings();
         fullWidth = settings.FullWidth;
         sidebarCollapsed = settings.SidebarCollapsed;
+        sidebarMaxWidth = settings.SidebarMaxWidth;
     }
 
     private async Task ToggleFullWidth()
