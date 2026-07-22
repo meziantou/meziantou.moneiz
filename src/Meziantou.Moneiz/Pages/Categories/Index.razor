@@ -7,13 +7,17 @@
     <a class="btn" href="/categories/create">Create category</a>
 </div>
 
-<Repeater Items="@database?.Categories.OrderBy(c => c.GroupName).ThenBy(c => c.Name)">
+<Repeater Items="@SortedCategories">
     <RepeaterContainerTemplate>
         <table>
             <thead>
                 <tr>
-                    <th>Name</th>
-                    <th style="text-align: right"># Transactions</th>
+                    <th @onclick="() => SetSort(SortColumn.Name)" style="cursor: pointer; user-select: none">
+                        Name @GetSortIndicator(SortColumn.Name)
+                    </th>
+                    <th @onclick="() => SetSort(SortColumn.TransactionCount)" style="text-align: right; cursor: pointer; user-select: none">
+                        # Transactions @GetSortIndicator(SortColumn.TransactionCount)
+                    </th>
                     <th></th>
                 </tr>
             </thead>
@@ -21,19 +25,19 @@
         </table>
     </RepeaterContainerTemplate>
 
-    <ItemTemplate Context="category">
+    <ItemTemplate Context="categoryItem">
         <tr>
-            <td>@category</td>
-            <td style="text-align: right">@database!.Transactions.Count(t => t.Category == category)</td>
+            <td>@categoryItem.Category</td>
+            <td style="text-align: right">@categoryItem.TransactionCount</td>
             <td class="commands">
                 <Dropdown>
-                    <li><a class="view-transactions" href="/categories/@category.Id/transactions"><i class="fas fa-search"></i> View Transactions</a></li>
-                    @if (category.GroupName != null)
+                    <li><a class="view-transactions" href="/categories/@categoryItem.Category.Id/transactions"><i class="fas fa-search"></i> View Transactions</a></li>
+                    @if (categoryItem.Category.GroupName != null)
                     {
-                        <li><a class="view-transactions" href="/category-group/@(Uri.EscapeDataString(category.GroupName))/transactions"><i class="fas fa-search"></i> View Transactions with category group '@category.GroupName'</a></li>
+                        <li><a class="view-transactions" href="/category-group/@(Uri.EscapeDataString(categoryItem.Category.GroupName))/transactions"><i class="fas fa-search"></i> View Transactions with category group '@categoryItem.Category.GroupName'</a></li>
                     }
-                    <li><a class="edit" href="/categories/@category.Id/edit"><i class="fas fa-pencil-alt"></i> Edit</a></li>
-                    <li><button type="button" class="btn-link" @onclick="() => Delete(category)"><i class="fas fa-trash" style="color: red"></i> Delete</button></li>
+                    <li><a class="edit" href="/categories/@categoryItem.Category.Id/edit"><i class="fas fa-pencil-alt"></i> Edit</a></li>
+                    <li><button type="button" class="btn-link" @onclick="() => Delete(categoryItem.Category)"><i class="fas fa-trash" style="color: red"></i> Delete</button></li>
                 </Dropdown>
             </td>
         </tr>
@@ -41,11 +45,70 @@
 </Repeater>
 
 @code {
+    private enum SortColumn
+    {
+        Name,
+        TransactionCount,
+    }
+
+    private sealed record CategoryWithTransactionCount(Category Category, int TransactionCount);
+
     Database? database;
+    SortColumn sortColumn = SortColumn.Name;
+    bool sortAscending = true;
+
+    private IEnumerable<CategoryWithTransactionCount> SortedCategories
+    {
+        get
+        {
+            if (database is null)
+            {
+                return Array.Empty<CategoryWithTransactionCount>();
+            }
+
+            var transactionCountByCategory = database.Transactions
+                .Where(t => t.Category is not null)
+                .GroupBy(t => t.Category!)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            var categories = database.Categories
+                .Select(category => new CategoryWithTransactionCount(category, transactionCountByCategory.GetValueOrDefault(category, 0)));
+
+            return (sortColumn, sortAscending) switch
+            {
+                (SortColumn.Name, true) => categories.OrderBy(c => c.Category.ToString(), StringComparer.CurrentCultureIgnoreCase),
+                (SortColumn.Name, false) => categories.OrderByDescending(c => c.Category.ToString(), StringComparer.CurrentCultureIgnoreCase),
+                (SortColumn.TransactionCount, true) => categories.OrderBy(c => c.TransactionCount).ThenBy(c => c.Category.ToString(), StringComparer.CurrentCultureIgnoreCase),
+                _ => categories.OrderByDescending(c => c.TransactionCount).ThenBy(c => c.Category.ToString(), StringComparer.CurrentCultureIgnoreCase),
+            };
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
         database = await DatabaseProvider.GetDatabase();
+    }
+
+    private string GetSortIndicator(SortColumn column)
+    {
+        if (sortColumn != column)
+        {
+            return "";
+        }
+
+        return sortAscending ? "▲" : "▼";
+    }
+
+    private void SetSort(SortColumn column)
+    {
+        if (sortColumn == column)
+        {
+            sortAscending = !sortAscending;
+            return;
+        }
+
+        sortColumn = column;
+        sortAscending = true;
     }
 
     private async Task Delete(Category category)
