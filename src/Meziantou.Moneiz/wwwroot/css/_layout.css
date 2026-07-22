@@ -21,6 +21,10 @@ body {
     height: 100%;
 }
 
+.grid-container.sidebar-collapsed {
+    grid-template-columns: 1fr;
+}
+
 .site-header {
     position: sticky;
     top: 0;
@@ -38,6 +42,15 @@ body {
 .site-main {
     grid-column-start: 2;
     grid-column-end: 3;
+}
+
+.grid-container.sidebar-collapsed .site-sidebar {
+    display: none;
+}
+
+.grid-container.sidebar-collapsed .site-main {
+    grid-column-start: 1;
+    grid-column-end: 2;
 }
 
 .container {
