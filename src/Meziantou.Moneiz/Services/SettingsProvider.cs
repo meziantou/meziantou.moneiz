@@ -19,6 +19,11 @@ public static partial class SettingsProvider
         var result = await GetValue("displaySettings", JsonSettingsContext.Default.MoneizDisplaySettings);
         result ??= new MoneizDisplaySettings();
         result.PageSize = Math.Clamp(result.PageSize, 10, int.MaxValue);
+        if (!Enum.IsDefined(typeof(CategoryDisplayMode), result.CategoryDisplayMode))
+        {
+            result.CategoryDisplayMode = CategoryDisplayMode.Name;
+        }
+
         if (string.IsNullOrWhiteSpace(result.DateFormat))
         {
             result.DateFormat = null;
