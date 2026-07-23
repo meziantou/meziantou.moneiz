@@ -17,12 +17,12 @@ public sealed class AnalyticsModel
             Accounts = accounts,
             PeriodFrom = options.FromDate,
             PeriodTo = options.ToDate,
-            BalanceHistory = BuildBalanceHistory(database, accounts, options.FromDate, options.ToDate),
+            BalanceHistory = BuildBalanceHistory(database, accounts, options.FromDate, options.ToDate, options),
             BigTable = BuildBigTable(database, options),
         };
     }
 
-    private static BalanceHistory BuildBalanceHistory(Database database, IReadOnlyList<Account> accounts, DateOnly fromDate, DateOnly toDate)
+    private static BalanceHistory BuildBalanceHistory(Database database, IReadOnlyList<Account> accounts, DateOnly fromDate, DateOnly toDate, AnalyticsOptions options)
     {
         var result = new BalanceHistory()
         {
@@ -36,7 +36,9 @@ public sealed class AnalyticsModel
 
             var initialBalance = database.GetBalance(account, fromDate.AddDays(-1));
             balances[0] = initialBalance;
-            var transactions = database.Transactions.Where(t => t.Account == account && t.ValueDate >= fromDate && t.ValueDate <= toDate).OrderBy(t => t.ValueDate);
+            var transactions = database.Transactions
+                .Where(t => t.Account == account && t.ValueDate >= fromDate && t.ValueDate <= toDate && options.TransactionMatchesLabelFilter(t))
+                .OrderBy(t => t.ValueDate);
             var currentIndex = 0;
             foreach (var transaction in transactions)
             {
@@ -77,7 +79,7 @@ public sealed class AnalyticsModel
         var dateGrouping = options.BigTableDateGrouping;
 
         var transactionGroups = database.Transactions
-            .Where(t => t.Account is not null && options.SelectedAccounts.Contains(t.Account) && t.ValueDate >= fromDate && t.ValueDate <= toDate)
+            .Where(t => t.Account is not null && options.SelectedAccounts.Contains(t.Account) && t.ValueDate >= fromDate && t.ValueDate <= toDate && options.TransactionMatchesLabelFilter(t))
             .GroupBy(c => c.Category);
 
         var firstBucketDate = GetDateBucketStart(fromDate, dateGrouping);

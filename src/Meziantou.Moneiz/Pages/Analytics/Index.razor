@@ -51,8 +51,23 @@
 			</ul>
 		</div>
 
-		<h2>Period</h2>
-		<div class="form-group">
+		@if (allLabels!.Any())
+		{
+			<h2>Labels</h2>
+			<div class="form-group">
+				<div class="chip-group">
+					<span class="chip-label">Filter:</span>
+					<span class="chip @(!options.IsLabelFilterActive ? "selected" : "")" @onclick="() => SelectAllLabels()">All</span>
+					@foreach (var label in allLabels!)
+					{
+						var capturedLabel = label;
+						<span class="chip @(options.SelectedLabels.Contains(capturedLabel) ? "selected" : "")" @onclick="() => options.ToggleLabel(capturedLabel)">@capturedLabel</span>
+					}
+				</div>
+			</div>
+		}
+
+		<h2>Period</h2>		<div class="form-group">
 			<div class="chip-group">
 				<span class="chip @(IsPeriodSelected("month") ? "selected" : "")" @onclick="() => SelectCurrentMonth()">This month</span>
 				<span class="chip @(IsPeriodSelected("year") ? "selected" : "")" @onclick="() => SelectCurrentYear()">This year</span>
@@ -94,6 +109,7 @@
 @code {
 	Database? database;
 	IList<Account>? allAccounts;
+	IList<string>? allLabels;
 	AnalyticsOptions options = new();
 
 	bool showDetails;
@@ -103,6 +119,7 @@
 	{
 		database = await DatabaseProvider.GetDatabase();
 		allAccounts = database.VisibleAccounts.Concat(database.ClosedAccounts).ToList();
+		allLabels = database.GetAllLabels().ToList();
 		options.SelectedAccounts.AddRange(allAccounts.Where(account => !account.Closed));
 
 		options.OptionChanged += OnOptionsChanged;
@@ -112,6 +129,11 @@
 	{
 		Generate();
 		InvokeAsync(StateHasChanged);
+	}
+
+	private void SelectAllLabels()
+	{
+		options.SelectAllLabels();
 	}
 
 	private void SelectAll()

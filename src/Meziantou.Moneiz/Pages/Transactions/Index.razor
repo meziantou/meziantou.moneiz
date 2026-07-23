@@ -3,6 +3,7 @@
 @page "/categories/{CategoryId:int}/transactions"
 @page "/category-group/{CategoryGroup}/transactions"
 @page "/payees/{PayeeId:int}/transactions"
+@page "/labels/{Label}/transactions"
 @using System.Globalization
 @using System.Diagnostics.CodeAnalysis
 @using System.Diagnostics
@@ -117,6 +118,7 @@ else
                         Comment @GetSortIndicator(SortColumn.Comment)
                     </a>
                 </th>
+                <th>Labels</th>
                 <th></th>
             </tr>
         </thead>
@@ -209,6 +211,18 @@ else
                             @transaction.Comment
                         }
                     </td>
+                    <td id="@GetInlineEditorCellId(transaction, EditColumn.Labels)"
+                        class="@GetInlineEditCellClass(transaction, EditColumn.Labels)"
+                        @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Labels)">
+                        @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Labels)
+                        {
+                            @FormatLabels(transaction.Labels)
+                        }
+                        else
+                        {
+                            @FormatLabels(transaction.Labels)
+                        }
+                    </td>
                     <td class="commands">
                         <Dropdown>
                             <li><button type="button" class="btn-link duplicate" @onclick="() => QuickDuplicate(transaction)"><i class="fas fa-copy"></i> Quick duplicate</button></li>
@@ -228,6 +242,14 @@ else
                                 if (transaction.Category.GroupName != null)
                                 {
                                     <li><a class="view-transactions" href="/category-group/@(Uri.EscapeDataString(transaction.Category.GroupName))/transactions"><i class="fas fa-search"></i> View Transactions with category group '@transaction.Category.GroupName'</a></li>
+                                }
+                            }
+
+                            @if (transaction.Labels is { Length: > 0 })
+                            {
+                                foreach (var txLabel in transaction.Labels)
+                                {
+                                    <li><a class="view-transactions" href="/labels/@(Uri.EscapeDataString(txLabel))/transactions"><i class="fas fa-tag"></i> View Transactions with label '@txLabel'</a></li>
                                 }
                             }
 
@@ -282,6 +304,13 @@ else
                        @onkeydown="e => InlineEditorKeyDown(e)"
                        @onblur="e => EndInlineEdit()" />
             }
+            else if (editColumn == EditColumn.Labels)
+            {
+                <EditForm Model="currentEdit" Context="editContext">
+                    <InputLabels @bind-Value="currentEdit.Labels" />
+                    <button type="button" class="btn-link" @onclick="EndInlineEdit">Done</button>
+                </EditForm>
+            }
         </div>
     }
 }
@@ -311,6 +340,9 @@ else
 
     [Parameter]
     public int? PayeeId { get; set; }
+
+    [Parameter]
+    public string? Label { get; set; }
 
     [Parameter, SupplyParameterFromQuery(Name = "search")]
     public string? Search { get; set; }
@@ -347,6 +379,7 @@ else
             CategoryId is null &&
             CategoryGroup is null &&
             PayeeId is null &&
+            Label is null &&
             !HasSearch &&
             sortColumn is SortColumn.OperationDate &&
             !sortAscending;
@@ -475,6 +508,11 @@ else
         if (!string.IsNullOrEmpty(CategoryGroup))
         {
             result = result.Where(t => string.Equals(t.Category?.GroupName, CategoryGroup, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrEmpty(Label))
+        {
+            result = result.Where(t => t.Labels is not null && t.Labels.Contains(Label, StringComparer.Ordinal));
         }
 
         if (HasSearch)
@@ -630,7 +668,7 @@ else
         currentEdit = TransactionEdit.FromTransaction(transaction, editCurrentTransaction: true);
         editColumn = column;
         inlineEditorStyle = null;
-        focusInlineEditorRequested = column != EditColumn.Category;
+        focusInlineEditorRequested = column != EditColumn.Category && column != EditColumn.Labels;
 
         var rect = await JSRuntime.InvokeAsync<BoundingClientRect>("MoneizGetElementDocumentRectById", GetInlineEditorCellId(transaction, column));
         inlineEditorStyle = FormattableString.Invariant($"top: {rect.Top}px; left: {rect.Left}px; min-width: {rect.Width}px;");
@@ -650,7 +688,7 @@ else
             inlineEditorStyle = null;
             focusInlineEditorRequested = false;
         }
-        else if (e.Key == "Enter" && editColumn != EditColumn.Category)
+        else if (e.Key == "Enter" && editColumn != EditColumn.Category && editColumn != EditColumn.Labels)
         {
             await EndInlineEdit();
         }
@@ -681,12 +719,16 @@ else
     private string? FormatCategory(Category? category)
         => displaySettings.FormatCategory(category);
 
+    private static string? FormatLabels(string[]? labels)
+        => labels is { Length: > 0 } ? string.Join(", ", labels) : null;
+
     private enum EditColumn
     {
         Amount,
         Comment,
         Date,
         Category,
+        Labels,
     }
 
     private enum SortColumn

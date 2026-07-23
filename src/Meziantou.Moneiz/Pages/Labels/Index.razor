@@ -1,0 +1,155 @@
+@page "/labels"
+@inject DatabaseProvider DatabaseProvider
+
+<h1>My labels</h1>
+
+<LoadingIndicator IsLoading="database == null">
+    @if (!_labels.Any())
+    {
+        <p>No labels found. Add labels to your transactions to see them here.</p>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Label</th>
+                    <th style="text-align: right"># Transactions</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in _labels)
+                {
+                    var capturedItem = item;
+                    <tr>
+                        <td>
+                            @if (_renameTarget == capturedItem.Label)
+                            {
+                                <input type="text"
+                                       value="@_renameValue"
+                                       @oninput="e => _renameValue = e.Value?.ToString() ?? string.Empty"
+                                       @onkeydown="e => OnRenameKeyDown(e, capturedItem.Label)"
+                                       @ref="_renameInput" />
+                                <button type="button" class="btn-link" @onclick="() => CommitRename(capturedItem.Label)">Save</button>
+                                <button type="button" class="btn-link" @onclick="CancelRename">Cancel</button>
+                                @if (_renameError is not null)
+                                {
+                                    <span class="validation-message">@_renameError</span>
+                                }
+                            }
+                            else
+                            {
+                                @capturedItem.Label
+                            }
+                        </td>
+                        <td style="text-align: right">
+                            <a href="/labels/@(Uri.EscapeDataString(capturedItem.Label))/transactions">@capturedItem.TransactionCount</a>
+                        </td>
+                        <td class="commands">
+                            <Dropdown>
+                                <li><a class="view-transactions" href="/labels/@(Uri.EscapeDataString(capturedItem.Label))/transactions"><i class="fas fa-search"></i> View transactions</a></li>
+                                <li><button type="button" class="btn-link" @onclick="() => BeginRename(capturedItem.Label)"><i class="fas fa-pencil-alt"></i> Rename</button></li>
+                                <li><button type="button" class="btn-link" @onclick="() => Delete(capturedItem.Label)"><i class="fas fa-trash" style="color: red"></i> Delete</button></li>
+                            </Dropdown>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</LoadingIndicator>
+
+@code {
+    Database? database;
+    List<LabelWithCount> _labels = [];
+    string? _renameTarget;
+    string _renameValue = string.Empty;
+    string? _renameError;
+    ElementReference _renameInput;
+
+    protected override async Task OnInitializedAsync()
+    {
+        database = await DatabaseProvider.GetDatabase();
+        LoadLabels();
+    }
+
+    private void LoadLabels()
+    {
+        if (database is null)
+            return;
+
+        var countByLabel = database.Transactions
+            .Where(t => t.Labels is { Length: > 0 })
+            .SelectMany(t => t.Labels!)
+            .GroupBy(l => l, StringComparer.Ordinal)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        _labels = database.GetAllLabels()
+            .Select(l => new LabelWithCount(l, countByLabel.GetValueOrDefault(l, 0)))
+            .ToList();
+    }
+
+    private void BeginRename(string label)
+    {
+        _renameTarget = label;
+        _renameValue = label;
+        _renameError = null;
+    }
+
+    private void CancelRename()
+    {
+        _renameTarget = null;
+        _renameError = null;
+    }
+
+    private async Task CommitRename(string oldName)
+    {
+        Debug.Assert(database is not null);
+
+        var newName = _renameValue.Trim();
+        if (string.IsNullOrEmpty(newName))
+        {
+            _renameError = "Label name cannot be empty.";
+            return;
+        }
+
+        if (string.Equals(newName, oldName, StringComparison.Ordinal))
+        {
+            CancelRename();
+            return;
+        }
+
+        database.RenameLabel(oldName, newName);
+        await DatabaseProvider.Save();
+        _renameTarget = null;
+        _renameError = null;
+        LoadLabels();
+    }
+
+    private async Task OnRenameKeyDown(KeyboardEventArgs e, string oldName)
+    {
+        if (e.Key == "Enter")
+        {
+            await CommitRename(oldName);
+        }
+        else if (e.Key == "Escape")
+        {
+            CancelRename();
+        }
+    }
+
+    private async Task Delete(string label)
+    {
+        Debug.Assert(database is not null);
+
+        if (GlobalInterop.Confirm($"Do you really want to delete the label '{label}' from all transactions?"))
+        {
+            database.DeleteLabel(label);
+            await DatabaseProvider.Save();
+            LoadLabels();
+        }
+    }
+
+    private sealed record LabelWithCount(string Label, int TransactionCount);
+}

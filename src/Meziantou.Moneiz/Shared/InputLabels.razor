@@ -1,0 +1,128 @@
+@inject DatabaseProvider DatabaseProvider
+
+<div class="input-labels">
+    <div class="input-labels-chips">
+        @foreach (var label in _currentLabels)
+        {
+            var capturedLabel = label;
+            <span class="chip selected input-labels-chip">
+                @capturedLabel
+                <button type="button" class="input-labels-remove" @onclick="() => RemoveLabel(capturedLabel)" aria-label="Remove label @capturedLabel">×</button>
+            </span>
+        }
+    </div>
+    <div class="input-labels-input-row">
+        <input type="text"
+               class="input-labels-input"
+               placeholder="Add label…"
+               list="@_datalistId"
+               value="@_inputValue"
+               @oninput="OnInput"
+               @onkeydown="OnKeyDown"
+               @onchange="OnChange" />
+        <datalist id="@_datalistId">
+            @foreach (var suggestion in _suggestions)
+            {
+                <option value="@suggestion" />
+            }
+        </datalist>
+    </div>
+</div>
+
+@code {
+    private static int _idCounter;
+
+    private readonly string _datalistId = $"input-labels-datalist-{System.Threading.Interlocked.Increment(ref _idCounter)}";
+    private List<string> _currentLabels = [];
+    private List<string> _suggestions = [];
+    private string _inputValue = string.Empty;
+
+    [Parameter]
+    public string[]? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<string[]?> ValueChanged { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var database = await DatabaseProvider.GetDatabase();
+        _suggestions = database.GetAllLabels().ToList();
+    }
+
+    protected override void OnParametersSet()
+    {
+        _currentLabels = Value is { Length: > 0 } ? [.. Value] : [];
+    }
+
+    private async Task AddLabel(string label)
+    {
+        label = label.Trim();
+        if (string.IsNullOrEmpty(label))
+            return;
+
+        // Support comma-separated labels
+        var parts = label.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var changed = false;
+        foreach (var part in parts)
+        {
+            if (!string.IsNullOrEmpty(part) && !_currentLabels.Contains(part, StringComparer.Ordinal))
+            {
+                _currentLabels.Add(part);
+                if (!_suggestions.Contains(part, StringComparer.Ordinal))
+                {
+                    _suggestions.Add(part);
+                    _suggestions.Sort(StringComparer.CurrentCultureIgnoreCase);
+                }
+
+                changed = true;
+            }
+        }
+
+        _inputValue = string.Empty;
+
+        if (changed)
+        {
+            await RaiseValueChanged();
+        }
+    }
+
+    private async Task RemoveLabel(string label)
+    {
+        if (_currentLabels.Remove(label))
+        {
+            await RaiseValueChanged();
+        }
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key is "Enter" or "," or "Tab")
+        {
+            await AddLabel(_inputValue);
+        }
+        else if (e.Key == "Backspace" && string.IsNullOrEmpty(_inputValue) && _currentLabels.Count > 0)
+        {
+            _currentLabels.RemoveAt(_currentLabels.Count - 1);
+            await RaiseValueChanged();
+        }
+    }
+
+    private void OnInput(ChangeEventArgs e)
+    {
+        _inputValue = e.Value?.ToString() ?? string.Empty;
+    }
+
+    private async Task OnChange(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString() ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            await AddLabel(value);
+        }
+    }
+
+    private async Task RaiseValueChanged()
+    {
+        await ValueChanged.InvokeAsync(_currentLabels.Count > 0 ? [.. _currentLabels] : null);
+    }
+}

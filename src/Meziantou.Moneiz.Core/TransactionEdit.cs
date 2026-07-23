@@ -16,6 +16,7 @@ public sealed class TransactionEdit
     public DateOnly ValueDate { get; set; }
     public decimal Amount { get; set; }
     public string? Comment { get; set; }
+    public string[]? Labels { get; set; }
 
     public static TransactionEdit FromTransaction(Transaction transaction, bool createNewTransaction = false, bool editCurrentTransaction = false)
     {
@@ -30,6 +31,7 @@ public sealed class TransactionEdit
             Comment = transaction.Comment,
             Payee = transaction.Payee?.Name,
             ValueDate = transaction.ValueDate,
+            Labels = transaction.Labels,
             _editCurrentTransaction = editCurrentTransaction,
         };
     }
@@ -73,6 +75,7 @@ public sealed class TransactionEdit
             transaction.ValueDate = ValueDate;
             transaction.Amount = !_editCurrentTransaction && InterAccount ? -Math.Abs(Amount) : Amount;
             transaction.Comment = Comment;
+            transaction.Labels = Labels is { Length: > 0 } ? Labels : null;
 
             if (InterAccount)
             {
@@ -94,6 +97,7 @@ public sealed class TransactionEdit
                 creditedTransaction.ValueDate = transaction.ValueDate;
                 creditedTransaction.Amount = -transaction.Amount;
                 creditedTransaction.Comment = Comment;
+                creditedTransaction.Labels = transaction.Labels;
 
                 creditedTransaction.LinkedTransaction = transaction;
                 transaction.LinkedTransaction = creditedTransaction;
