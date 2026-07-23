@@ -69,7 +69,8 @@
   left: 0;
   right: 0;
   z-index: 1000;
-  max-height: 300px;
+  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
   background-color: var(--bg-color);
   border: 1px solid var(--border-color);
   border-top: none;
@@ -106,8 +107,9 @@
 
 /* Options List */
 .input-select-category-options {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
-  max-height: 250px;
 }
 
 /* Group Header */
