@@ -40,7 +40,7 @@
 				var payee = payeeRow.Payee;
 			}
 			<td>@payee</td>
-			<td>@payee.DefaultCategory</td>
+			<td>@FormatCategory(payee.DefaultCategory)</td>
 			<td style="text-align: right">@payeeRow.TransactionCount</td>
 			<td class="commands">
 				<Dropdown>
@@ -55,12 +55,14 @@
 
 @code {
 	Database? database;
+	MoneizDisplaySettings displaySettings = new();
 	SortColumn sortColumn = SortColumn.Name;
 	bool sortAscending = true;
 
 	protected override async Task OnInitializedAsync()
 	{
 		database = await DatabaseProvider.GetDatabase();
+		displaySettings = await SettingsProvider.GetDisplaySettings();
 	}
 
 	private IEnumerable<PayeeRow>? SortedPayees
@@ -105,7 +107,7 @@
 		return sortColumn switch
 		{
 			SortColumn.Name => SortBy(payees, payee => payee.Payee.Name),
-			SortColumn.DefaultCategory => SortBy(payees, payee => payee.Payee.DefaultCategory?.Name),
+			SortColumn.DefaultCategory => SortBy(payees, payee => FormatCategory(payee.Payee.DefaultCategory)),
 			SortColumn.Transactions => sortAscending
 				? payees.OrderBy(payee => payee.TransactionCount).ThenBy(payee => payee.Payee.Name, StringComparer.OrdinalIgnoreCase)
 				: payees.OrderByDescending(payee => payee.TransactionCount).ThenBy(payee => payee.Payee.Name, StringComparer.OrdinalIgnoreCase),
@@ -127,6 +129,9 @@
 
 		return sortAscending ? " ↑" : " ↓";
 	}
+
+	private string? FormatCategory(Category? category)
+		=> displaySettings.FormatCategory(category);
 
 	private enum SortColumn
 	{

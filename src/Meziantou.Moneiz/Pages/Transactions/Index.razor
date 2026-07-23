@@ -150,7 +150,7 @@ else
                         }
                         else
                         {
-                            @transaction.Category?.Name
+                            @FormatCategory(transaction.Category)
                         }
                     </td>
                     <td title="@transaction.FinalTitle">@transaction.FinalTitle</td>
@@ -261,7 +261,7 @@ else
 
 
 @code {
-    MoneizDisplaySettings? displaySettings;
+    MoneizDisplaySettings displaySettings = new();
     Database? database;
     Account? account;
     List<TransactionWithAccountBalance>? transactions;
@@ -442,7 +442,7 @@ else
         result = result.OrderByDescending(t => t.ValueDate).ThenByDescending(t => t.Id);
 
         // Load the transactions we need
-        var list = new List<TransactionWithAccountBalance>(capacity: displaySettings!.PageSize);
+        var list = new List<TransactionWithAccountBalance>(capacity: displaySettings.PageSize);
         var balance = CanShowAccountBalanceOnTransaction && account != null ? database.GetBalance(account) : 0m;
         using var enumerator = result.GetEnumerator();
 
@@ -528,6 +528,9 @@ else
 
         return defaultValue;
     }
+
+    private string? FormatCategory(Category? category)
+        => displaySettings.FormatCategory(category);
 
     private enum EditColumn
     {
