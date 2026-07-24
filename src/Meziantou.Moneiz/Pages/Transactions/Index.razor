@@ -118,8 +118,10 @@ else
                         Comment @GetSortIndicator(SortColumn.Comment)
                     </a>
                 </th>
-                <th>Labels</th>
-                <th></th>
+                @if (displaySettings.ShowLabels)
+                {
+                    <th>Labels</th>
+                }
             </tr>
         </thead>
 
@@ -211,18 +213,21 @@ else
                             @transaction.Comment
                         }
                     </td>
-                    <td id="@GetInlineEditorCellId(transaction, EditColumn.Labels)"
-                        class="@GetInlineEditCellClass(transaction, EditColumn.Labels)"
-                        @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Labels)">
-                        @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Labels)
-                        {
-                            @FormatLabels(transaction.Labels)
-                        }
-                        else
-                        {
-                            @FormatLabels(transaction.Labels)
-                        }
-                    </td>
+                    @if (displaySettings.ShowLabels)
+                    {
+                        <td id="@GetInlineEditorCellId(transaction, EditColumn.Labels)"
+                            class="@GetInlineEditCellClass(transaction, EditColumn.Labels)"
+                            @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Labels)">
+                            @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Labels)
+                            {
+                                @FormatLabels(transaction.Labels)
+                            }
+                            else
+                            {
+                                @FormatLabels(transaction.Labels)
+                            }
+                        </td>
+                    }
                     <td class="commands">
                         <Dropdown>
                             <li><button type="button" class="btn-link duplicate" @onclick="() => QuickDuplicate(transaction)"><i class="fas fa-copy"></i> Quick duplicate</button></li>
