@@ -13,7 +13,7 @@ public class DatabaseTests
         var category1 = new Category { Id = 1, Name = "c1", GroupName = "cg1" };
         var payee1 = new Payee { Id = 1, Name = "p1", DefaultCategory = category1 };
         var account1 = new Account { Id = 1, Name = "a1", CurrencyIsoCode = "USD" };
-        var transaction1 = new Transaction { Account = account1, Amount = 1, Category = category1, CheckedDate = today, Comment = "", Id = 1, Payee = payee1, ValueDate = today, };
+        var transaction1 = new Transaction { Account = account1, Amount = 1, Category = category1, CheckedDate = today, Comment = "", Id = 1, Payee = payee1, ValueDate = today, Labels = ["tag1", "tag2"] };
         var transaction2 = new Transaction { Account = account1, Amount = 1, Category = category1, CheckedDate = today, Comment = "", Id = 2, Payee = payee1, ValueDate = today, };
         var transaction3 = new Transaction { Account = account1, Amount = 1, Category = category1, CheckedDate = today, Comment = "", Id = 3, Payee = payee1, ValueDate = today, LinkedTransaction = transaction2 };
         transaction2.LinkedTransaction = transaction3;
@@ -48,6 +48,8 @@ public class DatabaseTests
         Assert.Same(imported.GetPayeeById(1), imported.GetTransactionById(1)!.Payee);
 
         Assert.Same(imported.GetTransactionById(2), imported.GetTransactionById(3)!.LinkedTransaction);
+        Assert.Equal((IEnumerable<string>)["tag1", "tag2"], imported.GetTransactionById(1)!.Labels);
+        Assert.Null(imported.GetTransactionById(2)!.Labels);
     }
 
     [Fact]
@@ -183,5 +185,83 @@ public class DatabaseTests
         };
         var date = JsonSerializer.Deserialize<DateOnly?>("\"2022-01-02T04:11:43.888Z\"", options);
         Assert.Equal(new DateOnly(2022, 01, 02), date);
+    }
+
+    [Fact]
+    public void RenameLabel_UpdatesAllMatchingTransactions()
+    {
+        var account = new Account { Id = 1 };
+        var t1 = new Transaction { Id = 1, Account = account, Amount = 1, ValueDate = Database.GetToday(), Labels = ["old", "other"] };
+        var t2 = new Transaction { Id = 2, Account = account, Amount = 2, ValueDate = Database.GetToday(), Labels = ["old"] };
+        var t3 = new Transaction { Id = 3, Account = account, Amount = 3, ValueDate = Database.GetToday(), Labels = ["unrelated"] };
+
+        var db = new Database
+        {
+            Accounts = { account },
+            Transactions = { t1, t2, t3 },
+        };
+
+        db.RenameLabel("old", "new");
+
+        Assert.Equal((IEnumerable<string>)["new", "other"], db.GetTransactionById(1)!.Labels);
+        Assert.Equal((IEnumerable<string>)["new"], db.GetTransactionById(2)!.Labels);
+        Assert.Equal((IEnumerable<string>)["unrelated"], db.GetTransactionById(3)!.Labels);
+    }
+
+    [Fact]
+    public void RenameLabel_DeduplicatesWhenNewNameAlreadyPresent()
+    {
+        var account = new Account { Id = 1 };
+        var t1 = new Transaction { Id = 1, Account = account, Amount = 1, ValueDate = Database.GetToday(), Labels = ["old", "new"] };
+
+        var db = new Database
+        {
+            Accounts = { account },
+            Transactions = { t1 },
+        };
+
+        db.RenameLabel("old", "new");
+
+        Assert.Equal((IEnumerable<string>)["new"], db.GetTransactionById(1)!.Labels);
+    }
+
+    [Fact]
+    public void DeleteLabel_RemovesLabelFromAllTransactions()
+    {
+        var account = new Account { Id = 1 };
+        var t1 = new Transaction { Id = 1, Account = account, Amount = 1, ValueDate = Database.GetToday(), Labels = ["remove", "keep"] };
+        var t2 = new Transaction { Id = 2, Account = account, Amount = 2, ValueDate = Database.GetToday(), Labels = ["remove"] };
+        var t3 = new Transaction { Id = 3, Account = account, Amount = 3, ValueDate = Database.GetToday(), Labels = ["keep"] };
+
+        var db = new Database
+        {
+            Accounts = { account },
+            Transactions = { t1, t2, t3 },
+        };
+
+        db.DeleteLabel("remove");
+
+        Assert.Equal((IEnumerable<string>)["keep"], db.GetTransactionById(1)!.Labels);
+        Assert.Null(db.GetTransactionById(2)!.Labels);
+        Assert.Equal((IEnumerable<string>)["keep"], db.GetTransactionById(3)!.Labels);
+    }
+
+    [Fact]
+    public void GetAllLabels_ReturnsDistinctSortedLabels()
+    {
+        var account = new Account { Id = 1 };
+        var t1 = new Transaction { Id = 1, Account = account, Amount = 1, ValueDate = Database.GetToday(), Labels = ["beta", "alpha"] };
+        var t2 = new Transaction { Id = 2, Account = account, Amount = 2, ValueDate = Database.GetToday(), Labels = ["beta", "gamma"] };
+        var t3 = new Transaction { Id = 3, Account = account, Amount = 3, ValueDate = Database.GetToday() };
+
+        var db = new Database
+        {
+            Accounts = { account },
+            Transactions = { t1, t2, t3 },
+        };
+
+        var labels = db.GetAllLabels().ToList();
+
+        Assert.Equal((IEnumerable<string>)["alpha", "beta", "gamma"], labels);
     }
 }

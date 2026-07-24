@@ -95,6 +95,11 @@ static Command CreateAddTransactionCommand()
         Description = "Mark transaction as checked (optional, default: false)"
     };
 
+    var labelsOption = new Option<string?>("--labels")
+    {
+        Description = "Comma-separated list of labels to assign to the transaction (optional)"
+    };
+
     addTransactionCommand.Options.Add(addFileOption);
     addTransactionCommand.Options.Add(addAccountIdOption);
     addTransactionCommand.Options.Add(toAccountIdOption);
@@ -104,6 +109,7 @@ static Command CreateAddTransactionCommand()
     addTransactionCommand.Options.Add(categoryOption);
     addTransactionCommand.Options.Add(commentOption);
     addTransactionCommand.Options.Add(checkedOption);
+    addTransactionCommand.Options.Add(labelsOption);
 
     addTransactionCommand.SetAction(async (parseResult) =>
     {
@@ -116,6 +122,7 @@ static Command CreateAddTransactionCommand()
         var category = parseResult.GetValue(categoryOption);
         var comment = parseResult.GetValue(commentOption);
         var isChecked = parseResult.GetValue(checkedOption);
+        var labels = parseResult.GetValue(labelsOption);
 
         if (file is null)
         {
@@ -123,7 +130,7 @@ static Command CreateAddTransactionCommand()
             return 1;
         }
 
-        return await AddTransactionAsync(file, accountId, toAccountId, amount, valueDate, payee, category, comment, isChecked);
+        return await AddTransactionAsync(file, accountId, toAccountId, amount, valueDate, payee, category, comment, isChecked, labels);
     });
 
     return addTransactionCommand;
@@ -173,6 +180,11 @@ static Command CreateUpdateTransactionCommand()
         Description = "Mark transaction as checked or unchecked (optional, true/false)"
     };
 
+    var labelsOption = new Option<string?>("--labels")
+    {
+        Description = "Comma-separated list of labels to assign to the transaction. Pass empty string to clear labels."
+    };
+
     updateTransactionCommand.Options.Add(updateFileOption);
     updateTransactionCommand.Options.Add(transactionIdOption);
     updateTransactionCommand.Options.Add(amountOption);
@@ -181,6 +193,7 @@ static Command CreateUpdateTransactionCommand()
     updateTransactionCommand.Options.Add(categoryOption);
     updateTransactionCommand.Options.Add(commentOption);
     updateTransactionCommand.Options.Add(checkedOption);
+    updateTransactionCommand.Options.Add(labelsOption);
 
     updateTransactionCommand.SetAction(async (parseResult) =>
     {
@@ -192,6 +205,7 @@ static Command CreateUpdateTransactionCommand()
         var category = parseResult.GetValue(categoryOption);
         var comment = parseResult.GetValue(commentOption);
         var isChecked = parseResult.GetValue(checkedOption);
+        var labels = parseResult.GetValue(labelsOption);
 
         if (file is null)
         {
@@ -199,7 +213,7 @@ static Command CreateUpdateTransactionCommand()
             return 1;
         }
 
-        return await UpdateTransactionAsync(file, transactionId, amount, valueDate, payee, category, comment, isChecked);
+        return await UpdateTransactionAsync(file, transactionId, amount, valueDate, payee, category, comment, isChecked, labels);
     });
 
     return updateTransactionCommand;
@@ -361,7 +375,7 @@ static string FormatAmount(decimal amount, string? currencyCode)
     return $"{sign}{absAmount:N2} {currencyCode ?? ""}".Trim();
 }
 
-static async Task<int> AddTransactionAsync(FileInfo file, int accountId, int? toAccountId, decimal amount, DateOnly? valueDate, string? payeeName, string? categoryName, string? comment, bool isChecked)
+static async Task<int> AddTransactionAsync(FileInfo file, int accountId, int? toAccountId, decimal amount, DateOnly? valueDate, string? payeeName, string? categoryName, string? comment, bool isChecked, string? labelsString)
 {
     if (!file.Exists)
     {
@@ -445,6 +459,9 @@ static async Task<int> AddTransactionAsync(FileInfo file, int accountId, int? to
         }
     }
 
+    // Parse labels
+    var labels = ParseLabels(labelsString);
+
     // Create and save transaction(s)
     Transaction transaction;
     Transaction? linkedTransaction = null;
@@ -460,7 +477,8 @@ static async Task<int> AddTransactionAsync(FileInfo file, int accountId, int? to
             ValueDate = valueDate.Value,
             Category = category,
             Comment = comment,
-            CheckedDate = isChecked ? Database.GetToday() : null
+            CheckedDate = isChecked ? Database.GetToday() : null,
+            Labels = labels,
         };
 
         // Credit transaction (deposit to destination account)
@@ -471,7 +489,8 @@ static async Task<int> AddTransactionAsync(FileInfo file, int accountId, int? to
             ValueDate = valueDate.Value,
             Category = category,
             Comment = comment,
-            CheckedDate = isChecked ? Database.GetToday() : null
+            CheckedDate = isChecked ? Database.GetToday() : null,
+            Labels = labels,
         };
 
         // Link the transactions
@@ -492,7 +511,8 @@ static async Task<int> AddTransactionAsync(FileInfo file, int accountId, int? to
             Payee = payee,
             Category = category,
             Comment = comment,
-            CheckedDate = isChecked ? Database.GetToday() : null
+            CheckedDate = isChecked ? Database.GetToday() : null,
+            Labels = labels,
         };
 
         db.SaveTransaction(transaction);
@@ -536,13 +556,15 @@ static async Task<int> AddTransactionAsync(FileInfo file, int accountId, int? to
         Console.WriteLine($"  Category: {category}");
     if (!string.IsNullOrWhiteSpace(comment))
         Console.WriteLine($"  Comment: {comment}");
+    if (labels is { Length: > 0 })
+        Console.WriteLine($"  Labels: {string.Join(", ", labels)}");
     if (isChecked)
         Console.WriteLine($"  Status: Checked");
 
     return 0;
 }
 
-static async Task<int> UpdateTransactionAsync(FileInfo file, int transactionId, decimal? amount, DateOnly? valueDate, string? payeeName, string? categoryName, string? comment, bool? isChecked)
+static async Task<int> UpdateTransactionAsync(FileInfo file, int transactionId, decimal? amount, DateOnly? valueDate, string? payeeName, string? categoryName, string? comment, bool? isChecked, string? labelsString)
 {
     if (!file.Exists)
     {
@@ -710,6 +732,18 @@ static async Task<int> UpdateTransactionAsync(FileInfo file, int transactionId, 
         }
     }
 
+    // Update labels if specified (null means not specified; non-null means update — empty string means clear)
+    if (labelsString is not null)
+    {
+        var labels = ParseLabels(labelsString);
+        transaction.Labels = labels;
+        if (isLinkedTransaction)
+        {
+            transaction.LinkedTransaction!.Labels = labels;
+            db.SaveTransaction(transaction.LinkedTransaction!);
+        }
+    }
+
     // Save the updated transaction
     db.SaveTransaction(transaction);
 
@@ -742,6 +776,9 @@ static async Task<int> UpdateTransactionAsync(FileInfo file, int transactionId, 
 
     if (!string.IsNullOrWhiteSpace(transaction.Comment))
         Console.WriteLine($"  Comment: {transaction.Comment}");
+
+    if (transaction.Labels is { Length: > 0 })
+        Console.WriteLine($"  Labels: {string.Join(", ", transaction.Labels)}");
 
     if (transaction.CheckedDate.HasValue)
         Console.WriteLine($"  Status: Checked");
@@ -816,6 +853,11 @@ static Command CreateGetTransactionsCommand()
         Description = "Filter by linked transaction ID"
     };
 
+    var labelOption = new Option<string?>("--label")
+    {
+        Description = "Filter by label name (exact match)"
+    };
+
     getTransactionsCommand.Options.Add(fileOption);
     getTransactionsCommand.Options.Add(accountIdOption);
     getTransactionsCommand.Options.Add(payeeIdOption);
@@ -827,6 +869,7 @@ static Command CreateGetTransactionsCommand()
     getTransactionsCommand.Options.Add(checkedOption);
     getTransactionsCommand.Options.Add(reconciliatedOption);
     getTransactionsCommand.Options.Add(linkedTransactionIdOption);
+    getTransactionsCommand.Options.Add(labelOption);
 
     getTransactionsCommand.SetAction(async (parseResult) =>
     {
@@ -841,6 +884,7 @@ static Command CreateGetTransactionsCommand()
         var isChecked = parseResult.GetValue(checkedOption);
         var isReconciliated = parseResult.GetValue(reconciliatedOption);
         var linkedTransactionId = parseResult.GetValue(linkedTransactionIdOption);
+        var label = parseResult.GetValue(labelOption);
 
         if (file is null)
         {
@@ -859,7 +903,8 @@ static Command CreateGetTransactionsCommand()
             toDate,
             isChecked,
             isReconciliated,
-            linkedTransactionId);
+            linkedTransactionId,
+            label);
     });
 
     return getTransactionsCommand;
@@ -876,7 +921,8 @@ static async Task<int> GetTransactionsAsync(
     DateOnly? toDate,
     bool? isChecked,
     bool? isReconciliated,
-    int? linkedTransactionId)
+    int? linkedTransactionId,
+    string? label)
 {
     if (!file.Exists)
     {
@@ -964,6 +1010,11 @@ static async Task<int> GetTransactionsAsync(
         transactions = transactions.Where(t => t.LinkedTransactionId == linkedTransactionId.Value);
     }
 
+    if (!string.IsNullOrEmpty(label))
+    {
+        transactions = transactions.Where(t => t.Labels is not null && t.Labels.Contains(label, StringComparer.Ordinal));
+    }
+
     // Convert to list for serialization
     var transactionsList = transactions.ToList();
 
@@ -983,6 +1034,7 @@ static async Task<int> GetTransactionsAsync(
         CategoryId = t.CategoryId,
         CategoryName = t.Category?.ToString(),
         LinkedTransactionId = t.LinkedTransactionId,
+        Labels = t.Labels,
         State = t.State.ToString()
     }).ToList();
 
@@ -997,4 +1049,17 @@ static async Task<int> GetTransactionsAsync(
     Console.WriteLine(json);
 
     return 0;
+}
+
+static string[]? ParseLabels(string? labelsString)
+{
+    if (labelsString is null)
+        return null;
+
+    var labels = labelsString
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .Distinct(StringComparer.Ordinal)
+        .ToArray();
+
+    return labels.Length > 0 ? labels : null;
 }

@@ -18,6 +18,7 @@ public class MoneizDisplaySettings
     public bool SidebarCollapsed { get; set; }
     public int? SidebarMaxWidth { get; set; } = 400;
     public CategoryDisplayMode CategoryDisplayMode { get; set; } = CategoryDisplayMode.Name;
+    public bool ShowLabels { get; set; } = true;
 
     public string FormatDate(DateOnly date) => DateFormat is null ? date.ToShortDateString() : date.ToString(DateFormat, CultureInfo.InvariantCulture);
     public string? FormatDate(DateOnly? date) => DateFormat is null ? date?.ToShortDateString() : date?.ToString(DateFormat, CultureInfo.InvariantCulture);

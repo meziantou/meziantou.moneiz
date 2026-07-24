@@ -1,4 +1,5 @@
-﻿using Meziantou.Moneiz.Core;
+﻿using System.Globalization;
+using Meziantou.Moneiz.Core;
 using Meziantou.Moneiz.Core.Analytics;
 
 namespace Meziantou.Moneiz.CoreTests;
@@ -91,7 +92,7 @@ public sealed class AnalyticsModelTests
             SelectedAccounts = { account },
         });
 
-        Assert.Equal(expectedDates, string.Join(",", result.BigTable!.Dates.Select(date => date.ToString("yyyy-MM-dd"))));
+        Assert.Equal(expectedDates, string.Join(",", result.BigTable!.Dates.Select(date => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture))));
         Assert.Equal(expectedTotals, string.Join(",", result.BigTable.Totals.Select(total => total.Total)));
     }
 }

@@ -30,6 +30,7 @@ internal static class TransactionQueries
         builder.AddHandler("category", (transaction, text) => MatchStringValue(transaction.Category?.Name, text));
         builder.AddHandler("categoryGroup", (transaction, text) => MatchStringValue(transaction.Category?.GroupName, text));
         builder.AddHandler("comment", (transaction, text) => MatchStringValue(transaction.Comment, text));
+        builder.AddHandler("label", (transaction, text) => transaction.Labels is not null && transaction.Labels.Any(l => MatchStringValue(l, text)));
         builder.AddHandler<TransactionState>("state", (transaction, value) => transaction.State == value);
         builder.AddRangeHandler<DateOnly>("date", (transaction, range) => range.IsInRange(transaction.ValueDate));
         builder.AddRangeHandler<decimal>("amount", (transaction, range) => range.IsInRange(transaction.Amount));
@@ -51,6 +52,15 @@ internal static class TransactionQueries
 
             if (MatchStringValue(transaction.Comment, text))
                 return true;
+
+            if (transaction.Labels is not null)
+            {
+                foreach (var label in transaction.Labels)
+                {
+                    if (MatchStringValue(label, text))
+                        return true;
+                }
+            }
 
             if (amount.HasValue)
             {

@@ -101,6 +101,9 @@ public sealed class Transaction
         set => _linkedTransactionId = value;
     }
 
+    [JsonPropertyName("k")]
+    public string[]? Labels { get; set; }
+
     [JsonIgnore]
     public string? FinalTitle => Payee?.ToString() ?? LinkedTransaction?.Account?.ToString();
 
