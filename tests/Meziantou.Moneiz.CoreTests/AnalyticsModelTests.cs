@@ -95,4 +95,50 @@ public sealed class AnalyticsModelTests
         Assert.Equal(expectedDates, string.Join(",", result.BigTable!.Dates.Select(date => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture))));
         Assert.Equal(expectedTotals, string.Join(",", result.BigTable.Totals.Select(total => total.Total)));
     }
+
+    [Fact]
+    public void ComputeModel_CustomFilter_IsCombinedWithLabelFilter()
+    {
+        var database = new Database();
+        var account = new Account();
+        database.Accounts.Add(account);
+
+        database.Transactions.Add(new Transaction
+        {
+            Account = account,
+            ValueDate = new DateOnly(2023, 1, 1),
+            Amount = 10m,
+            Labels = ["keep"],
+        });
+
+        database.Transactions.Add(new Transaction
+        {
+            Account = account,
+            ValueDate = new DateOnly(2023, 1, 2),
+            Amount = 6m,
+            Labels = ["drop-by-label"],
+        });
+
+        database.Transactions.Add(new Transaction
+        {
+            Account = account,
+            ValueDate = new DateOnly(2023, 1, 3),
+            Amount = -4m,
+            Labels = ["keep"],
+        });
+
+        var options = new AnalyticsOptions
+        {
+            FromDate = new DateOnly(2023, 1, 1),
+            ToDate = new DateOnly(2023, 1, 3),
+            TransactionFilter = static t => t.Amount > 0,
+            SelectedAccounts = { account },
+            SelectedLabels = { "keep" },
+        };
+
+        var result = AnalyticsModel.Build(database, options);
+
+        Assert.Equal(10m, result.BigTable!.Totals[^1].Total);
+        Assert.Equal(10m, result.BalanceHistory!.BalancesByAccount[0].Difference);
+    }
 }
