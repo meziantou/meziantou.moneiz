@@ -10,6 +10,7 @@ public sealed class AnalyticsOptions
     public ISet<Account> SelectedAccounts { get; } = new HashSet<Account>();
 
     public ISet<string> SelectedLabels { get; } = new HashSet<string>(StringComparer.Ordinal);
+    public Predicate<Transaction>? TransactionFilter { get; set; }
 
     public ISet<int> BigTableDisabledCategories { get; } = new HashSet<int>();
     public ISet<string> BigTableDisabledCategoryGroups { get; } = new HashSet<string>(StringComparer.Ordinal);
@@ -28,6 +29,11 @@ public sealed class AnalyticsOptions
             return false;
 
         return transaction.Labels.Any(l => SelectedLabels.Contains(l));
+    }
+
+    public bool TransactionMatchesFilter(Transaction transaction)
+    {
+        return TransactionMatchesLabelFilter(transaction) && (TransactionFilter?.Invoke(transaction) ?? true);
     }
 
     public bool IsGroupEnabled(string? name) => !BigTableDisabledCategoryGroups.Contains(name ?? "");

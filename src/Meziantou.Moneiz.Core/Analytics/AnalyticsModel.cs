@@ -37,7 +37,7 @@ public sealed class AnalyticsModel
             var initialBalance = database.GetBalance(account, fromDate.AddDays(-1));
             balances[0] = initialBalance;
             var transactions = database.Transactions
-                .Where(t => t.Account == account && t.ValueDate >= fromDate && t.ValueDate <= toDate && options.TransactionMatchesLabelFilter(t))
+                .Where(t => t.Account == account && t.ValueDate >= fromDate && t.ValueDate <= toDate && options.TransactionMatchesFilter(t))
                 .OrderBy(t => t.ValueDate);
             var currentIndex = 0;
             foreach (var transaction in transactions)
@@ -79,7 +79,7 @@ public sealed class AnalyticsModel
         var dateGrouping = options.BigTableDateGrouping;
 
         var transactionGroups = database.Transactions
-            .Where(t => t.Account is not null && options.SelectedAccounts.Contains(t.Account) && t.ValueDate >= fromDate && t.ValueDate <= toDate && options.TransactionMatchesLabelFilter(t))
+            .Where(t => t.Account is not null && options.SelectedAccounts.Contains(t.Account) && t.ValueDate >= fromDate && t.ValueDate <= toDate && options.TransactionMatchesFilter(t))
             .GroupBy(c => c.Category);
 
         var firstBucketDate = GetDateBucketStart(fromDate, dateGrouping);

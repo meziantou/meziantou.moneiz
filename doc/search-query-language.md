@@ -2,7 +2,7 @@
 
 This page documents the search query language for each search box in the app.
 
-## Transactions search box
+## Transactions and analytics search boxes
 
 Applies to:
 
@@ -11,6 +11,7 @@ Applies to:
 - `/categories/{id}/transactions`
 - `/category-group/{group}/transactions`
 - `/payees/{id}/transactions`
+- `/analytics`
 
 ### Syntax
 
@@ -33,6 +34,7 @@ Applies to:
 | `category` | text | Category name |
 | `categoryGroup` | text | Category group name |
 | `comment` | text | Transaction comment |
+| `label` | text | Transaction label |
 | `state` | enum | `NotChecked`, `Checked`, `Reconciliated` |
 | `date` | date | Transaction date (`yyyy-MM-dd`) |
 | `amount` | number | Transaction amount |
