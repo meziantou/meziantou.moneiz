@@ -294,10 +294,9 @@ else
             }
             else if (editColumn == EditColumn.Amount)
             {
-                <input type="number" @ref="inlineEditorInput"
-                       step="0.01"
-                       value="@currentEdit.Amount.ToString(CultureInfo.InvariantCulture)"
-                       @oninput="e => { if (decimal.TryParse((string?)e.Value, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture, out var parsedAmount)) currentEdit.Amount = parsedAmount; }"
+                <input type="text" inputmode="decimal" @ref="inlineEditorInput"
+                       value="@inlineAmountRawValue"
+                       @oninput="e => inlineAmountRawValue = (string?)e.Value ?? string.Empty"
                        @onkeydown="e => InlineEditorKeyDown(e)"
                        @onblur="e => EndInlineEdit()" />
             }
@@ -333,6 +332,7 @@ else
     ElementReference inlineEditorInput;
     string? inlineEditorStyle;
     bool focusInlineEditorRequested;
+    string inlineAmountRawValue = "";
 
     [Parameter]
     public int? AccountId { get; set; }
@@ -675,6 +675,9 @@ else
         inlineEditorStyle = null;
         focusInlineEditorRequested = column != EditColumn.Category && column != EditColumn.Labels;
 
+        if (column == EditColumn.Amount)
+            inlineAmountRawValue = currentEdit.Amount.ToString(CultureInfo.InvariantCulture);
+
         var rect = await JSRuntime.InvokeAsync<BoundingClientRect>("MoneizGetElementDocumentRectById", GetInlineEditorCellId(transaction, column));
         inlineEditorStyle = FormattableString.Invariant($"top: {rect.Top}px; left: {rect.Left}px; min-width: {rect.Width}px;");
     }
@@ -704,6 +707,9 @@ else
 		Debug.Assert(database != null);
         if (currentEdit != null)
         {
+            if (editColumn == EditColumn.Amount && decimal.TryParse(inlineAmountRawValue, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture, out var parsedAmount))
+                currentEdit.Amount = parsedAmount;
+
             currentEdit.Save(database);
             await DatabaseProvider.Save();
             currentEdit = null;
