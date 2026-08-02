@@ -11,7 +11,7 @@ public partial class Database
         return ScheduledTransactions.FirstOrDefault(item => item.Id == id);
     }
 
-    public void SaveScheduledTransaction(ScheduledTransaction scheduledTransaction)
+    public void SaveScheduledTransaction(ScheduledTransaction scheduledTransaction, DateOnly? previousNextOccurenceDate = null)
     {
         using (DeferEvents())
         {
@@ -22,6 +22,11 @@ public partial class Database
             }
 
             AddOrReplace(ScheduledTransactions, existingTransaction, scheduledTransaction);
+
+            if (scheduledTransaction.NextOccurenceDate is null && previousNextOccurenceDate is not null)
+            {
+                scheduledTransaction.NextOccurenceDate = ComputeNextOccurenceDate(scheduledTransaction, previousNextOccurenceDate.Value);
+            }
 
             if (scheduledTransaction.NextOccurenceDate == null)
             {
@@ -73,7 +78,7 @@ public partial class Database
 
             if (scheduledTransaction.NextOccurenceDate == null)
             {
-                DateOnly? recurrenceDate = reccurenceRule.GetNextOccurrence(scheduledTransaction.StartDate.ToDateTime(TimeOnly.MinValue)) is DateTime nextDateTime ? DateOnly.FromDateTime(nextDateTime) : null;
+                DateOnly? recurrenceDate = ComputeNextOccurenceDate(scheduledTransaction, scheduledTransaction.StartDate);
                 scheduledTransaction.NextOccurenceDate = recurrenceDate;
                 if (scheduledTransaction.NextOccurenceDate == null)
                 {
@@ -136,5 +141,15 @@ public partial class Database
                 RaiseDatabaseChanged();
             }
         }
+    }
+
+    private static DateOnly? ComputeNextOccurenceDate(ScheduledTransaction scheduledTransaction, DateOnly startDate)
+    {
+        var recurrenceRule = scheduledTransaction.RecurrenceRule;
+        if (recurrenceRule is null)
+            return null;
+
+        var searchDate = startDate > scheduledTransaction.StartDate ? startDate : scheduledTransaction.StartDate;
+        return recurrenceRule.GetNextOccurrence(searchDate.ToDateTime(TimeOnly.MinValue)) is DateTime nextDateTime ? DateOnly.FromDateTime(nextDateTime) : null;
     }
 }

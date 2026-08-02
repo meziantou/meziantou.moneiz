@@ -82,6 +82,7 @@ public partial class Edit
         Debug.Assert(_database is not null);
         Debug.Assert(_model is not null);
         var scheduledTransaction = _database.GetScheduledTransactionById(Id);
+        var previousNextOccurenceDate = scheduledTransaction?.NextOccurenceDate;
         scheduledTransaction ??= new ScheduledTransaction();
 
         // Reset the schedule if StartDate or RRule changed
@@ -115,7 +116,7 @@ public partial class Edit
         scheduledTransaction.Category = _model.Category;
         scheduledTransaction.Amount = _model.Amount;
         scheduledTransaction.Comment = _model.Comment;
-        _database.SaveScheduledTransaction(scheduledTransaction);
+        _database.SaveScheduledTransaction(scheduledTransaction, previousNextOccurenceDate);
         await DatabaseProvider.Save();
         NavigationManager.NavigateToScheduler();
     }

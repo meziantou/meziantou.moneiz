@@ -76,6 +76,38 @@ public class DatabaseTests
     }
 
     [Fact]
+    public void UpdateScheduledTransaction_PreservesExistingProgression()
+    {
+        var db = new Database();
+        var account = new Account();
+        db.SaveAccount(account);
+
+        var scheduledTransaction = new ScheduledTransaction
+        {
+            Account = account,
+            Amount = 1,
+            RecurrenceRuleText = "FREQ=DAILY",
+            Name = "test",
+            StartDate = Database.GetToday().AddDays(-20),
+        };
+
+        db.SaveScheduledTransaction(scheduledTransaction);
+        var previousNextOccurenceDate = scheduledTransaction.NextOccurenceDate;
+        var transactionsCountBeforeUpdate = db.Transactions.Count;
+
+        Assert.NotNull(previousNextOccurenceDate);
+
+        scheduledTransaction.RecurrenceRuleText = "FREQ=WEEKLY";
+        scheduledTransaction.NextOccurenceDate = null;
+
+        db.SaveScheduledTransaction(scheduledTransaction, previousNextOccurenceDate);
+
+        Assert.Equal(transactionsCountBeforeUpdate, db.Transactions.Count);
+        Assert.NotNull(scheduledTransaction.NextOccurenceDate);
+        Assert.True(scheduledTransaction.NextOccurenceDate >= previousNextOccurenceDate);
+    }
+
+    [Fact]
     public void GetPayeeSuggestionsMatchesAndRanksNames()
     {
         var account = new Account { Id = 1 };
