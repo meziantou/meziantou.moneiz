@@ -68,7 +68,7 @@ public partial class Edit
                 Payee = scheduledTransaction.Payee?.Name,
                 Name = scheduledTransaction.Name,
                 RecurrenceRule = scheduledTransaction.RecurrenceRuleText,
-                StartDate = Id is null ? Database.GetToday() : scheduledTransaction.StartDate,
+                StartDate = Id is null ? Database.GetToday() : scheduledTransaction.NextOccurenceDate ?? scheduledTransaction.StartDate,
             };
         }
         else
