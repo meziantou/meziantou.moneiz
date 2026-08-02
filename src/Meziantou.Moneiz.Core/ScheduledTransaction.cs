@@ -105,6 +105,9 @@ public sealed class ScheduledTransaction
     [JsonConverter(typeof(NullableDateOnlyJsonConverter))]
     public DateOnly? NextOccurenceDate { get; set; }
 
+    [JsonPropertyName("l")]
+    public string[]? Labels { get; set; }
+
     [JsonIgnore]
     public RecurrenceRule? RecurrenceRule
     {

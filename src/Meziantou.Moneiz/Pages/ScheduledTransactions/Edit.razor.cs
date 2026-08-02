@@ -47,6 +47,7 @@ public partial class Edit
                 Amount = scheduledTransaction.Amount,
                 Category = scheduledTransaction.Category,
                 Comment = scheduledTransaction.Comment,
+                Labels = scheduledTransaction.Labels,
                 Payee = scheduledTransaction.Payee?.Name,
                 Name = scheduledTransaction.Name,
                 RecurrenceRule = scheduledTransaction.RecurrenceRuleText,
@@ -70,6 +71,7 @@ public partial class Edit
                     _model.Payee = transaction.Payee?.Name;
                     _model.Category = transaction.Category;
                     _model.Amount = transaction.Amount;
+                    _model.Labels = transaction.Labels;
                     _model.StartDate = transaction.ValueDate.AddDays(1);
                     _model.RecurrenceRule = $"FREQ=MONTHLY;BYMONTHDAY={transaction.ValueDate.Day.ToStringInvariant()};INTERVAL=1";
                 }
@@ -115,6 +117,7 @@ public partial class Edit
         scheduledTransaction.Category = _model.Category;
         scheduledTransaction.Amount = _model.Amount;
         scheduledTransaction.Comment = _model.Comment;
+        scheduledTransaction.Labels = _model.Labels;
         _database.SaveScheduledTransaction(scheduledTransaction);
         await DatabaseProvider.Save();
         NavigationManager.NavigateToScheduler();
@@ -150,5 +153,6 @@ public partial class Edit
         public Category? Category { get; set; }
         public decimal Amount { get; set; }
         public string? Comment { get; set; }
+        public string[]? Labels { get; set; }
     }
 }

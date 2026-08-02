@@ -93,6 +93,7 @@ public partial class Database
                     Category = scheduledTransaction.Category,
                     Comment = scheduledTransaction.Comment,
                     Amount = interAccount ? -Math.Abs(scheduledTransaction.Amount) : scheduledTransaction.Amount,
+                    Labels = scheduledTransaction.Labels,
                     Payee = scheduledTransaction.Payee,
                     ValueDate = transactionDate,
                 };
@@ -107,6 +108,7 @@ public partial class Database
                         Category = scheduledTransaction.Category,
                         Comment = scheduledTransaction.Comment,
                         Amount = Math.Abs(scheduledTransaction.Amount),
+                        Labels = scheduledTransaction.Labels,
                         Payee = scheduledTransaction.Payee,
                         ValueDate = transactionDate,
                         LinkedTransaction = transaction,
