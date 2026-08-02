@@ -36,6 +36,19 @@
                 <option>FREQ=MONTHLY;BYMONTHDAY=1;INTERVAL=1</option>
                 <option>FREQ=MONTHLY;BYSETPOS=-1;BYDAY=MO,TU,WE,TH,FR;INTERVAL=1</option>
             </datalist>
+
+            @if (Id is not null && NextOccurrences.Count > 0)
+            {
+                <div>
+                    Next occurrences:
+                    <ul>
+                        @foreach (var occurrence in NextOccurrences)
+                        {
+                            <li><UserDate DateTime="@occurrence" /></li>
+                        }
+                    </ul>
+                </div>
+            }
         </div>
 
         @if (_database!.VisibleAccounts.Skip(1).Any())
