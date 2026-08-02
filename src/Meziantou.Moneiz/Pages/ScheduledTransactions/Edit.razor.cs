@@ -4,12 +4,14 @@ using Meziantou.Moneiz.Core;
 using Meziantou.Moneiz.Extensions;
 using Meziantou.Moneiz.Services;
 using Meziantou.Framework;
+using Meziantou.Framework.Scheduling;
 using System.Diagnostics;
 
 namespace Meziantou.Moneiz.Pages.ScheduledTransactions;
 
 public partial class Edit
 {
+    private const int OccurrencePreviewCount = 5;
     private Database? _database;
     private EditModel? _model;
 
@@ -21,6 +23,21 @@ public partial class Edit
 
     [Parameter, SupplyParameterFromQuery]
     public int? CreateFromTransactionId { get; set; }
+
+    private IReadOnlyList<DateTime> NextOccurrences
+    {
+        get
+        {
+            if (_model is null)
+                return [];
+
+            var recurrenceRuleText = _model.RecurrenceRule.TrimAndNullify();
+            if (recurrenceRuleText is null || !RecurrenceRule.TryParse(recurrenceRuleText, out var recurrenceRule))
+                return [];
+
+            return recurrenceRule.GetNextOccurrences(_model.StartDate.ToDateTime(TimeOnly.MinValue)).Take(OccurrencePreviewCount).ToList();
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
