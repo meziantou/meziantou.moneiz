@@ -76,6 +76,28 @@ public class DatabaseTests
     }
 
     [Fact]
+    public void ScheduledTransaction_LabelsAreCopiedToGeneratedTransactions()
+    {
+        var db = new Database();
+        var account = new Account();
+        db.SaveAccount(account);
+
+        var scheduledTransaction = new ScheduledTransaction
+        {
+            Account = account,
+            Amount = 1,
+            RecurrenceRuleText = "FREQ=daily",
+            Name = "test",
+            StartDate = Database.GetToday(),
+            Labels = ["tag1", "tag2"],
+        };
+
+        db.SaveScheduledTransaction(scheduledTransaction);
+
+        Assert.All(db.Transactions, t => Assert.Equal((IEnumerable<string>)["tag1", "tag2"], t.Labels));
+    }
+
+    [Fact]
     public void GetPayeeSuggestionsMatchesAndRanksNames()
     {
         var account = new Account { Id = 1 };
