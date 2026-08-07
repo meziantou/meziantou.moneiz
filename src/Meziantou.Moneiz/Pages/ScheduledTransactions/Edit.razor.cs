@@ -44,11 +44,19 @@ public partial class Edit
     {
         _database = await DatabaseProvider.GetDatabase();
         _displaySettings = await SettingsProvider.GetDisplaySettings();
+        InitializeModel();
     }
 
     protected override void OnParametersSet()
     {
-        Debug.Assert(_database is not null);
+        InitializeModel();
+    }
+
+    private void InitializeModel()
+    {
+        if (_database is null)
+            return;
+
         var scheduledTransaction = _database.GetScheduledTransactionById(Id ?? DuplicatedScheduleTransactionId);
         if (scheduledTransaction is null && Id is not null)
         {
