@@ -98,6 +98,33 @@ public class DatabaseTests
     }
 
     [Fact]
+    public void ProcessNextScheduledTransactionOccurrence_UsesTheActualNextOccurrence()
+    {
+        var db = new Database();
+        var account = new Account();
+        db.SaveAccount(account);
+
+        var scheduledTransaction = new ScheduledTransaction
+        {
+            Account = account,
+            Amount = 1,
+            RecurrenceRuleText = "FREQ=MONTHLY;BYMONTHDAY=10",
+            Name = "test",
+            StartDate = new DateOnly(2026, 08, 10),
+            NextOccurenceDate = new DateOnly(2026, 08, 10),
+        };
+
+        db.SaveScheduledTransaction(scheduledTransaction);
+        db.Transactions.Clear();
+
+        db.ProcessNextScheduledTransactionOccurrence(scheduledTransaction);
+
+        var transaction = Assert.Single(db.Transactions);
+        Assert.Equal(new DateOnly(2026, 08, 10), transaction.ValueDate);
+        Assert.Equal(new DateOnly(2026, 09, 10), scheduledTransaction.NextOccurenceDate);
+    }
+
+    [Fact]
     public void GetPayeeSuggestionsMatchesAndRanksNames()
     {
         var account = new Account { Id = 1 };

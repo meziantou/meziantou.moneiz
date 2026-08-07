@@ -52,7 +52,7 @@ public partial class Database
 
         using (DeferEvents())
         {
-            ProcessScheduledTransaction(scheduledTransaction, scheduledTransaction.NextOccurenceDate.Value.AddDays(1));
+            ProcessScheduledTransaction(scheduledTransaction, scheduledTransaction.NextOccurenceDate.Value.AddDays(1), forceSingleOccurrence: true);
         }
     }
 
@@ -70,7 +70,7 @@ public partial class Database
         }
     }
 
-    private void ProcessScheduledTransaction(ScheduledTransaction scheduledTransaction, DateOnly createUntil)
+    private void ProcessScheduledTransaction(ScheduledTransaction scheduledTransaction, DateOnly createUntil, bool forceSingleOccurrence = false)
     {
         using (DeferEvents())
         {
@@ -94,7 +94,7 @@ public partial class Database
                 }
             }
 
-            while (scheduledTransaction.NextOccurenceDate < createUntil)
+            while (scheduledTransaction.NextOccurenceDate < createUntil || (forceSingleOccurrence && scheduledTransaction.NextOccurenceDate == createUntil))
             {
                 var transactionDate = scheduledTransaction.NextOccurenceDate.Value;
                 var interAccount = scheduledTransaction.CreditedAccount is not null;
@@ -147,6 +147,9 @@ public partial class Database
 
                 scheduledTransaction.NextOccurenceDate = newRecurrenceDate;
                 RaiseDatabaseChanged();
+
+                if (forceSingleOccurrence)
+                    return;
             }
         }
     }
