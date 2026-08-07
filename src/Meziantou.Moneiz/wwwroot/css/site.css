@@ -1288,6 +1288,12 @@ thead th {
   border-top: 0;
 }
 
+thead th a {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
 th, td {
   padding: 8px;
   text-align: left;
