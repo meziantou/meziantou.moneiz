@@ -116,12 +116,15 @@
             </label>
         </div>
 
-        <div class="form-group">
-            <label>
-                Labels
-            </label>
-            <InputLabels @bind-Value="_model.Labels" />
-        </div>
+        @if (displaySettings.ShowLabels)
+        {
+            <div class="form-group">
+                <label>
+                    Labels
+                </label>
+                <InputLabels @bind-Value="_model.Labels" />
+            </div>
+        }
 
         <button type="submit">Submit</button>
     </EditForm>

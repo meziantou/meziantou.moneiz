@@ -2,6 +2,7 @@
 @using Meziantou.Framework.Scheduling
 @inject DatabaseProvider DatabaseProvider
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 
 <h1>Scheduler</h1>
 
@@ -19,6 +20,10 @@
                     <th>Amount</th>
                     <th>Rule</th>
                     <th>Next occurrence</th>
+                    @if (displaySettings.ShowLabels)
+                    {
+                        <th>Labels</th>
+                    }
                     <th></th>
                 </tr>
             </thead>
@@ -43,6 +48,10 @@
                     </ul>
                 </details>
             </td>
+            @if (displaySettings.ShowLabels)
+            {
+                <td>@FormatLabels(scheduledTransaction.Labels)</td>
+            }
             <td class="commands">
                 <Dropdown>
                     <li><a class="duplicate" href="/scheduler/create?DuplicatedScheduleTransactionId=@scheduledTransaction.Id"><i class="fas fa-copy"></i> Duplicate</a></li>
@@ -56,10 +65,12 @@
 
 @code {
     Database? database;
+    MoneizDisplaySettings displaySettings = new();
 
     protected override async Task OnInitializedAsync()
     {
         database = await DatabaseProvider.GetDatabase();
+        displaySettings = await SettingsProvider.GetDisplaySettings();
     }
 
     private async Task Delete(ScheduledTransaction scheduledTransaction)
@@ -71,4 +82,7 @@
             await DatabaseProvider.Save();
         }
     }
+
+    private static string? FormatLabels(string[]? labels)
+        => labels is { Length: > 0 } ? string.Join(", ", labels) : null;
 }
