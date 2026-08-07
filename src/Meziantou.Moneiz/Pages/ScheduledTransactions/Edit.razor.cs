@@ -14,7 +14,7 @@ public partial class Edit
     private const int OccurrencePreviewCount = 5;
     private Database? _database;
     private EditModel? _model;
-    private MoneizDisplaySettings displaySettings = new();
+    private MoneizDisplaySettings _displaySettings = new();
 
     [Parameter]
     public int? Id { get; set; }
@@ -43,7 +43,7 @@ public partial class Edit
     protected override async Task OnInitializedAsync()
     {
         _database = await DatabaseProvider.GetDatabase();
-        displaySettings = await SettingsProvider.GetDisplaySettings();
+        _displaySettings = await SettingsProvider.GetDisplaySettings();
     }
 
     protected override void OnParametersSet()
