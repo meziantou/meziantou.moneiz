@@ -44,7 +44,6 @@ public partial class Edit
     {
         _database = await DatabaseProvider.GetDatabase();
         _displaySettings = await SettingsProvider.GetDisplaySettings();
-        InitializeModel();
     }
 
     protected override void OnParametersSet()
