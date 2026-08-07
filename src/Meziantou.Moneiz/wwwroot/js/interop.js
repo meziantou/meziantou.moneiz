@@ -124,7 +124,7 @@ function MoneizFocusIfConnected(element) {
   }, 500);
 })()
 
-const dragDropHelpers = {
+window.dragDropHelpers = {
   isBottomHalf(clientY, selector) {
     const el = document.querySelector(selector);
     if (!el) return false;
