@@ -123,3 +123,12 @@ function MoneizFocusIfConnected(element) {
     }
   }, 500);
 })()
+
+window.dragDropHelpers = {
+  isBottomHalf(clientY, selector) {
+    const el = document.querySelector(selector);
+    if (!el) return false;
+    const rect = el.getBoundingClientRect();
+    return clientY > rect.top + rect.height / 2;
+  }
+};

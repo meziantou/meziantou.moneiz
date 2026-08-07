@@ -1,4 +1,5 @@
-﻿@page "/accounts"
+﻿@inject IJSRuntime JS
+@page "/accounts"
 @inject DatabaseProvider DatabaseProvider
 
 <h1>Accounts</h1>
@@ -25,11 +26,14 @@
 
     <ItemTemplate Context="account">
         <tr @key="account.Id"
-            class="account-row @(draggedAccount == account ? "dragging" : "")"
+            data-account-id="@account.Id"
+            class="@GetRowClass(account)"
             draggable="true"
             @ondragstart="() => OnDragStart(account)"
             @ondragend="OnDragEnd"
             @ondragover:preventDefault
+            @ondragover="async (e) => await OnDragOver(e, account)"
+            @ondragleave="() => OnDragLeave(account)"
             @ondrop:preventDefault
             @ondrop="() => OnDrop(account)">
             <td class="drag-handle" title="Drag and drop to reorder">
@@ -65,9 +69,25 @@
     </ItemTemplate>
 </Repeater>
 
+<style>
+    .account-row.dragging {
+        opacity: 0.4;
+    }
+
+    .account-row.drop-before {
+        border-top: 3px solid var(--accent-color, #007acc);
+    }
+
+    .account-row.drop-after {
+        border-bottom: 3px solid var(--accent-color, #007acc);
+    }
+</style>
+
 @code {
     Database? database;
     Account? draggedAccount;
+    Account? dropTargetAccount;
+    bool dropAfter; // true = insert after target, false = insert before
 
     protected override async Task OnInitializedAsync()
     {
@@ -145,6 +165,16 @@
         }
     }
 
+    private string GetRowClass(Account account)
+    {
+        var classes = new System.Text.StringBuilder("account-row");
+        if (draggedAccount == account)
+            classes.Append(" dragging");
+        if (dropTargetAccount == account)
+            classes.Append(dropAfter ? " drop-after" : " drop-before");
+        return classes.ToString();
+    }
+
     private void OnDragStart(Account account)
     {
         draggedAccount = account;
@@ -153,6 +183,23 @@
     private void OnDragEnd()
     {
         draggedAccount = null;
+        dropTargetAccount = null;
+    }
+
+    private async Task OnDragOver(DragEventArgs e, Account account)
+    {
+        if (draggedAccount is null || draggedAccount == account)
+            return;
+
+        var isBottomHalf = await JS.InvokeAsync<bool>("dragDropHelpers.isBottomHalf", e.ClientY, $"[data-account-id='{account.Id}']");
+        dropTargetAccount = account;
+        dropAfter = isBottomHalf;
+    }
+
+    private void OnDragLeave(Account account)
+    {
+        if (dropTargetAccount == account)
+            dropTargetAccount = null;
     }
 
     private async Task OnDrop(Account targetAccount)
@@ -160,11 +207,16 @@
         if (database is null || draggedAccount is null)
             return;
 
-        if (database.MoveAccountBefore(draggedAccount, targetAccount))
+        var moved = dropAfter
+            ? database.MoveAccountAfter(draggedAccount, targetAccount)
+            : database.MoveAccountBefore(draggedAccount, targetAccount);
+
+        if (moved)
         {
             await DatabaseProvider.Save();
         }
 
         draggedAccount = null;
+        dropTargetAccount = null;
     }
 }

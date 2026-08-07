@@ -171,6 +171,38 @@ public class DatabaseTests
     }
 
     [Fact]
+    public void MoveAccountAfterReordersAccounts()
+    {
+        var database = new Database();
+        var account1 = new Account { Name = "Account 1" };
+        var account2 = new Account { Name = "Account 2" };
+        var account3 = new Account { Name = "Account 3" };
+        database.SaveAccount(account1);
+        database.SaveAccount(account2);
+        database.SaveAccount(account3);
+
+        var updated = database.MoveAccountAfter(account1, account3);
+
+        Assert.True(updated);
+        Assert.Equal([account2, account3, account1], database.VisibleAccounts);
+    }
+
+    [Fact]
+    public void MoveAccountAfterDoesNotMoveAcrossOpenAndClosedAccounts()
+    {
+        var database = new Database();
+        var openedAccount = new Account { Name = "Opened account" };
+        var closedAccount = new Account { Name = "Closed account", Closed = true };
+        database.SaveAccount(openedAccount);
+        database.SaveAccount(closedAccount);
+
+        var updated = database.MoveAccountAfter(openedAccount, closedAccount);
+
+        Assert.False(updated);
+        Assert.Equal([openedAccount, closedAccount], database.Accounts.Sort());
+    }
+
+    [Fact]
     public void MoveAccountBeforeDoesNotMoveAcrossOpenAndClosedAccounts()
     {
         var database = new Database();
