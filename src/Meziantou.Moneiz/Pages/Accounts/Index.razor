@@ -25,10 +25,12 @@
 
     <ItemTemplate Context="account">
         <tr @key="account.Id"
-            class="account-row @(draggedAccount == account ? "dragging" : "")"
+            class="@GetRowClass(account)"
             draggable="true"
             @ondragstart="() => OnDragStart(account)"
             @ondragend="OnDragEnd"
+            @ondragenter="() => OnDragEnter(account)"
+            @ondragleave="() => OnDragLeave(account)"
             @ondragover:preventDefault
             @ondrop:preventDefault
             @ondrop="() => OnDrop(account)">
@@ -65,9 +67,20 @@
     </ItemTemplate>
 </Repeater>
 
+<style>
+    .account-row.dragging {
+        opacity: 0.4;
+    }
+
+    .account-row.drop-before {
+        border-top: 3px solid var(--accent-color, #007acc);
+    }
+</style>
+
 @code {
     Database? database;
     Account? draggedAccount;
+    Account? dropTargetAccount;
 
     protected override async Task OnInitializedAsync()
     {
@@ -145,6 +158,16 @@
         }
     }
 
+    private string GetRowClass(Account account)
+    {
+        var classes = new System.Text.StringBuilder("account-row");
+        if (draggedAccount == account)
+            classes.Append(" dragging");
+        if (dropTargetAccount == account)
+            classes.Append(" drop-before");
+        return classes.ToString();
+    }
+
     private void OnDragStart(Account account)
     {
         draggedAccount = account;
@@ -153,6 +176,23 @@
     private void OnDragEnd()
     {
         draggedAccount = null;
+        dropTargetAccount = null;
+    }
+
+    private void OnDragEnter(Account account)
+    {
+        if (draggedAccount is null || draggedAccount == account)
+            return;
+
+        dropTargetAccount = account;
+    }
+
+    private void OnDragLeave(Account account)
+    {
+        if (dropTargetAccount == account)
+        {
+            dropTargetAccount = null;
+        }
     }
 
     private async Task OnDrop(Account targetAccount)
@@ -166,5 +206,6 @@
         }
 
         draggedAccount = null;
+        dropTargetAccount = null;
     }
 }
