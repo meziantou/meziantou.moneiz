@@ -48,7 +48,14 @@ public partial class Edit
 
     protected override void OnParametersSet()
     {
-        Debug.Assert(_database is not null);
+        InitializeModel();
+    }
+
+    private void InitializeModel()
+    {
+        if (_database is null)
+            return;
+
         var scheduledTransaction = _database.GetScheduledTransactionById(Id ?? DuplicatedScheduleTransactionId);
         if (scheduledTransaction is null && Id is not null)
         {

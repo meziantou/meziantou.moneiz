@@ -5,7 +5,7 @@
 
 <h1>Create scheduled transaction</h1>
 
-<LoadingIndicator IsLoading="_database is null">
+<LoadingIndicator IsLoading="_database is null || _model is null">
     <EditForm Model="@_model" OnValidSubmit="OnSubmit">
         <DataAnnotationsValidator />
         <ValidationSummary />
