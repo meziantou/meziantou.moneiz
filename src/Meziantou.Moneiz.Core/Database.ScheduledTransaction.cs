@@ -45,6 +45,20 @@ public partial class Database
         ProcessScheduledTransactions(5);
     }
 
+    public void ProcessNextScheduledTransactionOccurrence(ScheduledTransaction scheduledTransaction)
+    {
+        using (DeferEvents())
+        {
+            if (scheduledTransaction.NextOccurenceDate is null)
+            {
+                ProcessScheduledTransaction(scheduledTransaction, GetToday().AddDays(1));
+                return;
+            }
+
+            ProcessScheduledTransaction(scheduledTransaction, scheduledTransaction.NextOccurenceDate.Value.AddDays(1));
+        }
+    }
+
     public void ProcessScheduledTransactions(int daysAhead)
     {
         using (DeferEvents())

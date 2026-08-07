@@ -54,6 +54,7 @@
             }
             <td class="commands">
                 <Dropdown>
+                    <li><button type="button" class="btn-link" @onclick="() => CreateNextOccurrence(scheduledTransaction)"><i class="fas fa-calendar-plus"></i> Create next occurrence</button></li>
                     <li><a class="duplicate" href="/scheduler/create?DuplicatedScheduleTransactionId=@scheduledTransaction.Id"><i class="fas fa-copy"></i> Duplicate</a></li>
                     <li><a class="edit" href="/scheduler/@scheduledTransaction.Id/edit"><i class="fas fa-pencil-alt"></i> Edit</a></li>
                     <li><button type="button" class="btn-link" @onclick="() => Delete(scheduledTransaction)"><i class="fas fa-trash" style="color: red"></i> Delete</button></li>
@@ -81,6 +82,13 @@
             database.RemoveScheduledTransaction(scheduledTransaction);
             await DatabaseProvider.Save();
         }
+    }
+
+    private async Task CreateNextOccurrence(ScheduledTransaction scheduledTransaction)
+    {
+        Debug.Assert(database != null);
+        database.ProcessNextScheduledTransactionOccurrence(scheduledTransaction);
+        await DatabaseProvider.Save();
     }
 
     private static string? FormatLabels(string[]? labels)
