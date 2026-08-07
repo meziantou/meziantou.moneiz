@@ -16,7 +16,7 @@
 
                 <ul class="navbar-nav navbar-nav-right">
                     <li><DatabaseNotExported /></li>
-                    <li><a @onclick="ToggleSidebar"><i class="fas @(sidebarCollapsed ? "fa-angle-double-right" : "fa-angle-double-left")"></i></a></li>
+                    <li><a @onclick="ToggleSidebar" title="@(sidebarCollapsed ? "Show sidebar" : "Hide sidebar")"><i class="fas @(sidebarCollapsed ? "fa-angle-double-right" : "fa-angle-double-left")"></i></a></li>
                     <li><a @onclick="ToggleFullWidth"><i class="fas @(fullWidth ? "fa-compress-alt" : "fa-expand-alt")"></i></a></li>
                     <li>
                         <Dropdown MenuText="My account" MenuIcon="fa-caret-down">
