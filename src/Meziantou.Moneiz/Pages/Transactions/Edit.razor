@@ -5,7 +5,7 @@
 
 <h1>Create transaction</h1>
 
-<LoadingIndicator IsLoading="database == null">
+<LoadingIndicator IsLoading="database is null || model is null">
 	<EditForm Model="@model" OnValidSubmit="OnSubmit">
 		<DataAnnotationsValidator />
 		<ValidationSummary />
