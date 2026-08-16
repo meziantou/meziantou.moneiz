@@ -37,7 +37,7 @@ public class DatabaseTests
         _ = Assert.Single(imported.Accounts);
         _ = Assert.Single(imported.Categories);
         _ = Assert.Single(imported.Payees);
-        Assert.Equal(3, imported.Transactions.Count);
+        Assert.HasCount(3, imported.Transactions);
         Assert.NotEmpty(imported.Currencies);
 
         // Check references
@@ -72,7 +72,7 @@ public class DatabaseTests
         db.SaveScheduledTransaction(scheduledTransaction);
 
         // Assert
-        Assert.Equal(5, db.Transactions.Count);
+        Assert.HasCount(5, db.Transactions);
     }
 
     [Fact]
