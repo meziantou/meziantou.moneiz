@@ -74,6 +74,10 @@
         {
             await DatabaseProvider.ExportToGitHub();
         }
+        catch (GitHubUnavailableException)
+        {
+            // The error is displayed by the GitHubUnavailableWarning component
+        }
         finally
         {
             isExporting = false;

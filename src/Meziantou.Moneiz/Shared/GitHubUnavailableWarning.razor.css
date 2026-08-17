@@ -1,0 +1,56 @@
+.github-unavailable-container {
+    background-color: #f2dede;
+    border-bottom: 1px solid #ebccd1;
+}
+
+.github-unavailable {
+    background-color: #f2dede;
+    border: none;
+    border-left: 4px solid #d9534f;
+    color: #a94442;
+    padding: 12px 20px;
+    margin: 0;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.github-unavailable i {
+    color: #d9534f;
+    font-size: 16px;
+}
+
+.github-unavailable strong {
+    font-weight: 700;
+}
+
+.github-unavailable a {
+    color: #a94442;
+    text-decoration: underline;
+}
+
+.github-unavailable a:hover {
+    color: #843534;
+}
+
+.github-unavailable-dismiss {
+    background: none;
+    border: none;
+    color: #a94442;
+    cursor: pointer;
+    margin-left: auto;
+    padding: 0 4px;
+}
+
+.alert {
+    padding: 15px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+
+.alert-danger {
+    background-color: #f2dede;
+    border-color: #ebccd1;
+    color: #a94442;
+}
