@@ -1,0 +1,51 @@
+@inject DatabaseProvider DatabaseProvider
+@implements IDisposable
+
+@if (error is not null && !dismissed)
+{
+    <div class="github-unavailable-container">
+        <div class="container">
+            <div class="alert alert-danger github-unavailable">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>
+                    <strong>@(error.Operation ?? "Cannot synchronize the database with GitHub")</strong>
+                    <text> — @(error.Details ?? error.Message) Check </text>
+                    <a href="@GitHubUnavailableException.StatusPageUrl" target="_blank" rel="noopener noreferrer">@GitHubUnavailableException.StatusPageUrl</a>
+                    <text> to know if there is an ongoing GitHub incident.</text>
+                </span>
+                <button type="button" class="github-unavailable-dismiss" title="Dismiss" @onclick="Dismiss"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private GitHubUnavailableException? error;
+    private bool dismissed;
+
+    protected override void OnInitialized()
+    {
+        DatabaseProvider.GitHubAvailabilityChanged += OnGitHubAvailabilityChanged;
+        error = DatabaseProvider.GitHubError;
+    }
+
+    public void Dispose()
+    {
+        DatabaseProvider.GitHubAvailabilityChanged -= OnGitHubAvailabilityChanged;
+    }
+
+    private void OnGitHubAvailabilityChanged(object? sender, EventArgs e)
+    {
+        InvokeAsync(() =>
+        {
+            error = DatabaseProvider.GitHubError;
+            dismissed = false;
+            StateHasChanged();
+        });
+    }
+
+    private void Dismiss()
+    {
+        dismissed = true;
+    }
+}

@@ -110,6 +110,10 @@
             await SaveGitHubConfig();
             await DatabaseProvider.ExportToGitHub();
         }
+        catch (GitHubUnavailableException)
+        {
+            // The error is displayed by the GitHubUnavailableWarning component
+        }
         finally
         {
             githubOperation = false;
@@ -123,6 +127,10 @@
             githubOperation = true;
             await SaveGitHubConfig();
             await DatabaseProvider.ImportFromGitHub(implicitLoad: false);
+        }
+        catch (GitHubUnavailableException)
+        {
+            // The error is displayed by the GitHubUnavailableWarning component
         }
         finally
         {

@@ -1,5 +1,7 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Meziantou.AspNetCore.Components.WebAssembly;
 using Meziantou.Framework;
@@ -16,11 +18,22 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
     private const string MoneizLocalStorageChangedName = "moneiz.dbchanged";
 
     private const string MoneizDownloadFileName = "moneiz.db";
+
+    private const string ImportOperation = "Cannot download the database from GitHub";
+    private const string ExportOperation = "Cannot save the database to GitHub";
+    private const string CheckNewVersionOperation = "Cannot check whether a new version of the database is available on GitHub";
+
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private Database? _database;
 
     public event EventHandler? DatabaseChanged;
     public event EventHandler? DatabaseSaved;
+    public event EventHandler? GitHubAvailabilityChanged;
+
+    /// <summary>
+    /// The last error raised because GitHub was unreachable or replied with a server error, or <see langword="null"/> when the last GitHub request succeeded.
+    /// </summary>
+    public GitHubUnavailableException? GitHubError { get; private set; }
 
     public void Dispose() => _semaphore.Dispose();
 
@@ -41,9 +54,14 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
                         {
                             await ImportFromGitHub(implicitLoad: true);
                         }
-                        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.Unauthorized)
+                        catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Unauthorized)
                         {
                             navigationManager.NavigateTo("/database");
+                        }
+                        catch (GitHubUnavailableException ex)
+                        {
+                            // Keep using the local copy of the database. The error is displayed by the GitHubUnavailableWarning component.
+                            Console.WriteLine(ex.Message);
                         }
                     }
 
@@ -169,13 +187,13 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
         var configuration = await LoadConfiguration();
 
         using var httpClient = CreateClient(configuration);
-        var currentUser = await httpClient.GetFromJsonAsync<GitHubUser>("user");
+        var currentUser = await GetFromGitHubAsync<GitHubUser>(httpClient, "user", ExportOperation);
         if (currentUser is null)
             throw new InvalidOperationException("Cannot get current user");
 
         // https://developer.github.com/v3/repos/contents/#get-repository-content
         var url = "repos/" + currentUser.Login + "/" + configuration.GitHubRepository + "/contents/";
-        var files = await httpClient.GetFromJsonAsync<GitHubContent[]>(url);
+        var files = await GetFromGitHubAsync<GitHubContent[]>(httpClient, url, ExportOperation);
         if (files is null)
             throw new InvalidOperationException("Cannot get repository content");
 
@@ -189,14 +207,17 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
                 return;
         }
 
-        var putResult = await httpClient.PutAsJsonAsync(url + MoneizDownloadFileName, new
+        var putResult = await InvokeGitHubApi(ExportOperation, async () =>
         {
-            message = "save db",
-            content = bytes,
-            sha = file?.Sha,
-        });
+            var response = await httpClient.PutAsJsonAsync(url + MoneizDownloadFileName, new
+            {
+                message = "save db",
+                content = bytes,
+                sha = file?.Sha,
+            });
 
-        _ = putResult.EnsureSuccessStatusCode();
+            return response.EnsureSuccessStatusCode();
+        });
 
         file = (await putResult.Content.ReadFromJsonAsync<UpdateFileResult>())?.Content;
 
@@ -215,18 +236,27 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
 
         var configuration = await LoadConfiguration();
         using var httpClient = CreateClient(configuration);
-        var currentUser = await httpClient.GetFromJsonAsync<GitHubUser>("user");
-        if (currentUser is null)
-            throw new InvalidOperationException("Cannot get current user");
+        try
+        {
+            var currentUser = await GetFromGitHubAsync<GitHubUser>(httpClient, "user", CheckNewVersionOperation);
+            if (currentUser is null)
+                throw new InvalidOperationException("Cannot get current user");
 
-        // https://developer.github.com/v3/repos/contents/#get-repository-content
-        var url = "repos/" + currentUser.Login + "/" + configuration.GitHubRepository + "/contents/";
-        var files = await SafeGetForJsonAsync<GitHubContent[]>(httpClient, url);
-        var file = files?.FirstOrDefault(f => f.Name == MoneizDownloadFileName);
-        if ((file is not null && configuration.GitHubSha is null) || file is null || !file.Sha.EqualsIgnoreCase(configuration.GitHubSha))
-            return true;
+            // https://developer.github.com/v3/repos/contents/#get-repository-content
+            var url = "repos/" + currentUser.Login + "/" + configuration.GitHubRepository + "/contents/";
+            var files = await SafeGetFromGitHubAsync<GitHubContent[]>(httpClient, url, CheckNewVersionOperation);
+            var file = files?.FirstOrDefault(f => f.Name == MoneizDownloadFileName);
+            if ((file is not null && configuration.GitHubSha is null) || file is null || !file.Sha.EqualsIgnoreCase(configuration.GitHubSha))
+                return true;
 
-        return false;
+            return false;
+        }
+        catch (GitHubUnavailableException ex)
+        {
+            // This runs in the background, so the error is only reported by the GitHubUnavailableWarning component
+            Console.WriteLine(ex.Message);
+            return false;
+        }
     }
 
     public async Task ImportFromGitHub(bool implicitLoad)
@@ -240,13 +270,13 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
         var configuration = await LoadConfiguration();
 
         using var httpClient = CreateClient(configuration);
-        var currentUser = await httpClient.GetFromJsonAsync<GitHubUser>("user");
+        var currentUser = await GetFromGitHubAsync<GitHubUser>(httpClient, "user", ImportOperation);
         if (currentUser is null)
             throw new InvalidOperationException("Cannot get current user");
 
         // https://developer.github.com/v3/repos/contents/#get-repository-content
         var url = "repos/" + currentUser.Login + "/" + configuration.GitHubRepository + "/contents/";
-        var files = await SafeGetForJsonAsync<GitHubContent[]>(httpClient, url);
+        var files = await SafeGetFromGitHubAsync<GitHubContent[]>(httpClient, url, ImportOperation);
         var file = files?.FirstOrDefault(f => f.Name == MoneizDownloadFileName);
         if (file is null)
         {
@@ -277,12 +307,9 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
 
         // Cannot use Download url for private repository
         // /repos/:owner/:repo/git/blobs/:file_sha
-        var blob = await httpClient.GetFromJsonAsync<GitHubBlob>("repos/" + currentUser.Login + "/" + configuration.GitHubRepository + "/git/blobs/" + file.Sha);
-        if (blob is null)
-            throw new InvalidOperationException("Cannot download database from GitHub");
-
-        if (blob.Content is null)
-            throw new InvalidOperationException("Cannot download database from GitHub");
+        var blob = await GetFromGitHubAsync<GitHubBlob>(httpClient, "repos/" + currentUser.Login + "/" + configuration.GitHubRepository + "/git/blobs/" + file.Sha, ImportOperation);
+        if (blob?.Content is null)
+            throw new InvalidOperationException(ImportOperation + ": GitHub returned an empty file.");
 
         var data = Convert.FromBase64String(blob.Content);
         var database = await Database.Load(data);
@@ -291,11 +318,15 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
         await SetConfiguration(configuration);
     }
 
-    private static async Task<T?> SafeGetForJsonAsync<T>(HttpClient httpClient, string url) where T : class
+    /// <summary>
+    /// Same as <see cref="GetFromGitHubAsync{T}(HttpClient, string, string)"/> but returns <see langword="null"/> when GitHub answers with a client
+    /// error (unknown repository, missing permission, …). Errors indicating GitHub is down are still reported.
+    /// </summary>
+    private async Task<T?> SafeGetFromGitHubAsync<T>(HttpClient httpClient, string url, string operation) where T : class
     {
         try
         {
-            return await httpClient.GetFromJsonAsync<T>(url);
+            return await GetFromGitHubAsync<T>(httpClient, url, operation);
         }
         catch (HttpRequestException)
         {
@@ -303,13 +334,53 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
         }
     }
 
+    private Task<T?> GetFromGitHubAsync<T>(HttpClient httpClient, string url, string operation) where T : class
+        => InvokeGitHubApi(operation, () => httpClient.GetFromJsonAsync<T>(url));
+
+    /// <summary>
+    /// Converts the failures indicating GitHub is down to a <see cref="GitHubUnavailableException"/>, so the user gets an actionable
+    /// error message instead of a raw HTTP error. Other failures (bad token, unknown repository, …) are not altered.
+    /// </summary>
+    private async Task<T> InvokeGitHubApi<T>(string operation, Func<Task<T>> action)
+    {
+        try
+        {
+            var result = await action();
+            SetGitHubError(error: null);
+            return result;
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is null or >= HttpStatusCode.InternalServerError)
+        {
+            // No status code means the request didn't reach GitHub (offline, DNS failure, GitHub down, …)
+            var exception = GitHubUnavailableException.Create(operation, ex.StatusCode, ex);
+            SetGitHubError(exception);
+            throw exception;
+        }
+        catch (Exception ex) when (ex is JsonException or NotSupportedException)
+        {
+            // GitHub returns an HTML page instead of JSON when it is down
+            var exception = GitHubUnavailableException.CreateInvalidResponse(operation, ex);
+            SetGitHubError(exception);
+            throw exception;
+        }
+    }
+
+    private void SetGitHubError(GitHubUnavailableException? error)
+    {
+        if (GitHubError is null && error is null)
+            return;
+
+        GitHubError = error;
+        GitHubAvailabilityChanged?.Invoke(this, EventArgs.Empty);
+    }
+
     public async Task OpenGitHubRepository()
     {
         var configuration = await LoadConfiguration();
 
         using var httpClient = CreateClient(configuration);
-        var currentUser = await httpClient.GetFromJsonAsync<GitHubUser>("user");
-        if(currentUser is null)
+        var currentUser = await GetFromGitHubAsync<GitHubUser>(httpClient, "user", "Cannot open the GitHub repository");
+        if (currentUser is null)
             throw new InvalidOperationException("Cannot get current user");
 
         var url = "https://github.com/" + currentUser.Login + "/" + configuration.GitHubRepository;
