@@ -154,6 +154,15 @@ public partial class Database
         return GetBalance(account, DateOnly.MaxValue, TransactionState.NotChecked);
     }
 
+    /// <summary>
+    /// Gets the balance of the account at the given date, including the scheduled transactions
+    /// that are not materialized yet. The database is not modified.
+    /// </summary>
+    public decimal GetProjectedBalance(Account account, DateOnly date)
+    {
+        return GetBalance(account, date) + GetPendingScheduledTransactionsAmount(account, date);
+    }
+
     private decimal GetBalance(Account account, DateOnly date, TransactionState transactionState)
     {
         return account.InitialBalance + Transactions.Where(IncludeTransaction).Sum(t => t.Amount);

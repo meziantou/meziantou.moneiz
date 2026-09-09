@@ -292,11 +292,7 @@ static async Task CheckOverdraftAsync(FileInfo file, string? accountIdFilter)
         var minimumBalance = account.OverdraftNotificationAmount;
         var targetDate = today.AddDays(days);
 
-        // Process scheduled transactions up to the target date for this account
-        var tempDb = db;
-        tempDb.ProcessScheduledTransactions(days);
-
-        var currentBalance = tempDb.GetTodayBalance(account);
+        var currentBalance = db.GetProjectedBalance(account, today);
 
         // Check balance for each day in the period
         DateOnly? overdraftDate = null;
@@ -305,7 +301,7 @@ static async Task CheckOverdraftAsync(FileInfo file, string? accountIdFilter)
         for (var i = 0; i <= days; i++)
         {
             var checkDate = today.AddDays(i);
-            var balance = tempDb.GetBalance(account, checkDate);
+            var balance = db.GetProjectedBalance(account, checkDate);
 
             if (balance < minimumBalance)
             {
@@ -346,7 +342,7 @@ static async Task CheckOverdraftAsync(FileInfo file, string? accountIdFilter)
         }
         else
         {
-            var projectedBalance = tempDb.GetBalance(account, targetDate);
+            var projectedBalance = db.GetProjectedBalance(account, targetDate);
             Console.WriteLine($"  Projected balance ({targetDate:yyyy-MM-dd}): {FormatAmount(projectedBalance, account.CurrencyIsoCode)}");
         }
 
