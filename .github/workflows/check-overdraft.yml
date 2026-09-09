@@ -37,8 +37,8 @@ jobs:
         shell: pwsh
         run: |
           if ([string]::IsNullOrEmpty("${{ inputs.account-ids }}")) {
-            meziantou.moneiz --file "${{ inputs.database-path }}"
+            meziantou.moneiz check-overdraft --file "${{ inputs.database-path }}"
           } else {
-            meziantou.moneiz --file "${{ inputs.database-path }}" --account-id "${{ inputs.account-ids }}"
+            meziantou.moneiz check-overdraft --file "${{ inputs.database-path }}" --account-id "${{ inputs.account-ids }}"
           }
 
