@@ -53,7 +53,10 @@ public sealed class TransactionEdit
         {
             Debug.Assert(DebitedAccount is not null);
 
-            var transaction = database.GetDebitedTransactionById(Id);
+            // When editing the current transaction, the edit model describes the selected transaction itself
+            // (its own account and signed amount), so it must be resolved by its exact id. Other flows build
+            // the model around the debited side, so they normalize to it.
+            var transaction = _editCurrentTransaction ? database.GetTransactionById(Id) : database.GetDebitedTransactionById(Id);
             if (transaction is null)
             {
                 transaction = new Transaction();
