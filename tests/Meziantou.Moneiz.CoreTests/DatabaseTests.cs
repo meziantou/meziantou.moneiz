@@ -345,4 +345,78 @@ public class DatabaseTests
 
         Assert.Equal((IEnumerable<string>)["alpha", "beta", "gamma"], labels);
     }
+
+    [Fact]
+    public void RemoveAccount_RemovesScheduledTransactionsOfTheAccount()
+    {
+        var db = new Database();
+        var account = new Account { Name = "a1" };
+        db.SaveAccount(account);
+
+        db.SaveScheduledTransaction(new ScheduledTransaction
+        {
+            Account = account,
+            Amount = 1,
+            RecurrenceRuleText = "FREQ=daily",
+            Name = "test",
+            StartDate = Database.GetToday(),
+        });
+
+        db.RemoveAccount(account);
+
+        Assert.Empty(db.ScheduledTransactions);
+        Assert.Empty(db.Transactions);
+    }
+
+    [Fact]
+    public void RemoveAccount_RemovesScheduledTransactionsCreditingTheAccount()
+    {
+        var db = new Database();
+        var debitedAccount = new Account { Name = "a1" };
+        var creditedAccount = new Account { Name = "a2" };
+        db.SaveAccount(debitedAccount);
+        db.SaveAccount(creditedAccount);
+
+        db.SaveScheduledTransaction(new ScheduledTransaction
+        {
+            Account = debitedAccount,
+            CreditedAccount = creditedAccount,
+            Amount = 1,
+            RecurrenceRuleText = "FREQ=daily",
+            Name = "test",
+            StartDate = Database.GetToday(),
+        });
+
+        db.RemoveAccount(creditedAccount);
+
+        Assert.Empty(db.ScheduledTransactions);
+    }
+
+    [Fact]
+    public async Task RemoveAccount_ScheduledTransactionsAreNotReattachedToANewAccountAfterReload()
+    {
+        var db = new Database();
+        var account = new Account { Name = "a1" };
+        db.SaveAccount(account);
+
+        db.SaveScheduledTransaction(new ScheduledTransaction
+        {
+            Account = account,
+            Amount = 1,
+            RecurrenceRuleText = "FREQ=daily",
+            Name = "test",
+            StartDate = Database.GetToday(),
+        });
+
+        db.RemoveAccount(account);
+
+        var newAccount = new Account { Name = "a2" };
+        db.SaveAccount(newAccount);
+        Assert.Equal(account.Id, newAccount.Id);
+
+        var imported = await Database.Load(db.Export());
+
+        Assert.Empty(imported.ScheduledTransactions);
+        Assert.Empty(imported.Transactions);
+    }
 }

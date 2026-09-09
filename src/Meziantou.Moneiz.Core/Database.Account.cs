@@ -113,6 +113,11 @@ public partial class Database
         {
             if (Accounts.Remove(account))
             {
+                foreach (var scheduledTransaction in ScheduledTransactions.Where(t => t.Account == account || t.CreditedAccount == account).ToList())
+                {
+                    RemoveScheduledTransaction(scheduledTransaction);
+                }
+
                 foreach (var transaction in Transactions.Where(t => t.Account == account).ToList())
                 {
                     RemoveTransaction(transaction);
