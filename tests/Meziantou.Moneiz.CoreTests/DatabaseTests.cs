@@ -54,6 +54,43 @@ public class DatabaseTests
     }
 
     [Fact]
+    public async Task ImportExportResolvesEveryTransferReference()
+    {
+        const int TransferCount = 500;
+
+        var today = Database.GetToday();
+        var debitedAccount = new Account { Id = 1, Name = "a1", CurrencyIsoCode = "USD" };
+        var creditedAccount = new Account { Id = 2, Name = "a2", CurrencyIsoCode = "USD" };
+        var database = new Database()
+        {
+            Accounts = { debitedAccount, creditedAccount },
+        };
+
+        for (var i = 0; i < TransferCount; i++)
+        {
+            var debit = new Transaction { Id = (i * 2) + 1, Account = debitedAccount, Amount = -10, ValueDate = today };
+            var credit = new Transaction { Id = (i * 2) + 2, Account = creditedAccount, Amount = 10, ValueDate = today };
+            debit.LinkedTransaction = credit;
+            credit.LinkedTransaction = debit;
+            database.Transactions.Add(debit);
+            database.Transactions.Add(credit);
+        }
+
+        var imported = await Database.Load(database.Export());
+
+        Assert.HasCount(TransferCount * 2, imported.Transactions);
+        foreach (var transaction in imported.Transactions)
+        {
+            var linkedTransaction = transaction.LinkedTransaction;
+            Assert.NotNull(linkedTransaction);
+            Assert.Equal(transaction.Amount < 0 ? transaction.Id + 1 : transaction.Id - 1, linkedTransaction.Id);
+            Assert.Same(transaction, linkedTransaction.LinkedTransaction);
+            Assert.Contains(linkedTransaction, imported.Transactions);
+            Assert.Same(transaction.Amount < 0 ? imported.GetAccountById(1) : imported.GetAccountById(2), transaction.Account);
+        }
+    }
+
+    [Fact]
     public void AddScheduledTransaction()
     {
         var db = new Database();
@@ -179,6 +216,21 @@ public class DatabaseTests
             ["Market", "Popular Market", "Recent Market", "Older Market"],
             database.GetPayeeSuggestions(selectedAccount, "market", 4).Select(payee => payee.Name));
         Assert.Empty(database.GetPayeeSuggestions(selectedAccount, null, 0));
+    }
+
+    [Fact]
+    public void SaveAccountWhenAllExistingAccountsAreClosed()
+    {
+        var database = new Database();
+        var closedAccount = new Account { Name = "Closed account", Closed = true };
+        database.SaveAccount(closedAccount);
+
+        var newAccount = new Account { Name = "New account" };
+        database.SaveAccount(newAccount);
+
+        Assert.HasCount(2, database.Accounts);
+        Assert.Equal([newAccount], database.VisibleAccounts);
+        Assert.Equal(0, newAccount.SortOrder);
     }
 
     [Fact]
@@ -329,6 +381,52 @@ public class DatabaseTests
     }
 
     [Fact]
+    public void DuplicateTransfer_FromCreditedTransaction_KeepsTheDirection()
+    {
+        var source = new Account { Id = 1, Name = "Source" };
+        var destination = new Account { Id = 2, Name = "Destination" };
+        var debitedTransaction = new Transaction { Id = 1, Account = source, Amount = -100, ValueDate = new DateOnly(2026, 01, 01) };
+        var creditedTransaction = new Transaction { Id = 2, Account = destination, Amount = 100, ValueDate = new DateOnly(2026, 01, 01), LinkedTransaction = debitedTransaction };
+        debitedTransaction.LinkedTransaction = creditedTransaction;
+
+        var db = new Database
+        {
+            Accounts = { source, destination },
+            Transactions = { debitedTransaction, creditedTransaction },
+        };
+
+        var duplicate = TransactionEdit.FromTransaction(creditedTransaction, createNewTransaction: true);
+        duplicate.Save(db);
+
+        Assert.HasCount(4, db.Transactions);
+        Assert.Equal(-200, db.GetBalance(source));
+        Assert.Equal(200, db.GetBalance(destination));
+    }
+
+    [Fact]
+    public void DuplicateTransfer_FromDebitedTransaction_KeepsTheDirection()
+    {
+        var source = new Account { Id = 1, Name = "Source" };
+        var destination = new Account { Id = 2, Name = "Destination" };
+        var debitedTransaction = new Transaction { Id = 1, Account = source, Amount = -100, ValueDate = new DateOnly(2026, 01, 01) };
+        var creditedTransaction = new Transaction { Id = 2, Account = destination, Amount = 100, ValueDate = new DateOnly(2026, 01, 01), LinkedTransaction = debitedTransaction };
+        debitedTransaction.LinkedTransaction = creditedTransaction;
+
+        var db = new Database
+        {
+            Accounts = { source, destination },
+            Transactions = { debitedTransaction, creditedTransaction },
+        };
+
+        var duplicate = TransactionEdit.FromTransaction(debitedTransaction, createNewTransaction: true);
+        duplicate.Save(db);
+
+        Assert.HasCount(4, db.Transactions);
+        Assert.Equal(-200, db.GetBalance(source));
+        Assert.Equal(200, db.GetBalance(destination));
+    }
+
+    [Fact]
     public void GetAllLabels_ReturnsDistinctSortedLabels()
     {
         var account = new Account { Id = 1 };
@@ -345,6 +443,255 @@ public class DatabaseTests
         var labels = db.GetAllLabels().ToList();
 
         Assert.Equal((IEnumerable<string>)["alpha", "beta", "gamma"], labels);
+    }
+
+    [Fact]
+    public void RemoveAccount_RemovesScheduledTransactionsOfTheAccount()
+    {
+        var db = new Database();
+        var account = new Account { Name = "a1" };
+        db.SaveAccount(account);
+
+        db.SaveScheduledTransaction(new ScheduledTransaction
+        {
+            Account = account,
+            Amount = 1,
+            RecurrenceRuleText = "FREQ=daily",
+            Name = "test",
+            StartDate = Database.GetToday(),
+        });
+
+        db.RemoveAccount(account);
+
+        Assert.Empty(db.ScheduledTransactions);
+        Assert.Empty(db.Transactions);
+    }
+
+    [Fact]
+    public void RemoveAccount_RemovesScheduledTransactionsCreditingTheAccount()
+    {
+        var db = new Database();
+        var debitedAccount = new Account { Name = "a1" };
+        var creditedAccount = new Account { Name = "a2" };
+        db.SaveAccount(debitedAccount);
+        db.SaveAccount(creditedAccount);
+
+        db.SaveScheduledTransaction(new ScheduledTransaction
+        {
+            Account = debitedAccount,
+            CreditedAccount = creditedAccount,
+            Amount = 1,
+            RecurrenceRuleText = "FREQ=daily",
+            Name = "test",
+            StartDate = Database.GetToday(),
+        });
+
+        db.RemoveAccount(creditedAccount);
+
+        Assert.Empty(db.ScheduledTransactions);
+    }
+
+    [Fact]
+    public async Task RemoveAccount_ScheduledTransactionsAreNotReattachedToANewAccountAfterReload()
+    {
+        var db = new Database();
+        var account = new Account { Name = "a1" };
+        db.SaveAccount(account);
+
+        db.SaveScheduledTransaction(new ScheduledTransaction
+        {
+            Account = account,
+            Amount = 1,
+            RecurrenceRuleText = "FREQ=daily",
+            Name = "test",
+            StartDate = Database.GetToday(),
+        });
+
+        db.RemoveAccount(account);
+
+        var newAccount = new Account { Name = "a2" };
+        db.SaveAccount(newAccount);
+        Assert.Equal(account.Id, newAccount.Id);
+
+        var imported = await Database.Load(db.Export());
+
+        Assert.Empty(imported.ScheduledTransactions);
+        Assert.Empty(imported.Transactions);
+    }
+
+    [Fact]
+    public void TransactionEdit_InlineEditOfCreditedTransfer_KeepsEachSideOnItsOwnAccount()
+    {
+        var source = new Account { Id = 1, Name = "source" };
+        var destination = new Account { Id = 2, Name = "destination" };
+        var today = Database.GetToday();
+        var reconciliationDate = new DateTime(2026, 01, 02, 03, 04, 05, DateTimeKind.Utc);
+        var debited = new Transaction { Id = 1, Account = source, Amount = -100, ValueDate = today, CheckedDate = today, ReconciliationDate = reconciliationDate };
+        var credited = new Transaction { Id = 2, Account = destination, Amount = 100, ValueDate = today, LinkedTransaction = debited };
+        debited.LinkedTransaction = credited;
+
+        var db = new Database
+        {
+            Accounts = { source, destination },
+            Transactions = { debited, credited },
+        };
+
+        var edit = TransactionEdit.FromTransaction(credited, editCurrentTransaction: true);
+        edit.Comment = "updated";
+        edit.Save(db);
+
+        Assert.Same(source, db.GetTransactionById(1)!.Account);
+        Assert.Equal(-100, db.GetTransactionById(1)!.Amount);
+        Assert.Equal(reconciliationDate, db.GetTransactionById(1)!.ReconciliationDate);
+
+        Assert.Same(destination, db.GetTransactionById(2)!.Account);
+        Assert.Equal(100, db.GetTransactionById(2)!.Amount);
+        Assert.Null(db.GetTransactionById(2)!.ReconciliationDate);
+
+        Assert.Equal("updated", db.GetTransactionById(1)!.Comment);
+        Assert.Equal("updated", db.GetTransactionById(2)!.Comment);
+    }
+
+    [Fact]
+    public void TransactionEdit_InlineEditOfDebitedTransfer_KeepsEachSideOnItsOwnAccount()
+    {
+        var source = new Account { Id = 1, Name = "source" };
+        var destination = new Account { Id = 2, Name = "destination" };
+        var today = Database.GetToday();
+        var reconciliationDate = new DateTime(2026, 01, 02, 03, 04, 05, DateTimeKind.Utc);
+        var debited = new Transaction { Id = 1, Account = source, Amount = -100, ValueDate = today, CheckedDate = today, ReconciliationDate = reconciliationDate };
+        var credited = new Transaction { Id = 2, Account = destination, Amount = 100, ValueDate = today, LinkedTransaction = debited };
+        debited.LinkedTransaction = credited;
+
+        var db = new Database
+        {
+            Accounts = { source, destination },
+            Transactions = { debited, credited },
+        };
+
+        var edit = TransactionEdit.FromTransaction(debited, editCurrentTransaction: true);
+        edit.Comment = "updated";
+        edit.Save(db);
+
+        Assert.Same(source, db.GetTransactionById(1)!.Account);
+        Assert.Equal(-100, db.GetTransactionById(1)!.Amount);
+        Assert.Equal(reconciliationDate, db.GetTransactionById(1)!.ReconciliationDate);
+
+        Assert.Same(destination, db.GetTransactionById(2)!.Account);
+        Assert.Equal(100, db.GetTransactionById(2)!.Amount);
+
+        Assert.Equal("updated", db.GetTransactionById(1)!.Comment);
+        Assert.Equal("updated", db.GetTransactionById(2)!.Comment);
+    }
+
+    [Fact]
+    public void TransactionEdit_InlineEditAmountOfCreditedTransfer_UpdatesBothSides()
+    {
+        var source = new Account { Id = 1, Name = "source" };
+        var destination = new Account { Id = 2, Name = "destination" };
+        var today = Database.GetToday();
+        var debited = new Transaction { Id = 1, Account = source, Amount = -100, ValueDate = today };
+        var credited = new Transaction { Id = 2, Account = destination, Amount = 100, ValueDate = today, LinkedTransaction = debited };
+        debited.LinkedTransaction = credited;
+
+        var db = new Database
+        {
+            Accounts = { source, destination },
+            Transactions = { debited, credited },
+        };
+
+        var edit = TransactionEdit.FromTransaction(credited, editCurrentTransaction: true);
+        edit.Amount = 150;
+        edit.Save(db);
+
+        Assert.Same(source, db.GetTransactionById(1)!.Account);
+        Assert.Equal(-150, db.GetTransactionById(1)!.Amount);
+
+        Assert.Same(destination, db.GetTransactionById(2)!.Account);
+        Assert.Equal(150, db.GetTransactionById(2)!.Amount);
+    }
+
+    [Fact]
+    public void GetProjectedBalance_IncludesScheduledTransactionsBeyondTheMaterializedWindow()
+    {
+        var db = new Database();
+        var account = new Account { InitialBalance = 100 };
+        db.SaveAccount(account);
+
+        var scheduledTransaction = new ScheduledTransaction
+        {
+            Account = account,
+            Amount = -200,
+            RecurrenceRuleText = "FREQ=MONTHLY;BYMONTHDAY=10",
+            Name = "test",
+            StartDate = new DateOnly(2026, 08, 10),
+            NextOccurenceDate = new DateOnly(2026, 08, 10),
+        };
+
+        db.SaveScheduledTransaction(scheduledTransaction);
+
+        Assert.Empty(db.Transactions);
+        Assert.Equal(100, db.GetBalance(account, new DateOnly(2026, 09, 10)));
+
+        Assert.Equal(100, db.GetProjectedBalance(account, new DateOnly(2026, 08, 09)));
+        Assert.Equal(-100, db.GetProjectedBalance(account, new DateOnly(2026, 08, 10)));
+        Assert.Equal(-300, db.GetProjectedBalance(account, new DateOnly(2026, 09, 10)));
+
+        // The projection must not materialize anything
+        Assert.Empty(db.Transactions);
+        Assert.Equal(new DateOnly(2026, 08, 10), scheduledTransaction.NextOccurenceDate);
+    }
+
+    [Fact]
+    public void GetProjectedBalance_DoesNotCountMaterializedOccurrencesTwice()
+    {
+        var today = Database.GetToday();
+        var db = new Database();
+        var account = new Account();
+        db.SaveAccount(account);
+
+        db.SaveScheduledTransaction(new ScheduledTransaction
+        {
+            Account = account,
+            Amount = -1,
+            RecurrenceRuleText = "FREQ=DAILY",
+            Name = "test",
+            StartDate = today,
+        });
+
+        Assert.HasCount(5, db.Transactions);
+        Assert.Equal(-5, db.GetBalance(account, today.AddDays(9)));
+
+        Assert.Equal(-5, db.GetProjectedBalance(account, today.AddDays(4)));
+        Assert.Equal(-10, db.GetProjectedBalance(account, today.AddDays(9)));
+    }
+
+    [Fact]
+    public void GetProjectedBalance_HandlesInterAccountScheduledTransactions()
+    {
+        var db = new Database();
+        var debitedAccount = new Account { Name = "debited", InitialBalance = 100 };
+        var creditedAccount = new Account { Name = "credited" };
+        var otherAccount = new Account { Name = "other" };
+        db.SaveAccount(debitedAccount);
+        db.SaveAccount(creditedAccount);
+        db.SaveAccount(otherAccount);
+
+        db.SaveScheduledTransaction(new ScheduledTransaction
+        {
+            Account = debitedAccount,
+            CreditedAccount = creditedAccount,
+            Amount = 30,
+            RecurrenceRuleText = "FREQ=MONTHLY;BYMONTHDAY=10",
+            Name = "test",
+            StartDate = new DateOnly(2026, 08, 10),
+            NextOccurenceDate = new DateOnly(2026, 08, 10),
+        });
+
+        Assert.Equal(100, db.GetProjectedBalance(debitedAccount, new DateOnly(2026, 08, 09)));
+        Assert.Equal(70, db.GetProjectedBalance(debitedAccount, new DateOnly(2026, 08, 10)));
+        Assert.Equal(30, db.GetProjectedBalance(creditedAccount, new DateOnly(2026, 08, 10)));
+        Assert.Equal(0, db.GetProjectedBalance(otherAccount, new DateOnly(2026, 09, 10)));
     }
 
     [Fact]

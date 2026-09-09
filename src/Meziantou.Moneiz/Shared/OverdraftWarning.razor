@@ -107,7 +107,7 @@
                 for (var i = 0; i <= days; i++)
                 {
                     var checkDate = today.AddDays(i);
-                    var balance = db.GetBalance(account, checkDate);
+                    var balance = db.GetProjectedBalance(account, checkDate);
 
                     if (balance < minimumBalance)
                     {

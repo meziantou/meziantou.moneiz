@@ -21,9 +21,10 @@ public partial class Database
         if (existingAccount is null)
         {
             account.Id = GenerateId(Accounts, a => a.Id);
-            if (Accounts.Count > 0)
+            var maxSortOrder = Accounts.Where(a => !a.Closed).Max(a => (int?)a.SortOrder);
+            if (maxSortOrder is not null)
             {
-                account.SortOrder = Accounts.Where(account => !account.Closed).Max(account => account.SortOrder) + 1;
+                account.SortOrder = maxSortOrder.GetValueOrDefault() + 1;
             }
         }
 
@@ -113,6 +114,11 @@ public partial class Database
         {
             if (Accounts.Remove(account))
             {
+                foreach (var scheduledTransaction in ScheduledTransactions.Where(t => t.Account == account || t.CreditedAccount == account).ToList())
+                {
+                    RemoveScheduledTransaction(scheduledTransaction);
+                }
+
                 foreach (var transaction in Transactions.Where(t => t.Account == account).ToList())
                 {
                     RemoveTransaction(transaction);
@@ -152,6 +158,15 @@ public partial class Database
     public decimal GetBalance(Account account)
     {
         return GetBalance(account, DateOnly.MaxValue, TransactionState.NotChecked);
+    }
+
+    /// <summary>
+    /// Gets the balance of the account at the given date, including the scheduled transactions
+    /// that are not materialized yet. The database is not modified.
+    /// </summary>
+    public decimal GetProjectedBalance(Account account, DateOnly date)
+    {
+        return GetBalance(account, date) + GetPendingScheduledTransactionsAmount(account, date);
     }
 
     private decimal GetBalance(Account account, DateOnly date, TransactionState transactionState)

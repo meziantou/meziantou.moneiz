@@ -56,6 +56,64 @@ public partial class Database
         }
     }
 
+    /// <summary>
+    /// Computes the total amount of the scheduled transaction occurrences that impact the account
+    /// up to <paramref name="date"/> and that are not materialized yet.
+    /// </summary>
+    private decimal GetPendingScheduledTransactionsAmount(Account account, DateOnly date)
+    {
+        var total = 0m;
+        foreach (var scheduledTransaction in ScheduledTransactions)
+        {
+            var amount = GetOccurrenceAmount(scheduledTransaction, account);
+            if (amount == 0)
+                continue;
+
+            total += amount * GetPendingOccurrences(scheduledTransaction, date).Count();
+        }
+
+        return total;
+    }
+
+    /// <summary>
+    /// Gets the amount a single occurrence of the scheduled transaction adds to the account balance.
+    /// </summary>
+    private static decimal GetOccurrenceAmount(ScheduledTransaction scheduledTransaction, Account account)
+    {
+        var interAccount = scheduledTransaction.CreditedAccount is not null;
+
+        var amount = 0m;
+        if (scheduledTransaction.Account == account)
+        {
+            amount += interAccount ? -Math.Abs(scheduledTransaction.Amount) : scheduledTransaction.Amount;
+        }
+
+        if (interAccount && scheduledTransaction.CreditedAccount == account)
+        {
+            amount += Math.Abs(scheduledTransaction.Amount);
+        }
+
+        return amount;
+    }
+
+    private static IEnumerable<DateOnly> GetPendingOccurrences(ScheduledTransaction scheduledTransaction, DateOnly maxDate)
+    {
+        DateOnly? previousOccurrence = null;
+        foreach (var occurrence in scheduledTransaction.GetNextOccurences())
+        {
+            var occurrenceDate = DateOnly.FromDateTime(occurrence);
+            if (occurrenceDate > maxDate)
+                yield break;
+
+            // The recurrence rule must move forward, otherwise the enumeration never ends
+            if (previousOccurrence >= occurrenceDate)
+                yield break;
+
+            previousOccurrence = occurrenceDate;
+            yield return occurrenceDate;
+        }
+    }
+
     public void ProcessScheduledTransactions(int daysAhead)
     {
         using (DeferEvents())
