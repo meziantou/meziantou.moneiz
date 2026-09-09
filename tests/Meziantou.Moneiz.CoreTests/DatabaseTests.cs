@@ -517,4 +517,96 @@ public class DatabaseTests
         Assert.Empty(imported.ScheduledTransactions);
         Assert.Empty(imported.Transactions);
     }
+
+    [Fact]
+    public void TransactionEdit_InlineEditOfCreditedTransfer_KeepsEachSideOnItsOwnAccount()
+    {
+        var source = new Account { Id = 1, Name = "source" };
+        var destination = new Account { Id = 2, Name = "destination" };
+        var today = Database.GetToday();
+        var reconciliationDate = new DateTime(2026, 01, 02, 03, 04, 05, DateTimeKind.Utc);
+        var debited = new Transaction { Id = 1, Account = source, Amount = -100, ValueDate = today, CheckedDate = today, ReconciliationDate = reconciliationDate };
+        var credited = new Transaction { Id = 2, Account = destination, Amount = 100, ValueDate = today, LinkedTransaction = debited };
+        debited.LinkedTransaction = credited;
+
+        var db = new Database
+        {
+            Accounts = { source, destination },
+            Transactions = { debited, credited },
+        };
+
+        var edit = TransactionEdit.FromTransaction(credited, editCurrentTransaction: true);
+        edit.Comment = "updated";
+        edit.Save(db);
+
+        Assert.Same(source, db.GetTransactionById(1)!.Account);
+        Assert.Equal(-100, db.GetTransactionById(1)!.Amount);
+        Assert.Equal(reconciliationDate, db.GetTransactionById(1)!.ReconciliationDate);
+
+        Assert.Same(destination, db.GetTransactionById(2)!.Account);
+        Assert.Equal(100, db.GetTransactionById(2)!.Amount);
+        Assert.Null(db.GetTransactionById(2)!.ReconciliationDate);
+
+        Assert.Equal("updated", db.GetTransactionById(1)!.Comment);
+        Assert.Equal("updated", db.GetTransactionById(2)!.Comment);
+    }
+
+    [Fact]
+    public void TransactionEdit_InlineEditOfDebitedTransfer_KeepsEachSideOnItsOwnAccount()
+    {
+        var source = new Account { Id = 1, Name = "source" };
+        var destination = new Account { Id = 2, Name = "destination" };
+        var today = Database.GetToday();
+        var reconciliationDate = new DateTime(2026, 01, 02, 03, 04, 05, DateTimeKind.Utc);
+        var debited = new Transaction { Id = 1, Account = source, Amount = -100, ValueDate = today, CheckedDate = today, ReconciliationDate = reconciliationDate };
+        var credited = new Transaction { Id = 2, Account = destination, Amount = 100, ValueDate = today, LinkedTransaction = debited };
+        debited.LinkedTransaction = credited;
+
+        var db = new Database
+        {
+            Accounts = { source, destination },
+            Transactions = { debited, credited },
+        };
+
+        var edit = TransactionEdit.FromTransaction(debited, editCurrentTransaction: true);
+        edit.Comment = "updated";
+        edit.Save(db);
+
+        Assert.Same(source, db.GetTransactionById(1)!.Account);
+        Assert.Equal(-100, db.GetTransactionById(1)!.Amount);
+        Assert.Equal(reconciliationDate, db.GetTransactionById(1)!.ReconciliationDate);
+
+        Assert.Same(destination, db.GetTransactionById(2)!.Account);
+        Assert.Equal(100, db.GetTransactionById(2)!.Amount);
+
+        Assert.Equal("updated", db.GetTransactionById(1)!.Comment);
+        Assert.Equal("updated", db.GetTransactionById(2)!.Comment);
+    }
+
+    [Fact]
+    public void TransactionEdit_InlineEditAmountOfCreditedTransfer_UpdatesBothSides()
+    {
+        var source = new Account { Id = 1, Name = "source" };
+        var destination = new Account { Id = 2, Name = "destination" };
+        var today = Database.GetToday();
+        var debited = new Transaction { Id = 1, Account = source, Amount = -100, ValueDate = today };
+        var credited = new Transaction { Id = 2, Account = destination, Amount = 100, ValueDate = today, LinkedTransaction = debited };
+        debited.LinkedTransaction = credited;
+
+        var db = new Database
+        {
+            Accounts = { source, destination },
+            Transactions = { debited, credited },
+        };
+
+        var edit = TransactionEdit.FromTransaction(credited, editCurrentTransaction: true);
+        edit.Amount = 150;
+        edit.Save(db);
+
+        Assert.Same(source, db.GetTransactionById(1)!.Account);
+        Assert.Equal(-150, db.GetTransactionById(1)!.Amount);
+
+        Assert.Same(destination, db.GetTransactionById(2)!.Account);
+        Assert.Equal(150, db.GetTransactionById(2)!.Amount);
+    }
 }
