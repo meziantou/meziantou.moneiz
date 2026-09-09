@@ -34,6 +34,7 @@ public static partial class SettingsProvider
 
     public static Task SetDisplaySettings(MoneizDisplaySettings value) => SetValue("displaySettings", value, JsonSettingsContext.Default.MoneizDisplaySettings);
 
+    [JsonSourceGenerationOptions(RespectNullableAnnotations = false, RespectRequiredConstructorParameters = false)]
     [JsonSerializable(typeof(MoneizDisplaySettings))]
     [JsonSerializable(typeof(bool?))]
     private sealed partial class JsonSettingsContext : JsonSerializerContext;
