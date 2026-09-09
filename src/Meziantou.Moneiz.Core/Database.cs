@@ -159,6 +159,21 @@ public sealed partial class Database
                     throw new MoneizException($"Database is not valid: linked transaction of transaction '{transaction.Id}' is not valid");
             }
         }
+
+        foreach (var scheduledTransaction in ScheduledTransactions)
+        {
+            if (scheduledTransaction.Account is not null)
+            {
+                if (!Accounts.Any(a => ReferenceEquals(a, scheduledTransaction.Account)))
+                    throw new MoneizException($"Database is not valid: account of scheduled transaction '{scheduledTransaction.Id}' is not valid");
+            }
+
+            if (scheduledTransaction.CreditedAccount is not null)
+            {
+                if (!Accounts.Any(a => ReferenceEquals(a, scheduledTransaction.CreditedAccount)))
+                    throw new MoneizException($"Database is not valid: credited account of scheduled transaction '{scheduledTransaction.Id}' is not valid");
+            }
+        }
     }
 
     private static void AddOrReplace<T>(IList<T> items, T? existingItem, T newItem) where T : class
