@@ -128,26 +128,26 @@ public sealed class ScheduledTransaction
         return RecurrenceRule.GetNextOccurrences(NextOccurenceDate.Value.ToDateTime(TimeOnly.MinValue));
     }
 
-    internal void ResolveReferences(Database database)
+    internal void ResolveReferences(DatabaseReferenceIndex index)
     {
         if (_accountId.HasValue)
         {
-            Account = database.GetAccountById(_accountId);
+            Account = index.Accounts.GetById(_accountId);
         }
 
         if (_creditedAccountId.HasValue)
         {
-            CreditedAccount = database.GetAccountById(_creditedAccountId);
+            CreditedAccount = index.Accounts.GetById(_creditedAccountId);
         }
 
         if (_payeeId.HasValue)
         {
-            Payee = database.GetPayeeById(_payeeId);
+            Payee = index.Payees.GetById(_payeeId);
         }
 
         if (_categoryId.HasValue)
         {
-            Category = database.GetCategoryById(_categoryId);
+            Category = index.Categories.GetById(_categoryId);
         }
     }
 }
