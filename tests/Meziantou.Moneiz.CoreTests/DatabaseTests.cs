@@ -53,6 +53,43 @@ public class DatabaseTests
     }
 
     [Fact]
+    public async Task ImportExportResolvesEveryTransferReference()
+    {
+        const int TransferCount = 500;
+
+        var today = Database.GetToday();
+        var debitedAccount = new Account { Id = 1, Name = "a1", CurrencyIsoCode = "USD" };
+        var creditedAccount = new Account { Id = 2, Name = "a2", CurrencyIsoCode = "USD" };
+        var database = new Database()
+        {
+            Accounts = { debitedAccount, creditedAccount },
+        };
+
+        for (var i = 0; i < TransferCount; i++)
+        {
+            var debit = new Transaction { Id = (i * 2) + 1, Account = debitedAccount, Amount = -10, ValueDate = today };
+            var credit = new Transaction { Id = (i * 2) + 2, Account = creditedAccount, Amount = 10, ValueDate = today };
+            debit.LinkedTransaction = credit;
+            credit.LinkedTransaction = debit;
+            database.Transactions.Add(debit);
+            database.Transactions.Add(credit);
+        }
+
+        var imported = await Database.Load(database.Export());
+
+        Assert.HasCount(TransferCount * 2, imported.Transactions);
+        foreach (var transaction in imported.Transactions)
+        {
+            var linkedTransaction = transaction.LinkedTransaction;
+            Assert.NotNull(linkedTransaction);
+            Assert.Equal(transaction.Amount < 0 ? transaction.Id + 1 : transaction.Id - 1, linkedTransaction.Id);
+            Assert.Same(transaction, linkedTransaction.LinkedTransaction);
+            Assert.Contains(linkedTransaction, imported.Transactions);
+            Assert.Same(transaction.Amount < 0 ? imported.GetAccountById(1) : imported.GetAccountById(2), transaction.Account);
+        }
+    }
+
+    [Fact]
     public void AddScheduledTransaction()
     {
         var db = new Database();

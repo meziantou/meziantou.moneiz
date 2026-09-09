@@ -122,26 +122,26 @@ public sealed class Transaction
         }
     }
 
-    internal void ResolveReferences(Database database)
+    internal void ResolveReferences(DatabaseReferenceIndex index)
     {
         if (_accountId.HasValue)
         {
-            Account = database.GetAccountById(_accountId);
+            Account = index.Accounts.GetById(_accountId);
         }
 
         if (_payeeId.HasValue)
         {
-            Payee = database.GetPayeeById(_payeeId);
+            Payee = index.Payees.GetById(_payeeId);
         }
 
         if (_categoryId.HasValue)
         {
-            Category = database.GetCategoryById(_categoryId);
+            Category = index.Categories.GetById(_categoryId);
         }
 
         if (_linkedTransactionId.HasValue)
         {
-            LinkedTransaction = database.GetTransactionById(_linkedTransactionId);
+            LinkedTransaction = index.Transactions.GetById(_linkedTransactionId);
         }
     }
 }

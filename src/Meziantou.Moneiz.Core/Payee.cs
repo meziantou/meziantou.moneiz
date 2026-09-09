@@ -30,11 +30,11 @@ public sealed class Payee
         set => _defaultCategoryId = value;
     }
 
-    internal void ResolveReferences(Database database)
+    internal void ResolveReferences(DatabaseReferenceIndex index)
     {
         if (_defaultCategoryId.HasValue)
         {
-            DefaultCategory = database.GetCategoryById(_defaultCategoryId);
+            DefaultCategory = index.Categories.GetById(_defaultCategoryId);
         }
     }
 
