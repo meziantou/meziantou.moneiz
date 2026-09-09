@@ -609,4 +609,87 @@ public class DatabaseTests
         Assert.Same(destination, db.GetTransactionById(2)!.Account);
         Assert.Equal(150, db.GetTransactionById(2)!.Amount);
     }
+
+    [Fact]
+    public void GetProjectedBalance_IncludesScheduledTransactionsBeyondTheMaterializedWindow()
+    {
+        var db = new Database();
+        var account = new Account { InitialBalance = 100 };
+        db.SaveAccount(account);
+
+        var scheduledTransaction = new ScheduledTransaction
+        {
+            Account = account,
+            Amount = -200,
+            RecurrenceRuleText = "FREQ=MONTHLY;BYMONTHDAY=10",
+            Name = "test",
+            StartDate = new DateOnly(2026, 08, 10),
+            NextOccurenceDate = new DateOnly(2026, 08, 10),
+        };
+
+        db.SaveScheduledTransaction(scheduledTransaction);
+
+        Assert.Empty(db.Transactions);
+        Assert.Equal(100, db.GetBalance(account, new DateOnly(2026, 09, 10)));
+
+        Assert.Equal(100, db.GetProjectedBalance(account, new DateOnly(2026, 08, 09)));
+        Assert.Equal(-100, db.GetProjectedBalance(account, new DateOnly(2026, 08, 10)));
+        Assert.Equal(-300, db.GetProjectedBalance(account, new DateOnly(2026, 09, 10)));
+
+        // The projection must not materialize anything
+        Assert.Empty(db.Transactions);
+        Assert.Equal(new DateOnly(2026, 08, 10), scheduledTransaction.NextOccurenceDate);
+    }
+
+    [Fact]
+    public void GetProjectedBalance_DoesNotCountMaterializedOccurrencesTwice()
+    {
+        var today = Database.GetToday();
+        var db = new Database();
+        var account = new Account();
+        db.SaveAccount(account);
+
+        db.SaveScheduledTransaction(new ScheduledTransaction
+        {
+            Account = account,
+            Amount = -1,
+            RecurrenceRuleText = "FREQ=DAILY",
+            Name = "test",
+            StartDate = today,
+        });
+
+        Assert.HasCount(5, db.Transactions);
+        Assert.Equal(-5, db.GetBalance(account, today.AddDays(9)));
+
+        Assert.Equal(-5, db.GetProjectedBalance(account, today.AddDays(4)));
+        Assert.Equal(-10, db.GetProjectedBalance(account, today.AddDays(9)));
+    }
+
+    [Fact]
+    public void GetProjectedBalance_HandlesInterAccountScheduledTransactions()
+    {
+        var db = new Database();
+        var debitedAccount = new Account { Name = "debited", InitialBalance = 100 };
+        var creditedAccount = new Account { Name = "credited" };
+        var otherAccount = new Account { Name = "other" };
+        db.SaveAccount(debitedAccount);
+        db.SaveAccount(creditedAccount);
+        db.SaveAccount(otherAccount);
+
+        db.SaveScheduledTransaction(new ScheduledTransaction
+        {
+            Account = debitedAccount,
+            CreditedAccount = creditedAccount,
+            Amount = 30,
+            RecurrenceRuleText = "FREQ=MONTHLY;BYMONTHDAY=10",
+            Name = "test",
+            StartDate = new DateOnly(2026, 08, 10),
+            NextOccurenceDate = new DateOnly(2026, 08, 10),
+        });
+
+        Assert.Equal(100, db.GetProjectedBalance(debitedAccount, new DateOnly(2026, 08, 09)));
+        Assert.Equal(70, db.GetProjectedBalance(debitedAccount, new DateOnly(2026, 08, 10)));
+        Assert.Equal(30, db.GetProjectedBalance(creditedAccount, new DateOnly(2026, 08, 10)));
+        Assert.Equal(0, db.GetProjectedBalance(otherAccount, new DateOnly(2026, 09, 10)));
+    }
 }
