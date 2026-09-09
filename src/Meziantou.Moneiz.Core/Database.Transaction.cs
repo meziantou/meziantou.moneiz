@@ -15,14 +15,7 @@ public partial class Database
         if (id is null)
             return null;
 
-        var transaction = Transactions.FirstOrDefault(item => item.Id == id);
-        if (transaction is null)
-            return null;
-
-        if (transaction.Amount > 0 && transaction.LinkedTransaction is not null)
-            return transaction.LinkedTransaction;
-
-        return transaction;
+        return Transactions.FirstOrDefault(item => item.Id == id)?.DebitedTransaction;
     }
 
     public void SaveTransaction(Transaction transaction)

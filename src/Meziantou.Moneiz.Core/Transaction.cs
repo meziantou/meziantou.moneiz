@@ -107,6 +107,12 @@ public sealed class Transaction
     [JsonIgnore]
     public string? FinalTitle => Payee?.ToString() ?? LinkedTransaction?.Account?.ToString();
 
+    /// <summary>
+    /// Gets the debited side of the transfer this transaction belongs to, or the transaction itself when it is not part of a transfer.
+    /// </summary>
+    [JsonIgnore]
+    public Transaction DebitedTransaction => Amount > 0 && LinkedTransaction is not null ? LinkedTransaction : this;
+
     [JsonIgnore]
     public TransactionState State
     {
@@ -122,26 +128,26 @@ public sealed class Transaction
         }
     }
 
-    internal void ResolveReferences(Database database)
+    internal void ResolveReferences(DatabaseReferenceIndex index)
     {
         if (_accountId.HasValue)
         {
-            Account = database.GetAccountById(_accountId);
+            Account = index.Accounts.GetById(_accountId);
         }
 
         if (_payeeId.HasValue)
         {
-            Payee = database.GetPayeeById(_payeeId);
+            Payee = index.Payees.GetById(_payeeId);
         }
 
         if (_categoryId.HasValue)
         {
-            Category = database.GetCategoryById(_categoryId);
+            Category = index.Categories.GetById(_categoryId);
         }
 
         if (_linkedTransactionId.HasValue)
         {
-            LinkedTransaction = database.GetTransactionById(_linkedTransactionId);
+            LinkedTransaction = index.Transactions.GetById(_linkedTransactionId);
         }
     }
 }

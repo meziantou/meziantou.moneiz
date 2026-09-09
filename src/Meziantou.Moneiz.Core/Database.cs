@@ -94,37 +94,38 @@ public sealed partial class Database
         if (db is null)
             throw new Exception("database is null");
 
-        db.ResolveReferences();
-        db.AssertNoDetachedReferences();
+        var index = new DatabaseReferenceIndex(db);
+        db.ResolveReferences(index);
+        db.AssertNoDetachedReferences(index);
         db.ProcessScheduledTransactions();
         return db;
     }
 
-    private void ResolveReferences()
+    private void ResolveReferences(DatabaseReferenceIndex index)
     {
         foreach (var payee in Payees)
         {
-            payee.ResolveReferences(this);
+            payee.ResolveReferences(index);
         }
 
         foreach (var transaction in Transactions)
         {
-            transaction.ResolveReferences(this);
+            transaction.ResolveReferences(index);
         }
 
         foreach (var scheduledTransaction in ScheduledTransactions)
         {
-            scheduledTransaction.ResolveReferences(this);
+            scheduledTransaction.ResolveReferences(index);
         }
     }
 
-    private void AssertNoDetachedReferences()
+    private void AssertNoDetachedReferences(DatabaseReferenceIndex index)
     {
         foreach (var payee in Payees)
         {
             if (payee.DefaultCategory is not null)
             {
-                if (!Categories.Any(c => ReferenceEquals(c, payee.DefaultCategory)))
+                if (!index.Categories.Contains(payee.DefaultCategory))
                     throw new MoneizException($"Database is not valid: category of payee '{payee}' is not valid");
             }
         }
@@ -133,19 +134,19 @@ public sealed partial class Database
         {
             if (transaction.Account is not null)
             {
-                if (!Accounts.Any(c => ReferenceEquals(c, transaction.Account)))
+                if (!index.Accounts.Contains(transaction.Account))
                     throw new MoneizException($"Database is not valid: account of transaction '{transaction.Id}' is not valid");
             }
 
             if (transaction.Category is not null)
             {
-                if (!Categories.Any(c => ReferenceEquals(c, transaction.Category)))
+                if (!index.Categories.Contains(transaction.Category))
                     throw new MoneizException($"Database is not valid: category of transaction '{transaction.Id}' is not valid");
             }
 
             if (transaction.Payee is not null)
             {
-                if (!Payees.Any(c => ReferenceEquals(c, transaction.Payee)))
+                if (!index.Payees.Contains(transaction.Payee))
                     throw new MoneizException($"Database is not valid: payee of transaction '{transaction.Id}' is not valid");
             }
 
@@ -154,8 +155,23 @@ public sealed partial class Database
                 if (!ReferenceEquals(transaction.LinkedTransaction.LinkedTransaction, transaction))
                     throw new MoneizException($"Database is not valid: linked transaction of transaction '{transaction.Id}' is not valid");
 
-                if (!Transactions.Any(c => ReferenceEquals(c, transaction.LinkedTransaction)))
+                if (!index.Transactions.Contains(transaction.LinkedTransaction))
                     throw new MoneizException($"Database is not valid: linked transaction of transaction '{transaction.Id}' is not valid");
+            }
+        }
+
+        foreach (var scheduledTransaction in ScheduledTransactions)
+        {
+            if (scheduledTransaction.Account is not null)
+            {
+                if (!Accounts.Any(a => ReferenceEquals(a, scheduledTransaction.Account)))
+                    throw new MoneizException($"Database is not valid: account of scheduled transaction '{scheduledTransaction.Id}' is not valid");
+            }
+
+            if (scheduledTransaction.CreditedAccount is not null)
+            {
+                if (!Accounts.Any(a => ReferenceEquals(a, scheduledTransaction.CreditedAccount)))
+                    throw new MoneizException($"Database is not valid: credited account of scheduled transaction '{scheduledTransaction.Id}' is not valid");
             }
         }
     }
