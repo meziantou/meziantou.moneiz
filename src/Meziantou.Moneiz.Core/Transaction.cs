@@ -107,6 +107,12 @@ public sealed class Transaction
     [JsonIgnore]
     public string? FinalTitle => Payee?.ToString() ?? LinkedTransaction?.Account?.ToString();
 
+    /// <summary>
+    /// Gets the debited side of the transfer this transaction belongs to, or the transaction itself when it is not part of a transfer.
+    /// </summary>
+    [JsonIgnore]
+    public Transaction DebitedTransaction => Amount > 0 && LinkedTransaction is not null ? LinkedTransaction : this;
+
     [JsonIgnore]
     public TransactionState State
     {

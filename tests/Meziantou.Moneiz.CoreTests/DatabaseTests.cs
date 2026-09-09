@@ -380,6 +380,52 @@ public class DatabaseTests
     }
 
     [Fact]
+    public void DuplicateTransfer_FromCreditedTransaction_KeepsTheDirection()
+    {
+        var source = new Account { Id = 1, Name = "Source" };
+        var destination = new Account { Id = 2, Name = "Destination" };
+        var debitedTransaction = new Transaction { Id = 1, Account = source, Amount = -100, ValueDate = new DateOnly(2026, 01, 01) };
+        var creditedTransaction = new Transaction { Id = 2, Account = destination, Amount = 100, ValueDate = new DateOnly(2026, 01, 01), LinkedTransaction = debitedTransaction };
+        debitedTransaction.LinkedTransaction = creditedTransaction;
+
+        var db = new Database
+        {
+            Accounts = { source, destination },
+            Transactions = { debitedTransaction, creditedTransaction },
+        };
+
+        var duplicate = TransactionEdit.FromTransaction(creditedTransaction, createNewTransaction: true);
+        duplicate.Save(db);
+
+        Assert.HasCount(4, db.Transactions);
+        Assert.Equal(-200, db.GetBalance(source));
+        Assert.Equal(200, db.GetBalance(destination));
+    }
+
+    [Fact]
+    public void DuplicateTransfer_FromDebitedTransaction_KeepsTheDirection()
+    {
+        var source = new Account { Id = 1, Name = "Source" };
+        var destination = new Account { Id = 2, Name = "Destination" };
+        var debitedTransaction = new Transaction { Id = 1, Account = source, Amount = -100, ValueDate = new DateOnly(2026, 01, 01) };
+        var creditedTransaction = new Transaction { Id = 2, Account = destination, Amount = 100, ValueDate = new DateOnly(2026, 01, 01), LinkedTransaction = debitedTransaction };
+        debitedTransaction.LinkedTransaction = creditedTransaction;
+
+        var db = new Database
+        {
+            Accounts = { source, destination },
+            Transactions = { debitedTransaction, creditedTransaction },
+        };
+
+        var duplicate = TransactionEdit.FromTransaction(debitedTransaction, createNewTransaction: true);
+        duplicate.Save(db);
+
+        Assert.HasCount(4, db.Transactions);
+        Assert.Equal(-200, db.GetBalance(source));
+        Assert.Equal(200, db.GetBalance(destination));
+    }
+
+    [Fact]
     public void GetAllLabels_ReturnsDistinctSortedLabels()
     {
         var account = new Account { Id = 1 };
