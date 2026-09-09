@@ -68,15 +68,8 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
                     if (_database is null)
                     {
                         var result = await GlobalInterop.GetByteArrayValue(MoneizLocalStorageDbName);
-                        if (result is not null)
-                        {
-                            _database = await Database.Load(result);
-                        }
-
-                        _database ??= new Database();
+                        SetDatabase(result is not null ? await Database.Load(result) : new Database());
                     }
-
-                    _database.DatabaseChanged += Database_DatabaseChanged;
                 }
             }
             finally
@@ -129,13 +122,28 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
     public async Task Import(Database database)
     {
         await Save(database, new SaveOptions { IndicateDbChanged = false });
-        if (_database is not null)
+        SetDatabase(database);
+        RaiseDatabaseChanged();
+    }
+
+    /// <summary>
+    /// Makes <paramref name="database"/> the current database, moving the <see cref="Database.DatabaseChanged"/>
+    /// subscription off the previous instance so changes are forwarded exactly once.
+    /// </summary>
+    [MemberNotNull(nameof(_database))]
+    private void SetDatabase(Database database)
+    {
+        if (!ReferenceEquals(_database, database))
         {
-            _database.DatabaseChanged -= Database_DatabaseChanged;
+            if (_database is not null)
+            {
+                _database.DatabaseChanged -= Database_DatabaseChanged;
+            }
+
+            database.DatabaseChanged += Database_DatabaseChanged;
         }
 
         _database = database;
-        RaiseDatabaseChanged();
     }
 
     private void Database_DatabaseChanged(object? sender, EventArgs e) => RaiseDatabaseChanged();
