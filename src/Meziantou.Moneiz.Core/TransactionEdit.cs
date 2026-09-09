@@ -20,6 +20,12 @@ public sealed class TransactionEdit
 
     public static TransactionEdit FromTransaction(Transaction transaction, bool createNewTransaction = false, bool editCurrentTransaction = false)
     {
+        if (createNewTransaction)
+        {
+            // Duplicate the debited side so the copy keeps the direction of the original transfer
+            transaction = transaction.DebitedTransaction;
+        }
+
         return new TransactionEdit
         {
             Id = createNewTransaction ? null : transaction.Id,

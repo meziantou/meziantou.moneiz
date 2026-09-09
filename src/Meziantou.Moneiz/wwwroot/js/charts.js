@@ -71,13 +71,25 @@ window.MoneizCharts = {
                 });
             });
 
+            // A constant series (or no data at all) has no range, which would turn every
+            // vertical coordinate into NaN, so fall back to an arbitrary non-zero range
+            if (!Number.isFinite(minValue) || !Number.isFinite(maxValue)) {
+                minValue = 0;
+                maxValue = 1;
+            }
+
             // Add some padding to the range
             const valueRange = maxValue - minValue;
-            minValue = minValue - valueRange * 0.1;
-            maxValue = maxValue + valueRange * 0.1;
+            const valuePadding = valueRange > 0 ? valueRange * 0.1 : Math.max(Math.abs(maxValue) * 0.1, 1);
+            minValue = minValue - valuePadding;
+            maxValue = maxValue + valuePadding;
 
             // Helper functions
-            const getX = (index) => padding.left + (index / (labels.length - 1)) * chartWidth;
+            // A single point has no horizontal range, so center it instead of dividing by zero
+            const lastIndex = labels.length - 1;
+            const getX = (index) => lastIndex > 0
+                ? padding.left + (index / lastIndex) * chartWidth
+                : padding.left + chartWidth / 2;
             const getY = (value) => padding.top + chartHeight - ((value - minValue) / (maxValue - minValue)) * chartHeight;
 
             // Theme colors
