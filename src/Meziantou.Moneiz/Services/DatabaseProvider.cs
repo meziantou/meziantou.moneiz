@@ -492,6 +492,7 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
         }
     }
 
+    [JsonSourceGenerationOptions(RespectNullableAnnotations = true, RespectRequiredConstructorParameters = true)]
     [JsonSerializable(typeof(DatabaseConfiguration))]
     private sealed partial class JsonDatabaseContext : JsonSerializerContext;
 }
