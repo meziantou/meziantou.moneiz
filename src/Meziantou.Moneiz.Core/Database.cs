@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Meziantou.Moneiz.Core;
 
-[JsonSourceGenerationOptions(DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault, RespectNullableAnnotations = false, RespectRequiredConstructorParameters = false)]
+[JsonSourceGenerationOptions(DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault, RespectNullableAnnotations = true, RespectRequiredConstructorParameters = true)]
 [JsonSerializable(typeof(Database), GenerationMode = JsonSourceGenerationMode.Default)]
 internal sealed partial class DatabaseJsonContext : JsonSerializerContext
 {
