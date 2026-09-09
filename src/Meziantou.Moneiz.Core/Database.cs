@@ -46,6 +46,12 @@ public sealed partial class Database
     [JsonPropertyName("g")]
     public DateTime LastModifiedDate { get; set; } = DateTime.UtcNow;
 
+    /// <summary>
+    /// Incremented every time the database is modified. It allows to detect the modifications made while an export was running.
+    /// </summary>
+    [JsonIgnore]
+    public int Revision { get; private set; }
+
     public byte[] Export()
     {
         using var ms = new MemoryStream();
@@ -192,6 +198,7 @@ public sealed partial class Database
 
     private void RaiseDatabaseChanged()
     {
+        Revision++;
         if (_deferredEventCount == 0)
         {
             LastModifiedDate = DateTime.UtcNow;

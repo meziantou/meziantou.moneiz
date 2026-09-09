@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.IO.Compression;
+using System.Text.Json;
 using Meziantou.Moneiz.Core;
 
 namespace Meziantou.Moneiz.CoreTests;
@@ -344,5 +345,52 @@ public class DatabaseTests
         var labels = db.GetAllLabels().ToList();
 
         Assert.Equal((IEnumerable<string>)["alpha", "beta", "gamma"], labels);
+    }
+
+    [Fact]
+    public void Revision_IsIncrementedOnEveryModification()
+    {
+        var database = new Database();
+        var initialRevision = database.Revision;
+
+        database.SaveAccount(new Account { Name = "Account 1" });
+        var revisionAfterFirstChange = database.Revision;
+
+        database.SaveAccount(new Account { Name = "Account 2" });
+
+        Assert.True(revisionAfterFirstChange > initialRevision);
+        Assert.True(database.Revision > revisionAfterFirstChange);
+    }
+
+    [Fact]
+    public void Revision_IsIncrementedWhenEventsAreDeferred()
+    {
+        var database = new Database();
+        var account = new Account { Name = "Account 1" };
+        database.SaveAccount(account);
+        var revision = database.Revision;
+
+        // SaveTransaction defers the DatabaseChanged event
+        database.SaveTransaction(new Transaction { Account = account, Amount = 1, ValueDate = Database.GetToday() });
+
+        Assert.True(database.Revision > revision);
+    }
+
+    [Fact]
+    public void Revision_IsNotPersisted()
+    {
+        var database = new Database();
+        database.SaveAccount(new Account { Name = "Account 1" });
+        var revision = database.Revision;
+
+        var bytes = database.Export();
+
+        Assert.Equal(revision, database.Revision);
+
+        using var stream = new MemoryStream(bytes);
+        Assert.Equal(2, stream.ReadByte());
+        using var compressedStream = new GZipStream(stream, CompressionMode.Decompress);
+        using var reader = new StreamReader(compressedStream);
+        Assert.DoesNotContain(nameof(Database.Revision), reader.ReadToEnd());
     }
 }
