@@ -181,6 +181,21 @@ public class DatabaseTests
     }
 
     [Fact]
+    public void SaveAccountWhenAllExistingAccountsAreClosed()
+    {
+        var database = new Database();
+        var closedAccount = new Account { Name = "Closed account", Closed = true };
+        database.SaveAccount(closedAccount);
+
+        var newAccount = new Account { Name = "New account" };
+        database.SaveAccount(newAccount);
+
+        Assert.HasCount(2, database.Accounts);
+        Assert.Equal([newAccount], database.VisibleAccounts);
+        Assert.Equal(0, newAccount.SortOrder);
+    }
+
+    [Fact]
     public void MoveAccountBeforeReordersAccounts()
     {
         var database = new Database();
