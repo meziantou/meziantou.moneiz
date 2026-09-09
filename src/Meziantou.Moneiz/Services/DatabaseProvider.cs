@@ -74,9 +74,10 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
                         }
 
                         _database ??= new Database();
-                    }
 
-                    _database.DatabaseChanged += Database_DatabaseChanged;
+                        // When the database comes from GitHub, Import has already subscribed to the new instance
+                        _database.DatabaseChanged += Database_DatabaseChanged;
+                    }
                 }
             }
             finally
@@ -135,6 +136,7 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
         }
 
         _database = database;
+        _database.DatabaseChanged += Database_DatabaseChanged;
         RaiseDatabaseChanged();
     }
 
