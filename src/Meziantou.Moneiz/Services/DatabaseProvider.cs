@@ -112,11 +112,11 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
     public async Task ExportToFile()
     {
         var database = await GetDatabase();
+        var revision = database.Revision;
         var bytes = database.Export();
 
         await GlobalInterop.ExportToFile(MoneizDownloadFileName, bytes);
-        await GlobalInterop.SetValue(MoneizLocalStorageChangedName, value: false);
-        RaiseDatabaseSaved();
+        await MarkAsSynchronized(database, revision);
     }
 
     public async Task Import(Database database)
@@ -190,6 +190,7 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
     public async Task ExportToGitHub()
     {
         var database = await GetDatabase();
+        var revision = database.Revision;
         var bytes = database.Export();
 
         var configuration = await LoadConfiguration();
@@ -233,9 +234,34 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
         configuration.GitHubSha = file?.Sha;
         await SetConfiguration(configuration);
 
-        await GlobalInterop.SetValue(MoneizLocalStorageChangedName, value: false);
+        await MarkAsSynchronized(database, revision);
+    }
+
+    /// <summary>
+    /// Clears the indicator of local changes, unless the database was modified after the exported snapshot was created.
+    /// </summary>
+    private async Task MarkAsSynchronized(Database database, int revision)
+    {
+        if (IsSnapshotUpToDate(database, revision))
+        {
+            await GlobalInterop.SetValue(MoneizLocalStorageChangedName, value: false);
+
+            // The database may have been modified while the value was written, so the indicator must be restored
+            if (!IsSnapshotUpToDate(database, revision))
+            {
+                Console.WriteLine("Database was modified while clearing the local changes indicator => restore it");
+                await GlobalInterop.SetValue(MoneizLocalStorageChangedName, value: true);
+            }
+        }
+        else
+        {
+            Console.WriteLine("Database was modified while exporting => keep the local changes indicator");
+        }
+
         RaiseDatabaseSaved();
     }
+
+    private bool IsSnapshotUpToDate(Database database, int revision) => ReferenceEquals(_database, database) && database.Revision == revision;
 
     public async Task<bool> HasNewVersionOnGitHub()
     {
