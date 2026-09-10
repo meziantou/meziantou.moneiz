@@ -3,7 +3,7 @@
     <OutputType>Exe</OutputType>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>meziantou.moneiz</ToolCommandName>
-    <Version>1.0.3</Version>
+    <Version>2.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
