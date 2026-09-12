@@ -304,6 +304,8 @@ public class DatabaseTests
         var options = new JsonSerializerOptions
         {
             Converters = { new DateOnlyJsonConverter() },
+            RespectNullableAnnotations = true,
+            RespectRequiredConstructorParameters = true,
         };
         var date = JsonSerializer.Deserialize<DateOnly>("\"2022-01-02T04:11:43.888Z\"", options);
         Assert.Equal(new DateOnly(2022, 01, 02), date);
@@ -316,6 +318,8 @@ public class DatabaseTests
         var options = new JsonSerializerOptions
         {
             Converters = { new NullableDateOnlyJsonConverter() },
+            RespectNullableAnnotations = true,
+            RespectRequiredConstructorParameters = true,
         };
         var date = JsonSerializer.Deserialize<DateOnly?>("\"2022-01-02T04:11:43.888Z\"", options);
         Assert.Equal(new DateOnly(2022, 01, 02), date);

@@ -7,7 +7,7 @@ namespace Meziantou.Moneiz.Services;
 public sealed class ChartService(IJSRuntime jsRuntime)
 {
     private readonly IJSInProcessRuntime _jsRuntime = (IJSInProcessRuntime)jsRuntime;
-    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, RespectNullableAnnotations = true, RespectRequiredConstructorParameters = true };
 
     public bool CreateLineChart(ElementReference canvasElement, string[] labels, IEnumerable<ChartDataset> datasets, ChartOptions? options = null)
     {
