@@ -1038,7 +1038,9 @@ static async Task<int> GetTransactionsAsync(
     var jsonOptions = new JsonSerializerOptions
     {
         WriteIndented = true,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        RespectNullableAnnotations = true,
+        RespectRequiredConstructorParameters = true,
     };
 
     var json = JsonSerializer.Serialize(transactionsOutput, jsonOptions);
