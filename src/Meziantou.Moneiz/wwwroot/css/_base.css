@@ -1,5 +1,5 @@
 ﻿:root {
-    --container-width: 1200px;
+    --container-width: 1440px;
     --navbar-height: 50px;
     --navbar-margin: 15px;
     --navbar-padding: calc(var(--navbar-height) + var(--navbar-margin));
