@@ -1080,6 +1080,11 @@ body {
 .site-sidebar {
     grid-column-start: 1;
     grid-column-end: 1;
+    position: sticky;
+    top: var(--navbar-padding);
+    align-self: start;
+    max-height: calc(100vh - var(--navbar-padding) - var(--navbar-margin));
+    overflow-y: auto;
 }
 
 .site-main {
