@@ -22,21 +22,27 @@
                     {
                         <div class="widget-accounts-details">
                             <div>
-                                <span class="widget-accounts-details-title">On <UserDate Date="@Database.GetToday()" />:</span>
+                                <span class="widget-accounts-details-title" title="@Database.GetToday().ToLongDateString()">Today:</span>
                                 <Amount Value="@database.GetTodayBalance(account)" Currency="@account.CurrencyIsoCode" />
                             </div>
-                            <div>
-                                <span class="widget-accounts-details-title">All transactions:</span>
-                                <Amount Value="@database.GetBalance(account)" Currency="@account.CurrencyIsoCode" />
-                            </div>
+                            @if (database.HasFutureTransactions(account))
+                            {
+                                <div>
+                                    <span class="widget-accounts-details-title">All transactions:</span>
+                                    <Amount Value="@database.GetBalance(account)" Currency="@account.CurrencyIsoCode" />
+                                </div>
+                            }
                             <div>
                                 <span class="widget-accounts-details-title">Reconciled transactions:</span>
                                 <Amount Value="@database.GetReconciledBalance(account)" Currency="@account.CurrencyIsoCode" />
                             </div>
-                            <div>
-                                <span class="widget-accounts-details-title">Checked transactions:</span>
-                                <Amount Value="@database.GetCheckedBalance(account)" Currency="@account.CurrencyIsoCode" />
-                            </div>
+                            @if (database.HasUnreconciledTransactions(account))
+                            {
+                                <div>
+                                    <span class="widget-accounts-details-title">Checked transactions:</span>
+                                    <Amount Value="@database.GetCheckedBalance(account)" Currency="@account.CurrencyIsoCode" />
+                                </div>
+                            }
                         </div>
                     }
                 </li>

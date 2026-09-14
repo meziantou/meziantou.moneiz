@@ -431,6 +431,55 @@ public class DatabaseTests
     }
 
     [Fact]
+    public void HasFutureTransactions_OnlyConsidersTransactionsOfTheAccountAfterToday()
+    {
+        var today = Database.GetToday();
+        var account = new Account { Id = 1 };
+        var otherAccount = new Account { Id = 2 };
+        var db = new Database
+        {
+            Accounts = { account, otherAccount },
+            Transactions =
+            {
+                new Transaction { Id = 1, Account = account, Amount = 1, ValueDate = today },
+                new Transaction { Id = 2, Account = otherAccount, Amount = 1, ValueDate = today.AddDays(1) },
+            },
+        };
+
+        Assert.False(db.HasFutureTransactions(account));
+        Assert.True(db.HasFutureTransactions(otherAccount));
+
+        db.Transactions.Add(new Transaction { Id = 3, Account = account, Amount = 1, ValueDate = today.AddDays(1) });
+
+        Assert.True(db.HasFutureTransactions(account));
+    }
+
+    [Fact]
+    public void HasUnreconciledTransactions_OnlyConsidersTransactionsOfTheAccount()
+    {
+        var today = Database.GetToday();
+        var reconciliationDate = new DateTime(2026, 01, 01, 0, 0, 0, DateTimeKind.Utc);
+        var account = new Account { Id = 1 };
+        var otherAccount = new Account { Id = 2 };
+        var db = new Database
+        {
+            Accounts = { account, otherAccount },
+            Transactions =
+            {
+                new Transaction { Id = 1, Account = account, Amount = 1, ValueDate = today, CheckedDate = today, ReconciliationDate = reconciliationDate },
+                new Transaction { Id = 2, Account = otherAccount, Amount = 1, ValueDate = today },
+            },
+        };
+
+        Assert.False(db.HasUnreconciledTransactions(account));
+        Assert.True(db.HasUnreconciledTransactions(otherAccount));
+
+        db.Transactions.Add(new Transaction { Id = 3, Account = account, Amount = 1, ValueDate = today, CheckedDate = today });
+
+        Assert.True(db.HasUnreconciledTransactions(account));
+    }
+
+    [Fact]
     public void GetAllLabels_ReturnsDistinctSortedLabels()
     {
         var account = new Account { Id = 1 };
