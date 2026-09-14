@@ -1056,7 +1056,7 @@ body {
 
 .grid-container {
     display: grid;
-    grid-template-columns: minmax(300px, var(--sidebar-max-width, 1fr)) 3fr;
+    grid-template-columns: minmax(300px, var(--sidebar-max-width, 1fr)) minmax(0, 3fr);
     grid-gap: 10px;
     justify-items: stretch;
     align-items: stretch;
@@ -1065,7 +1065,7 @@ body {
 }
 
 .grid-container.sidebar-collapsed {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
 }
 
 .site-header {
@@ -1090,6 +1090,7 @@ body {
 .site-main {
     grid-column-start: 2;
     grid-column-end: 3;
+    min-width: 0;
 }
 
 .grid-container.sidebar-collapsed .site-sidebar {
@@ -1250,7 +1251,39 @@ body {
 
 .transaction-list {
   margin-bottom: 100px;
+  table-layout: fixed;
 }
+
+  .transaction-list-col-state,
+  .transaction-list-col-commands {
+    width: 20px;
+  }
+
+  .transaction-list-col-date {
+    width: 90px;
+  }
+
+  .transaction-list-col-amount,
+  .transaction-list-col-balance {
+    width: 100px;
+  }
+
+  .transaction-list-col-account {
+    width: 15%;
+  }
+
+  .transaction-list-col-category,
+  .transaction-list-col-comment {
+    width: 20%;
+  }
+
+  .transaction-list-col-title {
+    width: 35%;
+  }
+
+  .transaction-list-col-labels {
+    width: 10%;
+  }
 
   .transaction-list tr {
     height: 38px;
