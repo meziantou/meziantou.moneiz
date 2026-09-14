@@ -78,48 +78,49 @@ else
     <table class="transaction-list">
         <thead>
             <tr>
-                <th></th>
-                <th>
+                <th class="transaction-list-col-state"></th>
+                <th class="transaction-list-col-date">
                     <a href="@GetSortUri(SortColumn.OperationDate)">
                         Operation Date @GetSortIndicator(SortColumn.OperationDate)
                     </a>
                 </th>
                 @if (AccountId is null)
                 {
-                    <th>
+                    <th class="transaction-list-col-account">
                         <a href="@GetSortUri(SortColumn.Account)">
                             Account @GetSortIndicator(SortColumn.Account)
                         </a>
                     </th>
                 }
-                <th>
+                <th class="transaction-list-col-category">
                     <a href="@GetSortUri(SortColumn.Category)">
                         Category @GetSortIndicator(SortColumn.Category)
                     </a>
                 </th>
-                <th>
+                <th class="transaction-list-col-title">
                     <a href="@GetSortUri(SortColumn.Title)">
                         Title @GetSortIndicator(SortColumn.Title)
                     </a>
                 </th>
-                <th>
+                <th class="transaction-list-col-amount">
                     <a href="@GetSortUri(SortColumn.Amount)">
                         Amount @GetSortIndicator(SortColumn.Amount)
                     </a>
                 </th>
                 @if (CanShowAccountBalanceOnTransaction)
                 {
-                    <th>Balance</th>
+                    <th class="transaction-list-col-balance">Balance</th>
                 }
-                <th>
+                <th class="transaction-list-col-comment">
                     <a href="@GetSortUri(SortColumn.Comment)">
                         Comment @GetSortIndicator(SortColumn.Comment)
                     </a>
                 </th>
                 @if (displaySettings.ShowLabels)
                 {
-                    <th>Labels</th>
+                    <th class="transaction-list-col-labels">Labels</th>
                 }
+                <th class="transaction-list-col-commands"></th>
             </tr>
         </thead>
 

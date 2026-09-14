@@ -54,7 +54,39 @@
 
 .transaction-list {
   margin-bottom: 100px;
+  table-layout: fixed;
 }
+
+  .transaction-list-col-state,
+  .transaction-list-col-commands {
+    width: 20px;
+  }
+
+  .transaction-list-col-date {
+    width: 90px;
+  }
+
+  .transaction-list-col-amount,
+  .transaction-list-col-balance {
+    width: 100px;
+  }
+
+  .transaction-list-col-account {
+    width: 15%;
+  }
+
+  .transaction-list-col-category,
+  .transaction-list-col-comment {
+    width: 20%;
+  }
+
+  .transaction-list-col-title {
+    width: 35%;
+  }
+
+  .transaction-list-col-labels {
+    width: 10%;
+  }
 
   .transaction-list tr {
     height: 38px;
