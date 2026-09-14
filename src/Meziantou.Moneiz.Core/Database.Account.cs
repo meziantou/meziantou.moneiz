@@ -160,6 +160,17 @@ public partial class Database
         return GetBalance(account, DateOnly.MaxValue, TransactionState.NotChecked);
     }
 
+    public bool HasFutureTransactions(Account account)
+    {
+        var today = GetToday();
+        return Transactions.Any(t => t.Account == account && t.ValueDate > today);
+    }
+
+    public bool HasUnreconciledTransactions(Account account)
+    {
+        return Transactions.Any(t => t.Account == account && t.State is not TransactionState.Reconciliated);
+    }
+
     /// <summary>
     /// Gets the balance of the account at the given date, including the scheduled transactions
     /// that are not materialized yet. The database is not modified.

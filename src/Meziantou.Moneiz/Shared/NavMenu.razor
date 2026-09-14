@@ -1,4 +1,6 @@
+@using System.Globalization
 @inject DatabaseProvider DatabaseProvider
+@inject NavigationManager NavigationManager
 @implements IDisposable
 
 <aside class="site-sidebar">
@@ -11,9 +13,38 @@
             </RepeaterContainerTemplate>
 
             <ItemTemplate Context="account">
-                <li>
-                    <a href="accounts/@account.Id/transactions" title="@account">@account</a>
-                    <Amount Value="@database!.GetTodayBalance(account)" Currency="@account.CurrencyIsoCode" />
+                <li class="@(account.Id == selectedAccountId ? "active" : null)">
+                    <div class="widget-accounts-summary">
+                        <a href="accounts/@account.Id/transactions" title="@account">@account</a>
+                        <Amount Value="@database!.GetTodayBalance(account)" Currency="@account.CurrencyIsoCode" />
+                    </div>
+                    @if (account.Id == selectedAccountId)
+                    {
+                        <div class="widget-accounts-details">
+                            <div>
+                                <span class="widget-accounts-details-title" title="@Database.GetToday().ToLongDateString()">Today:</span>
+                                <Amount Value="@database.GetTodayBalance(account)" Currency="@account.CurrencyIsoCode" />
+                            </div>
+                            @if (database.HasFutureTransactions(account))
+                            {
+                                <div>
+                                    <span class="widget-accounts-details-title">All transactions:</span>
+                                    <Amount Value="@database.GetBalance(account)" Currency="@account.CurrencyIsoCode" />
+                                </div>
+                            }
+                            <div>
+                                <span class="widget-accounts-details-title">Reconciled transactions:</span>
+                                <Amount Value="@database.GetReconciledBalance(account)" Currency="@account.CurrencyIsoCode" />
+                            </div>
+                            @if (database.HasUnreconciledTransactions(account))
+                            {
+                                <div>
+                                    <span class="widget-accounts-details-title">Checked transactions:</span>
+                                    <Amount Value="@database.GetCheckedBalance(account)" Currency="@account.CurrencyIsoCode" />
+                                </div>
+                            }
+                        </div>
+                    }
                 </li>
             </ItemTemplate>
         </Repeater>
@@ -43,9 +74,12 @@
 @code {
     Database? database;
     MoneizDisplaySettings displaySettings = new();
+    int? selectedAccountId;
 
     protected override async Task OnInitializedAsync()
     {
+        selectedAccountId = GetSelectedAccountId();
+        NavigationManager.LocationChanged += OnLocationChanged;
         DatabaseProvider.DatabaseChanged += OnDatabaseChanged;
         await LoadDatabase();
         displaySettings = await SettingsProvider.GetDisplaySettings();
@@ -53,7 +87,33 @@
 
     public void Dispose()
     {
+        NavigationManager.LocationChanged -= OnLocationChanged;
         DatabaseProvider.DatabaseChanged -= OnDatabaseChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        var accountId = GetSelectedAccountId();
+        if (accountId != selectedAccountId)
+        {
+            selectedAccountId = accountId;
+            StateHasChanged();
+        }
+    }
+
+    private int? GetSelectedAccountId()
+    {
+        var path = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        var index = path.AsSpan().IndexOfAny('?', '#');
+        if (index >= 0)
+        {
+            path = path[..index];
+        }
+
+        if (path.Split('/') is ["accounts", var id, ..] && int.TryParse(id, NumberStyles.None, CultureInfo.InvariantCulture, out var accountId))
+            return accountId;
+
+        return null;
     }
 
     private void OnDatabaseChanged(object? sender, EventArgs e)

@@ -37,7 +37,7 @@ else
     {
         <div class="account-balance">
             <div>
-                <span class="account-balance-title">On <UserDate Date="@today" />:</span>
+                <span class="account-balance-title" title="@today.ToLongDateString()">Today:</span>
                 <Amount Value="@database!.GetTodayBalance(account)" Currency="@account.CurrencyIsoCode" />
             </div>
             <div>

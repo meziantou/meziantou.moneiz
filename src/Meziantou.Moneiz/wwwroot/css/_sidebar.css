@@ -33,7 +33,31 @@
 }
 
     .widget-accounts li {
+        list-style: none;
+    }
+
+    .widget-accounts-summary {
         display: flex;
+    }
+
+    .widget-accounts li.active .widget-accounts-summary {
+        font-weight: bold;
+    }
+
+    .widget-accounts-details {
+        font-size: var(--font-size-small);
+        padding-left: 15px;
+        margin-bottom: 4px;
+    }
+
+        .widget-accounts-details > div {
+            display: flex;
+        }
+
+    .widget-accounts-details-title {
+        flex-grow: 1;
+        margin-right: 5px;
+        white-space: nowrap;
     }
 
     .widget-accounts a {
