@@ -14,6 +14,10 @@ public static partial class SettingsProvider
 
     public static Task SetShowReconciliatedTransactions(int accountId, bool value) => SetValue("account:" + accountId.ToStringInvariant() + ":ShowReconciled", value, JsonSettingsContext.Default.NullableBoolean);
 
+    public static Task<bool?> GetShowBalanceColumn(int accountId) => GetValue("account:" + accountId.ToStringInvariant() + ":ShowBalance", JsonSettingsContext.Default.NullableBoolean);
+
+    public static Task SetShowBalanceColumn(int accountId, bool value) => SetValue("account:" + accountId.ToStringInvariant() + ":ShowBalance", value, JsonSettingsContext.Default.NullableBoolean);
+
     public static async Task<MoneizDisplaySettings> GetDisplaySettings()
     {
         var result = await GetValue("displaySettings", JsonSettingsContext.Default.MoneizDisplaySettings);

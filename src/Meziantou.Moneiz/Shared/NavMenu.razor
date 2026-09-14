@@ -23,24 +23,24 @@
                         <div class="widget-accounts-details">
                             <div>
                                 <span class="widget-accounts-details-title" title="@Database.GetToday().ToLongDateString()">Today:</span>
-                                <Amount Value="@database.GetTodayBalance(account)" Currency="@account.CurrencyIsoCode" />
+                                <Amount Value="@database.GetTodayBalance(account)" />
                             </div>
                             @if (database.HasFutureTransactions(account))
                             {
                                 <div>
                                     <span class="widget-accounts-details-title">All transactions:</span>
-                                    <Amount Value="@database.GetBalance(account)" Currency="@account.CurrencyIsoCode" />
+                                    <Amount Value="@database.GetBalance(account)" />
                                 </div>
                             }
                             <div>
                                 <span class="widget-accounts-details-title">Reconciled transactions:</span>
-                                <Amount Value="@database.GetReconciledBalance(account)" Currency="@account.CurrencyIsoCode" />
+                                <Amount Value="@database.GetReconciledBalance(account)" />
                             </div>
                             @if (database.HasUnreconciledTransactions(account))
                             {
                                 <div>
                                     <span class="widget-accounts-details-title">Checked transactions:</span>
-                                    <Amount Value="@database.GetCheckedBalance(account)" Currency="@account.CurrencyIsoCode" />
+                                    <Amount Value="@database.GetCheckedBalance(account)" />
                                 </div>
                             }
                         </div>
