@@ -24,13 +24,21 @@ else
 <div class="toolbar">
     <div class="toolbar-left">
         <p style="margin-top: 0.5rem; margin-bottom: 0.5rem">
-            <CreateTransactionLink Account="account"><i class="fa fa-plus-circle"></i> Create transaction</CreateTransactionLink>
+            <CreateTransactionLink Account="account" class="btn"><i class="fa fa-plus-circle"></i> Create transaction</CreateTransactionLink>
         </p>
         <p>
             <label>
                 <input type="checkbox" inert="@HasSearch" checked="@ShowReconciledTransactions()" @onchange="() => ToggleReconciledVisibility()" /> Show reconciled transactions
             </label>
         </p>
+        @if (CanShowAccountBalanceOnTransaction)
+        {
+            <p>
+                <label>
+                    <input type="checkbox" checked="@showBalance" @onchange="() => ToggleBalanceVisibility()" /> Show balance
+                </label>
+            </p>
+        }
     </div>
 
     @if (account is not null)
@@ -104,12 +112,12 @@ else
                 </th>
                 <th class="transaction-list-col-amount transaction-amount">
                     <a href="@GetSortUri(SortColumn.Amount)">
-                        Amount @GetSortIndicator(SortColumn.Amount)
+                        Amount@(GetColumnHeaderCurrency()) @GetSortIndicator(SortColumn.Amount)
                     </a>
                 </th>
-                @if (CanShowAccountBalanceOnTransaction)
+                @if (ShowBalanceColumn)
                 {
-                    <th class="transaction-list-col-balance transaction-amount">Balance</th>
+                    <th class="transaction-list-col-balance transaction-amount">Balance@(GetColumnHeaderCurrency())</th>
                 }
                 <th class="transaction-list-col-comment">
                     <a href="@GetSortUri(SortColumn.Comment)">
@@ -189,16 +197,16 @@ else
                         @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Amount)">
                         @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Amount)
                         {
-                            <Amount Value="@transaction.Amount" Currency="@transaction.Account!.CurrencyIsoCode" />
+                            <Amount Value="@transaction.Amount" Currency="@GetCellCurrency(transaction)" />
                         }
                         else
                         {
-                            <Amount Value="@transaction.Amount" Currency="@transaction.Account!.CurrencyIsoCode" />
+                            <Amount Value="@transaction.Amount" Currency="@GetCellCurrency(transaction)" />
                         }
                     </td>
-                    @if (CanShowAccountBalanceOnTransaction)
+                    @if (ShowBalanceColumn)
                     {
-                        <td class="transaction-amount"><Amount Value="@accountBalance" Currency="@transaction.Account!.CurrencyIsoCode" /></td>
+                        <td class="transaction-amount"><Amount Value="@accountBalance" Currency="@GetCellCurrency(transaction)" /></td>
                     }
                     <td id="@GetInlineEditorCellId(transaction, EditColumn.Comment)"
                         class="@GetInlineEditCellClass(transaction, EditColumn.Comment)"
@@ -326,6 +334,7 @@ else
     List<TransactionWithAccountBalance>? transactions;
     DateOnly today;
     bool showReconciled = true;
+    bool showBalance = true;
     TransactionEdit? currentEdit = null;
     EditColumn editColumn;
     ElementReference inlineEditorInput;
@@ -375,6 +384,7 @@ else
         if (AccountId != null)
         {
             showReconciled = await SettingsProvider.GetShowReconciliatedTransactions(AccountId ?? -1) ?? showReconciled;
+            showBalance = await SettingsProvider.GetShowBalanceColumn(AccountId ?? -1) ?? showBalance;
         }
 
         HasSearch = !string.IsNullOrWhiteSpace(Search);
@@ -402,6 +412,8 @@ else
     [MemberNotNullWhen(true, nameof(AccountId))]
     private bool CanShowAccountBalanceOnTransaction { get; set; }
 
+    private bool ShowBalanceColumn => CanShowAccountBalanceOnTransaction && showBalance;
+
     [MemberNotNullWhen(true, nameof(Search))]
     private bool HasSearch { get; set; }
 
@@ -418,6 +430,29 @@ else
         await SettingsProvider.SetShowReconciliatedTransactions(AccountId ?? -1, showReconciled);
         LoadTransactions();
     }
+
+    private async Task ToggleBalanceVisibility()
+    {
+        showBalance = !showBalance;
+        await SettingsProvider.SetShowBalanceColumn(AccountId ?? -1, showBalance);
+    }
+
+    private string? GetSingleAccountCurrency()
+    {
+        if (account is not null)
+            return account.CurrencyIsoCode;
+
+        if (database?.Accounts is [var singleAccount])
+            return singleAccount.CurrencyIsoCode;
+
+        return null;
+    }
+
+    private string? GetColumnHeaderCurrency()
+        => GetSingleAccountCurrency() is { } currency ? $" ({currency})" : null;
+
+    private string? GetCellCurrency(Transaction transaction)
+        => GetSingleAccountCurrency() is null ? transaction.Account!.CurrencyIsoCode : null;
 
     private async Task Check(Transaction transaction)
     {
