@@ -102,14 +102,14 @@ else
                         Title @GetSortIndicator(SortColumn.Title)
                     </a>
                 </th>
-                <th>
+                <th class="transaction-amount">
                     <a href="@GetSortUri(SortColumn.Amount)">
                         Amount @GetSortIndicator(SortColumn.Amount)
                     </a>
                 </th>
                 @if (CanShowAccountBalanceOnTransaction)
                 {
-                    <th>Balance</th>
+                    <th class="transaction-amount">Balance</th>
                 }
                 <th>
                     <a href="@GetSortUri(SortColumn.Comment)">
@@ -184,7 +184,7 @@ else
                     </td>
                     <td title="@transaction.FinalTitle">@transaction.FinalTitle</td>
                     <td id="@GetInlineEditorCellId(transaction, EditColumn.Amount)"
-                        class="@GetInlineEditCellClass(transaction, EditColumn.Amount)"
+                        class="transaction-amount @GetInlineEditCellClass(transaction, EditColumn.Amount)"
                         @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Amount)">
                         @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Amount)
                         {
@@ -197,7 +197,7 @@ else
                     </td>
                     @if (CanShowAccountBalanceOnTransaction)
                     {
-                        <td><Amount Value="@accountBalance" Currency="@transaction.Account!.CurrencyIsoCode" /></td>
+                        <td class="transaction-amount"><Amount Value="@accountBalance" Currency="@transaction.Account!.CurrencyIsoCode" /></td>
                     }
                     <td id="@GetInlineEditorCellId(transaction, EditColumn.Comment)"
                         class="@GetInlineEditCellClass(transaction, EditColumn.Comment)"

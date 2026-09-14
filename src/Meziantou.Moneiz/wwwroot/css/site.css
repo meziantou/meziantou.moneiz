@@ -1263,6 +1263,10 @@ body {
     overflow: hidden;
   }
 
+  .transaction-list .transaction-amount {
+    text-align: right;
+  }
+
   .transaction-list td.inline-editing {
     overflow: visible;
     position: relative;
