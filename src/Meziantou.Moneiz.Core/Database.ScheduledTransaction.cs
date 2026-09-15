@@ -98,20 +98,10 @@ public partial class Database
 
     private static IEnumerable<DateOnly> GetPendingOccurrences(ScheduledTransaction scheduledTransaction, DateOnly maxDate)
     {
-        DateOnly? previousOccurrence = null;
-        foreach (var occurrence in scheduledTransaction.GetNextOccurences())
-        {
-            var occurrenceDate = DateOnly.FromDateTime(occurrence);
-            if (occurrenceDate > maxDate)
-                yield break;
+        if (scheduledTransaction.NextOccurenceDate is null)
+            return [];
 
-            // The recurrence rule must move forward, otherwise the enumeration never ends
-            if (previousOccurrence >= occurrenceDate)
-                yield break;
-
-            previousOccurrence = occurrenceDate;
-            yield return occurrenceDate;
-        }
+        return scheduledTransaction.GetOccurrences(scheduledTransaction.NextOccurenceDate.Value).TakeWhile(date => date <= maxDate);
     }
 
     public void ProcessScheduledTransactions(int daysAhead)
@@ -132,8 +122,7 @@ public partial class Database
     {
         using (DeferEvents())
         {
-            var reccurenceRule = scheduledTransaction.RecurrenceRule;
-            if (reccurenceRule is null)
+            if (scheduledTransaction.RecurrenceRule is null)
             {
                 // Invalid recurrence rule => remove the scheduled transaction
                 RemoveScheduledTransaction(scheduledTransaction);
@@ -142,8 +131,7 @@ public partial class Database
 
             if (scheduledTransaction.NextOccurenceDate == null)
             {
-                DateOnly? recurrenceDate = reccurenceRule.GetNextOccurrence(scheduledTransaction.StartDate.ToDateTime(TimeOnly.MinValue)) is DateTime nextDateTime ? DateOnly.FromDateTime(nextDateTime) : null;
-                scheduledTransaction.NextOccurenceDate = recurrenceDate;
+                scheduledTransaction.NextOccurenceDate = scheduledTransaction.GetOccurrences(scheduledTransaction.StartDate).Cast<DateOnly?>().FirstOrDefault();
                 if (scheduledTransaction.NextOccurenceDate == null)
                 {
                     // recurrence ended => remove the scheduled transaction
@@ -152,6 +140,9 @@ public partial class Database
                 }
             }
 
+            // Occurrences must be enumerated from the start date. Computing the next occurrence from the last occurrence
+            // re-anchors the recurrence rule, e.g. "FREQ=MONTHLY" would create one transaction per day.
+            using var nextOccurrences = scheduledTransaction.GetOccurrences(scheduledTransaction.NextOccurenceDate.Value.AddDays(1)).GetEnumerator();
             while (scheduledTransaction.NextOccurenceDate < createUntil || (forceSingleOccurrence && scheduledTransaction.NextOccurenceDate == createUntil))
             {
                 var transactionDate = scheduledTransaction.NextOccurenceDate.Value;
@@ -188,22 +179,14 @@ public partial class Database
                     SaveTransaction(creditedTransaction);
                 }
 
-                DateOnly? newRecurrenceDate = reccurenceRule.GetNextOccurrence(scheduledTransaction.NextOccurenceDate.Value.AddDays(1).ToDateTime(TimeOnly.MinValue)) is DateTime nextDateTime ? DateOnly.FromDateTime(nextDateTime) : null;
-                if (scheduledTransaction.NextOccurenceDate == newRecurrenceDate)
-                {
-                    // Infinite loop, remove the transaction
-                    RemoveScheduledTransaction(scheduledTransaction);
-                    return;
-                }
-
-                if (newRecurrenceDate == null)
+                if (!nextOccurrences.MoveNext())
                 {
                     // Recurrence ended, remove the transaction
                     RemoveScheduledTransaction(scheduledTransaction);
                     return;
                 }
 
-                scheduledTransaction.NextOccurenceDate = newRecurrenceDate;
+                scheduledTransaction.NextOccurenceDate = nextOccurrences.Current;
                 RaiseDatabaseChanged();
 
                 if (forceSingleOccurrence)
