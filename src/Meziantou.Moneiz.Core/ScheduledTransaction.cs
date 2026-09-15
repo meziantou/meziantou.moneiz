@@ -122,10 +122,38 @@ public sealed class ScheduledTransaction
 
     public IEnumerable<DateTime> GetNextOccurences()
     {
-        if (RecurrenceRule is null || NextOccurenceDate == null)
+        if (NextOccurenceDate is null)
             return [];
 
-        return RecurrenceRule.GetNextOccurrences(NextOccurenceDate.Value.ToDateTime(TimeOnly.MinValue));
+        return GetOccurrences(NextOccurenceDate.Value).Select(date => date.ToDateTime(TimeOnly.MinValue));
+    }
+
+    /// <summary>
+    /// Gets the occurrences of the schedule that are on or after <paramref name="minDate"/>.
+    /// </summary>
+    /// <remarks>
+    /// The occurrences are always computed from <see cref="StartDate"/> as the recurrence rule is anchored on it.
+    /// For instance, <c>FREQ=MONTHLY</c> repeats on the day of the start date, and <c>INTERVAL</c> and <c>COUNT</c> are relative to it.
+    /// </remarks>
+    internal IEnumerable<DateOnly> GetOccurrences(DateOnly minDate)
+    {
+        var recurrenceRule = RecurrenceRule;
+        if (recurrenceRule is null)
+            yield break;
+
+        DateOnly? previousOccurrence = null;
+        foreach (var occurrence in recurrenceRule.GetNextOccurrences(StartDate.ToDateTime(TimeOnly.MinValue)))
+        {
+            var occurrenceDate = DateOnly.FromDateTime(occurrence);
+
+            // The recurrence rule must move forward, otherwise the enumeration never ends
+            if (previousOccurrence >= occurrenceDate)
+                yield break;
+
+            previousOccurrence = occurrenceDate;
+            if (occurrenceDate >= minDate)
+                yield return occurrenceDate;
+        }
     }
 
     internal void ResolveReferences(DatabaseReferenceIndex index)

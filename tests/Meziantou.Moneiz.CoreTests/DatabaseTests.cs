@@ -162,6 +162,100 @@ public class DatabaseTests
         Assert.Equal(new DateOnly(2026, 09, 10), scheduledTransaction.NextOccurenceDate);
     }
 
+    [Theory]
+    [InlineData("FREQ=MONTHLY")]
+    [InlineData("FREQ=MONTHLY;INTERVAL=1")]
+    public void ProcessScheduledTransactions_MonthlyRuleWithoutDayCreatesOneTransactionPerMonth(string recurrenceRule)
+    {
+        var db = new Database();
+        var account = new Account();
+        db.SaveAccount(account);
+
+        var startDate = Database.GetToday().AddMonths(-6);
+        startDate = new DateOnly(startDate.Year, startDate.Month, 10);
+        var scheduledTransaction = new ScheduledTransaction
+        {
+            Account = account,
+            Amount = 1,
+            RecurrenceRuleText = recurrenceRule,
+            Name = "test",
+            StartDate = startDate,
+        };
+
+        db.SaveScheduledTransaction(scheduledTransaction);
+
+        var dates = db.Transactions.Select(t => t.ValueDate).Order().ToList();
+        Assert.InRange(dates.Count, 6, 7);
+        for (var i = 0; i < dates.Count; i++)
+        {
+            Assert.Equal(startDate.AddMonths(i), dates[i]);
+        }
+
+        Assert.Equal(startDate.AddMonths(dates.Count), scheduledTransaction.NextOccurenceDate);
+    }
+
+    [Fact]
+    public void ProcessNextScheduledTransactionOccurrence_MonthlyRuleWithoutDay()
+    {
+        var db = new Database();
+        var account = new Account();
+        db.SaveAccount(account);
+
+        var scheduledTransaction = new ScheduledTransaction
+        {
+            Account = account,
+            Amount = 1,
+            RecurrenceRuleText = "FREQ=MONTHLY",
+            Name = "test",
+            StartDate = new DateOnly(2099, 01, 15),
+        };
+
+        db.SaveScheduledTransaction(scheduledTransaction);
+        Assert.Empty(db.Transactions);
+        Assert.Equal(new DateOnly(2099, 01, 15), scheduledTransaction.NextOccurenceDate);
+
+        db.ProcessNextScheduledTransactionOccurrence(scheduledTransaction);
+        db.ProcessNextScheduledTransactionOccurrence(scheduledTransaction);
+
+        Assert.Equal((IEnumerable<DateOnly>)[new DateOnly(2099, 01, 15), new DateOnly(2099, 02, 15)], db.Transactions.Select(t => t.ValueDate).Order());
+        Assert.Equal(new DateOnly(2099, 03, 15), scheduledTransaction.NextOccurenceDate);
+    }
+
+    [Fact]
+    public void ProcessScheduledTransactions_RespectsCount()
+    {
+        var db = new Database();
+        var account = new Account();
+        db.SaveAccount(account);
+
+        var scheduledTransaction = new ScheduledTransaction
+        {
+            Account = account,
+            Amount = 1,
+            RecurrenceRuleText = "FREQ=MONTHLY;BYMONTHDAY=10;COUNT=3",
+            Name = "test",
+            StartDate = new DateOnly(2020, 01, 10),
+        };
+
+        db.SaveScheduledTransaction(scheduledTransaction);
+
+        Assert.Equal((IEnumerable<DateOnly>)[new DateOnly(2020, 01, 10), new DateOnly(2020, 02, 10), new DateOnly(2020, 03, 10)], db.Transactions.Select(t => t.ValueDate).Order());
+        Assert.Empty(db.ScheduledTransactions);
+    }
+
+    [Fact]
+    public void GetNextOccurences_UsesTheStartDateAsAnchor()
+    {
+        var scheduledTransaction = new ScheduledTransaction
+        {
+            RecurrenceRuleText = "FREQ=WEEKLY;INTERVAL=2;COUNT=3",
+            StartDate = new DateOnly(2099, 01, 05),
+            NextOccurenceDate = new DateOnly(2099, 01, 19),
+        };
+
+        Assert.Equal((IEnumerable<DateTime>)[new DateTime(2099, 01, 19), new DateTime(2099, 02, 02)], scheduledTransaction.GetNextOccurences());
+    }
+
     [Fact]
     public void GetPayeeSuggestionsMatchesAndRanksNames()
     {
