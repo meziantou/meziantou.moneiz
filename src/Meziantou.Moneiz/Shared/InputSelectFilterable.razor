@@ -1,31 +1,40 @@
 @using Microsoft.AspNetCore.Components.Forms
 @typeparam TItem where TItem : class
 @inherits InputBase<TItem?>
+@inject IJSRuntime JSRuntime
 
 <input type="hidden" value="@CurrentValueAsString" />
 
 <div class="@ComponentCssClass @CssClass @(_isOpen ? "is-open" : "")" @attributes="AdditionalAttributes">
-    <div class="@($"{ComponentCssClass}-control")"
-         @onclick="ToggleDropdown"
-         tabindex="0"
-         @onkeydown="OnControlKeyDown">
+    <button type="button"
+            class="@($"{ComponentCssClass}-control")"
+            popovertarget="@_popoverId"
+            style="anchor-name: @_anchorName"
+            @onclick="OnControlClick">
         <span class="@($"{ComponentCssClass}-value")">
             @GetDisplayText(CurrentValue)
         </span>
         <span class="@($"{ComponentCssClass}-arrow")">▼</span>
-    </div>
+    </button>
 
-    @if (_isOpen)
-    {
-        <div class="@($"{ComponentCssClass}-dropdown")" @ref="_dropdown">
+    @* preventDefault: the component is often wrapped in a <label>, so a click on an option would also activate the control and reopen the popover *@
+    <div class="@($"{ComponentCssClass}-dropdown")"
+         id="@_popoverId"
+         popover="auto"
+         style="position-anchor: @_anchorName"
+         @onpopovertoggle="OnPopoverToggle"
+         @onclick:preventDefault
+         @ref="_dropdown">
+        @if (_isOpen)
+        {
             <div class="@($"{ComponentCssClass}-search")">
                 <input type="text"
                        class="@($"{ComponentCssClass}-search-input")"
                        placeholder="@SearchPlaceholder"
                        value="@_searchText"
+                       autofocus
                        @oninput="OnSearchInput"
                        @onkeydown="OnKeyDown"
-                       @onblur="CloseDropdown"
                        @ref="_searchInput" />
             </div>
 
@@ -36,7 +45,7 @@
                     var isHighlighted = _highlightedIndex == -1;
                     
                     <div class="@($"{ComponentCssClass}-option") @(isSelected ? "is-selected" : "") @(isHighlighted ? "is-highlighted" : "")"
-                         @onmousedown="() => SelectItem(null)"
+                         @onclick="() => SelectItem(null)"
                          @onmouseenter="() => _highlightedIndex = -1">
                         @EmptyText
                     </div>
@@ -66,7 +75,7 @@
                         var capturedItem = item;
 
                         <div class="@($"{ComponentCssClass}-option") @(isSelected ? "is-selected" : "") @(isHighlighted ? "is-highlighted" : "")"
-                             @onmousedown="() => SelectItem(capturedItem)"
+                             @onclick="() => SelectItem(capturedItem)"
                              @onmouseenter="() => _highlightedIndex = capturedIndex">
                             @GetItemDisplayName(item)
                         </div>
@@ -80,12 +89,16 @@
                     }
                 }
             </div>
-        </div>
-    }
+        }
+    </div>
 </div>
 
 @code {
+    private readonly string _popoverId = "input-select-" + Guid.NewGuid().ToString("N");
+    private readonly string _anchorName = "--input-select-" + Guid.NewGuid().ToString("N");
     private bool _isOpen;
+    private bool _initializeSearchInputRequested;
+    private bool _focusSearchInputRequested;
     private string _searchText = string.Empty;
     private ElementReference _searchInput;
     private ElementReference _dropdown;
@@ -149,16 +162,60 @@
         return false;
     }
 
-    private void ToggleDropdown()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        _isOpen = !_isOpen;
-        if (_isOpen)
+        if (_initializeSearchInputRequested && _isOpen)
         {
-            _searchText = string.Empty;
-            FilterItems();
-            _highlightedIndex = CurrentValue is not null ?
-                (_filteredItems?.FindIndex(i => AreItemsEqual(i, CurrentValue)) ?? -1) : -1;
+            _initializeSearchInputRequested = false;
+
+            // Hiding the popover moves the focus back to the control, so the Enter key used to select
+            // an item would activate the control and reopen the popover. It would also submit the parent form.
+            await JSRuntime.InvokeVoidAsync("MoneizPreventEnterKeyDefault", _searchInput);
         }
+
+        if (_focusSearchInputRequested && _isOpen)
+        {
+            _focusSearchInputRequested = false;
+            await _searchInput.FocusAsync();
+        }
+    }
+
+    // The browser toggles the popover natively (popovertarget), so this only renders the content
+    private void OnControlClick()
+    {
+        if (!_isOpen)
+        {
+            Open();
+        }
+    }
+
+    // Keeps the state in sync when the browser closes the popover (click outside, Escape) or opens it
+    private void OnPopoverToggle(PopoverToggleEventArgs e)
+    {
+        if (e.IsOpen)
+        {
+            if (!_isOpen)
+            {
+                Open();
+            }
+
+            _focusSearchInputRequested = true;
+        }
+        else
+        {
+            _isOpen = false;
+            _searchText = string.Empty;
+        }
+    }
+
+    private void Open()
+    {
+        _isOpen = true;
+        _initializeSearchInputRequested = true;
+        _searchText = string.Empty;
+        FilterItems();
+        _highlightedIndex = CurrentValue is not null ?
+            (_filteredItems?.FindIndex(i => AreItemsEqual(i, CurrentValue)) ?? -1) : -1;
     }
 
     private void FilterItems()
@@ -199,11 +256,12 @@
         _highlightedIndex = _filteredItems?.Count > 0 ? 0 : -1;
     }
 
-    private void SelectItem(TItem? item)
+    private async Task SelectItem(TItem? item)
     {
-        CurrentValue = item;
         _isOpen = false;
         _searchText = string.Empty;
+        await JSRuntime.InvokeVoidAsync("MoneizHidePopover", _dropdown);
+        CurrentValue = item;
     }
 
     private async Task OnKeyDown(KeyboardEventArgs e)
@@ -232,40 +290,14 @@
             case "Enter":
                 if (_highlightedIndex == -1 && AllowEmpty)
                 {
-                    SelectItem(null);
+                    await SelectItem(null);
                 }
                 else if (_filteredItems is not null && _highlightedIndex >= 0 && _highlightedIndex < _filteredItems.Count)
                 {
-                    SelectItem(_filteredItems[_highlightedIndex]);
+                    await SelectItem(_filteredItems[_highlightedIndex]);
                 }
                 break;
-
-            case "Escape":
-                _isOpen = false;
-                _searchText = string.Empty;
-                break;
         }
-
-        await Task.CompletedTask;
-    }
-
-    private async Task OnControlKeyDown(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter" || e.Key == " ")
-        {
-            ToggleDropdown();
-        }
-        else if (_isOpen)
-        {
-            await OnKeyDown(e);
-        }
-    }
-
-    private async Task CloseDropdown()
-    {
-        await Task.Delay(200);
-        _isOpen = false;
-        StateHasChanged();
     }
 
     private string GetDisplayText(TItem? item)

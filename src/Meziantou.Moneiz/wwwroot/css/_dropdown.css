@@ -21,8 +21,10 @@
 
 
 .dropdown-content {
-  position: absolute;
-  transform: translateX(-100%);
+  inset: auto;
+  position-area: bottom span-left;
+  position-try-fallbacks: flip-block;
+  color: var(--text-color);
   background-color: var(--table-bg);
   min-width: 160px;
   box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);

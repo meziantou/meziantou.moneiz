@@ -97,6 +97,27 @@ function MoneizGetElementDocumentRectById(id) {
   };
 }
 
+function MoneizPreventEnterKeyDefault(element) {
+  if (!element || element.moneizPreventEnterKeyDefault) {
+    return;
+  }
+
+  element.moneizPreventEnterKeyDefault = true;
+  element.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+    }
+  });
+}
+
+function MoneizHidePopover(element) {
+  if (!element || !element.isConnected || !element.matches(":popover-open")) {
+    return;
+  }
+
+  element.hidePopover();
+}
+
 function MoneizFocusIfConnected(element) {
   if (!element || !element.isConnected) {
     return;
