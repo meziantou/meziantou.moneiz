@@ -11,8 +11,8 @@
     <PackageVersion Include="Meziantou.Framework.Scheduling" Version="4.1.5" />
     <PackageVersion Include="Meziantou.Framework.SimpleQueryLanguage" Version="2.0.6" />
     <PackageVersion Include="Meziantou.Framework.ValueStopwatch" Version="3.0.3" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.12" />
-    <PackageVersion Include="System.CommandLine" Version="2.0.12" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.13" />
+    <PackageVersion Include="System.CommandLine" Version="2.0.13" />
   </ItemGroup>
 </Project>
