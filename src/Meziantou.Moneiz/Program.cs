@@ -8,6 +8,5 @@ builder.RootComponents.Add<App>("app");
 builder.Services.AddTransient(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.Services.AddSingleton<DatabaseProvider>();
 builder.Services.AddScoped<UrlService>();
-builder.Services.AddScoped<ChartService>();
 
 await builder.Build().RunAsync();

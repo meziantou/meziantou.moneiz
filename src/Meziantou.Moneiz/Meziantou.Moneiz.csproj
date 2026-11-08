@@ -22,6 +22,7 @@
   <ItemGroup>
     <PackageReference Include="Meziantou.AspNetCore.Components" />
     <PackageReference Include="Meziantou.AspNetCore.Components.WebAssembly" />
+    <PackageReference Include="Meziantou.Framework.Charts" />
     <PackageReference Include="Meziantou.Framework.RelativeDate" />
     <PackageReference Include="Meziantou.Framework.SimpleQueryLanguage" />
     <PackageReference Include="Meziantou.Framework.ValueStopwatch" />
