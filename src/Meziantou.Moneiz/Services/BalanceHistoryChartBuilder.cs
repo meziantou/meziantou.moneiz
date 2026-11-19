@@ -1,4 +1,5 @@
 using Meziantou.Framework.Charts;
+using Meziantou.Framework.VectorGraphics;
 using Meziantou.Moneiz.Core.Analytics;
 using Meziantou.Moneiz.Extensions;
 
