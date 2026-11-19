@@ -1,4 +1,5 @@
 ﻿@inject DatabaseProvider DatabaseProvider
+@inject TimeProvider TimeProvider
 @implements IDisposable
 
 @if (needImport)
@@ -30,11 +31,11 @@
     private bool needExport;
     private bool canExportToGitHub;
     private bool isExporting;
-    private System.Threading.Timer? timer;
+    private ITimer? timer;
 
     protected override async Task OnInitializedAsync()
     {
-        timer = new System.Threading.Timer(CheckNewVersion, state: null, TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(60));
+        timer = TimeProvider.CreateTimer(CheckNewVersion, state: null, TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(60));
         DatabaseProvider.DatabaseSaved += DatabaseChanged;
         await GetState();
     }

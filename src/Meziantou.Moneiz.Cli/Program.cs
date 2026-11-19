@@ -279,7 +279,7 @@ static async Task CheckOverdraftAsync(FileInfo file, string? accountIdFilter)
         return;
     }
 
-    var today = Database.GetToday();
+    var today = db.GetToday();
 
     Console.WriteLine("Checking accounts for overdraft using their configured notification settings");
     Console.WriteLine();
@@ -420,7 +420,7 @@ static async Task<int> AddTransactionAsync(FileInfo file, int accountId, int? to
     // Use today's date if not specified
     if (!valueDate.HasValue)
     {
-        valueDate = Database.GetToday();
+        valueDate = db.GetToday();
     }
 
     // For inter-account transfers, payee should not be specified
@@ -473,7 +473,7 @@ static async Task<int> AddTransactionAsync(FileInfo file, int accountId, int? to
             ValueDate = valueDate.Value,
             Category = category,
             Comment = comment,
-            CheckedDate = isChecked ? Database.GetToday() : null,
+            CheckedDate = isChecked ? db.GetToday() : null,
             Labels = labels,
         };
 
@@ -485,7 +485,7 @@ static async Task<int> AddTransactionAsync(FileInfo file, int accountId, int? to
             ValueDate = valueDate.Value,
             Category = category,
             Comment = comment,
-            CheckedDate = isChecked ? Database.GetToday() : null,
+            CheckedDate = isChecked ? db.GetToday() : null,
             Labels = labels,
         };
 
@@ -507,7 +507,7 @@ static async Task<int> AddTransactionAsync(FileInfo file, int accountId, int? to
             Payee = payee,
             Category = category,
             Comment = comment,
-            CheckedDate = isChecked ? Database.GetToday() : null,
+            CheckedDate = isChecked ? db.GetToday() : null,
             Labels = labels,
         };
 
@@ -710,10 +710,10 @@ static async Task<int> UpdateTransactionAsync(FileInfo file, int transactionId, 
     {
         if (isChecked.Value)
         {
-            transaction.CheckedDate = Database.GetToday();
+            transaction.CheckedDate = db.GetToday();
             if (isLinkedTransaction)
             {
-                transaction.LinkedTransaction!.CheckedDate = Database.GetToday();
+                transaction.LinkedTransaction!.CheckedDate = db.GetToday();
                 db.SaveTransaction(transaction.LinkedTransaction!);
             }
         }

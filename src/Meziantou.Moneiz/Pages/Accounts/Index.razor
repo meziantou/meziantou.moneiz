@@ -99,7 +99,7 @@
         if (database == null || !account.OverdraftNotificationEnabled)
             return null;
 
-        var today = Database.GetToday();
+        var today = database.GetToday();
         var days = account.OverdraftNotificationCheckPeriodDays;
         var minimumBalance = account.OverdraftNotificationAmount;
 

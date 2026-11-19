@@ -139,10 +139,20 @@ public partial class Database
         return GetBalance(account, DateOnly.MaxValue, TransactionState.Checked);
     }
 
-    [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "Get user time")]
-    public static DateOnly GetToday()
+    /// <summary>
+    /// Gets the current date in the user's local time zone.
+    /// </summary>
+    public static DateOnly GetToday(TimeProvider timeProvider)
     {
-        return DateOnly.FromDateTime(DateTime.Now);
+        return DateOnly.FromDateTime(timeProvider.GetLocalNow().DateTime);
+    }
+
+    /// <summary>
+    /// Gets the current date in the user's local time zone using the <see cref="TimeProvider"/> of the database.
+    /// </summary>
+    public DateOnly GetToday()
+    {
+        return GetToday(TimeProvider);
     }
 
     public decimal GetTodayBalance(Account account)
@@ -204,7 +214,7 @@ public partial class Database
 
     public void Reconcile(Account account)
     {
-        var now = DateTime.UtcNow;
+        var now = TimeProvider.GetUtcNow().UtcDateTime;
         foreach (var transaction in Transactions.Where(t => t.Account == account && t.State is TransactionState.Checked))
         {
             transaction.ReconciliationDate = now;

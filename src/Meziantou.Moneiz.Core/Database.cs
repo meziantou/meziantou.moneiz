@@ -17,7 +17,24 @@ public sealed partial class Database
 
     public event EventHandler? DatabaseChanged;
 
-    public Database() => Currencies = InitializeCurrencies();
+    [JsonConstructor]
+    public Database()
+        : this(TimeProvider.System)
+    {
+    }
+
+    public Database(TimeProvider timeProvider)
+    {
+        TimeProvider = timeProvider;
+        Currencies = InitializeCurrencies();
+        LastModifiedDate = timeProvider.GetUtcNow().UtcDateTime;
+    }
+
+    /// <summary>
+    /// The clock used to compute the current date and the modification dates.
+    /// </summary>
+    [JsonIgnore]
+    public TimeProvider TimeProvider { get; private set; }
 
     [JsonPropertyName("a")]
     public IList<Account> Accounts { get; set; } = [];
@@ -44,7 +61,7 @@ public sealed partial class Database
     public IList<ScheduledTransaction> ScheduledTransactions { get; set; } = [];
 
     [JsonPropertyName("g")]
-    public DateTime LastModifiedDate { get; set; } = DateTime.UtcNow;
+    public DateTime LastModifiedDate { get; set; }
 
     /// <summary>
     /// Incremented every time the database is modified. It allows to detect the modifications made while an export was running.
@@ -67,13 +84,13 @@ public sealed partial class Database
         return ms.ToArray();
     }
 
-    public static async Task<Database> Load(byte[] value)
+    public static async Task<Database> Load(byte[] value, TimeProvider? timeProvider = null)
     {
         using var ms = new MemoryStream(value);
-        return await Load(ms);
+        return await Load(ms, timeProvider);
     }
 
-    public static async Task<Database> Load(Stream stream)
+    public static async Task<Database> Load(Stream stream, TimeProvider? timeProvider = null)
     {
         var buffer = new byte[1];
         var count = await stream.ReadAsync(buffer.AsMemory());
@@ -100,6 +117,7 @@ public sealed partial class Database
         if (db is null)
             throw new Exception("database is null");
 
+        db.TimeProvider = timeProvider ?? TimeProvider.System;
         var index = new DatabaseReferenceIndex(db);
         db.ResolveReferences(index);
         db.AssertNoDetachedReferences(index);
@@ -217,7 +235,7 @@ public sealed partial class Database
         Revision++;
         if (_deferredEventCount == 0)
         {
-            LastModifiedDate = DateTime.UtcNow;
+            LastModifiedDate = TimeProvider.GetUtcNow().UtcDateTime;
             DatabaseChanged?.Invoke(this, EventArgs.Empty);
             _deferredEventCalled = false;
         }

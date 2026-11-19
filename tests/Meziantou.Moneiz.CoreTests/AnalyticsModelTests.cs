@@ -1,10 +1,22 @@
 ﻿using System.Globalization;
 using Meziantou.Moneiz.Core;
 using Meziantou.Moneiz.Core.Analytics;
+using Microsoft.Extensions.Time.Testing;
 
 namespace Meziantou.Moneiz.CoreTests;
 public sealed class AnalyticsModelTests
 {
+    [Fact]
+    public void AnalyticsOptions_DefaultPeriodUsesTimeProvider()
+    {
+        var timeProvider = new FakeTimeProvider(new DateTimeOffset(2026, 3, 10, 12, 0, 0, TimeSpan.Zero));
+
+        var options = new AnalyticsOptions(timeProvider);
+
+        Assert.Equal(new DateOnly(2026, 3, 10), options.ToDate);
+        Assert.Equal(new DateOnly(2026, 2, 8), options.FromDate);
+    }
+
     [Fact]
     public void ComputeModel()
     {

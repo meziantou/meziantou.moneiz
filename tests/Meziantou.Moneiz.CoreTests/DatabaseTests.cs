@@ -1,6 +1,7 @@
 ﻿using System.IO.Compression;
 using System.Text.Json;
 using Meziantou.Moneiz.Core;
+using Microsoft.Extensions.Time.Testing;
 
 namespace Meziantou.Moneiz.CoreTests;
 
@@ -10,7 +11,7 @@ public class DatabaseTests
     public async Task ImportExport()
     {
         // Arrange
-        var today = Database.GetToday();
+        var today = Database.GetToday(TimeProvider.System);
         var category1 = new Category { Id = 1, Name = "c1", GroupName = "cg1" };
         var payee1 = new Payee { Id = 1, Name = "p1", DefaultCategory = category1 };
         var account1 = new Account { Id = 1, Name = "a1", CurrencyIsoCode = "USD" };
@@ -58,7 +59,7 @@ public class DatabaseTests
     {
         const int TransferCount = 500;
 
-        var today = Database.GetToday();
+        var today = Database.GetToday(TimeProvider.System);
         var debitedAccount = new Account { Id = 1, Name = "a1", CurrencyIsoCode = "USD" };
         var creditedAccount = new Account { Id = 2, Name = "a2", CurrencyIsoCode = "USD" };
         var database = new Database()
@@ -103,7 +104,7 @@ public class DatabaseTests
             Amount = 1,
             RecurrenceRuleText = "FREQ=daily",
             Name = "test",
-            StartDate = Database.GetToday(),
+            StartDate = Database.GetToday(TimeProvider.System),
         };
 
         // Act
@@ -126,7 +127,7 @@ public class DatabaseTests
             Amount = 1,
             RecurrenceRuleText = "FREQ=daily",
             Name = "test",
-            StartDate = Database.GetToday(),
+            StartDate = Database.GetToday(TimeProvider.System),
             Labels = ["tag1", "tag2"],
         };
 
@@ -171,7 +172,7 @@ public class DatabaseTests
         var account = new Account();
         db.SaveAccount(account);
 
-        var startDate = Database.GetToday().AddMonths(-6);
+        var startDate = Database.GetToday(TimeProvider.System).AddMonths(-6);
         startDate = new DateOnly(startDate.Year, startDate.Month, 10);
         var scheduledTransaction = new ScheduledTransaction
         {
@@ -423,9 +424,9 @@ public class DatabaseTests
     public void RenameLabel_UpdatesAllMatchingTransactions()
     {
         var account = new Account { Id = 1 };
-        var t1 = new Transaction { Id = 1, Account = account, Amount = 1, ValueDate = Database.GetToday(), Labels = ["old", "other"] };
-        var t2 = new Transaction { Id = 2, Account = account, Amount = 2, ValueDate = Database.GetToday(), Labels = ["old"] };
-        var t3 = new Transaction { Id = 3, Account = account, Amount = 3, ValueDate = Database.GetToday(), Labels = ["unrelated"] };
+        var t1 = new Transaction { Id = 1, Account = account, Amount = 1, ValueDate = Database.GetToday(TimeProvider.System), Labels = ["old", "other"] };
+        var t2 = new Transaction { Id = 2, Account = account, Amount = 2, ValueDate = Database.GetToday(TimeProvider.System), Labels = ["old"] };
+        var t3 = new Transaction { Id = 3, Account = account, Amount = 3, ValueDate = Database.GetToday(TimeProvider.System), Labels = ["unrelated"] };
 
         var db = new Database
         {
@@ -444,7 +445,7 @@ public class DatabaseTests
     public void RenameLabel_DeduplicatesWhenNewNameAlreadyPresent()
     {
         var account = new Account { Id = 1 };
-        var t1 = new Transaction { Id = 1, Account = account, Amount = 1, ValueDate = Database.GetToday(), Labels = ["old", "new"] };
+        var t1 = new Transaction { Id = 1, Account = account, Amount = 1, ValueDate = Database.GetToday(TimeProvider.System), Labels = ["old", "new"] };
 
         var db = new Database
         {
@@ -461,9 +462,9 @@ public class DatabaseTests
     public void DeleteLabel_RemovesLabelFromAllTransactions()
     {
         var account = new Account { Id = 1 };
-        var t1 = new Transaction { Id = 1, Account = account, Amount = 1, ValueDate = Database.GetToday(), Labels = ["remove", "keep"] };
-        var t2 = new Transaction { Id = 2, Account = account, Amount = 2, ValueDate = Database.GetToday(), Labels = ["remove"] };
-        var t3 = new Transaction { Id = 3, Account = account, Amount = 3, ValueDate = Database.GetToday(), Labels = ["keep"] };
+        var t1 = new Transaction { Id = 1, Account = account, Amount = 1, ValueDate = Database.GetToday(TimeProvider.System), Labels = ["remove", "keep"] };
+        var t2 = new Transaction { Id = 2, Account = account, Amount = 2, ValueDate = Database.GetToday(TimeProvider.System), Labels = ["remove"] };
+        var t3 = new Transaction { Id = 3, Account = account, Amount = 3, ValueDate = Database.GetToday(TimeProvider.System), Labels = ["keep"] };
 
         var db = new Database
         {
@@ -527,7 +528,7 @@ public class DatabaseTests
     [Fact]
     public void HasFutureTransactions_OnlyConsidersTransactionsOfTheAccountAfterToday()
     {
-        var today = Database.GetToday();
+        var today = Database.GetToday(TimeProvider.System);
         var account = new Account { Id = 1 };
         var otherAccount = new Account { Id = 2 };
         var db = new Database
@@ -551,7 +552,7 @@ public class DatabaseTests
     [Fact]
     public void HasUnreconciledTransactions_OnlyConsidersTransactionsOfTheAccount()
     {
-        var today = Database.GetToday();
+        var today = Database.GetToday(TimeProvider.System);
         var reconciliationDate = new DateTime(2026, 01, 01, 0, 0, 0, DateTimeKind.Utc);
         var account = new Account { Id = 1 };
         var otherAccount = new Account { Id = 2 };
@@ -577,9 +578,9 @@ public class DatabaseTests
     public void GetAllLabels_ReturnsDistinctSortedLabels()
     {
         var account = new Account { Id = 1 };
-        var t1 = new Transaction { Id = 1, Account = account, Amount = 1, ValueDate = Database.GetToday(), Labels = ["beta", "alpha"] };
-        var t2 = new Transaction { Id = 2, Account = account, Amount = 2, ValueDate = Database.GetToday(), Labels = ["beta", "gamma"] };
-        var t3 = new Transaction { Id = 3, Account = account, Amount = 3, ValueDate = Database.GetToday() };
+        var t1 = new Transaction { Id = 1, Account = account, Amount = 1, ValueDate = Database.GetToday(TimeProvider.System), Labels = ["beta", "alpha"] };
+        var t2 = new Transaction { Id = 2, Account = account, Amount = 2, ValueDate = Database.GetToday(TimeProvider.System), Labels = ["beta", "gamma"] };
+        var t3 = new Transaction { Id = 3, Account = account, Amount = 3, ValueDate = Database.GetToday(TimeProvider.System) };
 
         var db = new Database
         {
@@ -605,7 +606,7 @@ public class DatabaseTests
             Amount = 1,
             RecurrenceRuleText = "FREQ=daily",
             Name = "test",
-            StartDate = Database.GetToday(),
+            StartDate = Database.GetToday(TimeProvider.System),
         });
 
         db.RemoveAccount(account);
@@ -630,7 +631,7 @@ public class DatabaseTests
             Amount = 1,
             RecurrenceRuleText = "FREQ=daily",
             Name = "test",
-            StartDate = Database.GetToday(),
+            StartDate = Database.GetToday(TimeProvider.System),
         });
 
         db.RemoveAccount(creditedAccount);
@@ -651,7 +652,7 @@ public class DatabaseTests
             Amount = 1,
             RecurrenceRuleText = "FREQ=daily",
             Name = "test",
-            StartDate = Database.GetToday(),
+            StartDate = Database.GetToday(TimeProvider.System),
         });
 
         db.RemoveAccount(account);
@@ -671,7 +672,7 @@ public class DatabaseTests
     {
         var source = new Account { Id = 1, Name = "source" };
         var destination = new Account { Id = 2, Name = "destination" };
-        var today = Database.GetToday();
+        var today = Database.GetToday(TimeProvider.System);
         var reconciliationDate = new DateTime(2026, 01, 02, 03, 04, 05, DateTimeKind.Utc);
         var debited = new Transaction { Id = 1, Account = source, Amount = -100, ValueDate = today, CheckedDate = today, ReconciliationDate = reconciliationDate };
         var credited = new Transaction { Id = 2, Account = destination, Amount = 100, ValueDate = today, LinkedTransaction = debited };
@@ -704,7 +705,7 @@ public class DatabaseTests
     {
         var source = new Account { Id = 1, Name = "source" };
         var destination = new Account { Id = 2, Name = "destination" };
-        var today = Database.GetToday();
+        var today = Database.GetToday(TimeProvider.System);
         var reconciliationDate = new DateTime(2026, 01, 02, 03, 04, 05, DateTimeKind.Utc);
         var debited = new Transaction { Id = 1, Account = source, Amount = -100, ValueDate = today, CheckedDate = today, ReconciliationDate = reconciliationDate };
         var credited = new Transaction { Id = 2, Account = destination, Amount = 100, ValueDate = today, LinkedTransaction = debited };
@@ -736,7 +737,7 @@ public class DatabaseTests
     {
         var source = new Account { Id = 1, Name = "source" };
         var destination = new Account { Id = 2, Name = "destination" };
-        var today = Database.GetToday();
+        var today = Database.GetToday(TimeProvider.System);
         var debited = new Transaction { Id = 1, Account = source, Amount = -100, ValueDate = today };
         var credited = new Transaction { Id = 2, Account = destination, Amount = 100, ValueDate = today, LinkedTransaction = debited };
         debited.LinkedTransaction = credited;
@@ -792,7 +793,7 @@ public class DatabaseTests
     [Fact]
     public void GetProjectedBalance_DoesNotCountMaterializedOccurrencesTwice()
     {
-        var today = Database.GetToday();
+        var today = Database.GetToday(TimeProvider.System);
         var db = new Database();
         var account = new Account();
         db.SaveAccount(account);
@@ -865,7 +866,7 @@ public class DatabaseTests
         var revision = database.Revision;
 
         // SaveTransaction defers the DatabaseChanged event
-        database.SaveTransaction(new Transaction { Account = account, Amount = 1, ValueDate = Database.GetToday() });
+        database.SaveTransaction(new Transaction { Account = account, Amount = 1, ValueDate = Database.GetToday(TimeProvider.System) });
 
         Assert.True(database.Revision > revision);
     }
@@ -886,5 +887,109 @@ public class DatabaseTests
         using var compressedStream = new GZipStream(stream, CompressionMode.Decompress);
         using var reader = new StreamReader(compressedStream);
         Assert.DoesNotContain(nameof(Database.Revision), reader.ReadToEnd());
+    }
+
+    [Fact]
+    public void GetToday_UsesTheLocalTimeZoneOfTheTimeProvider()
+    {
+        var timeProvider = new FakeTimeProvider(new DateTimeOffset(2026, 3, 10, 23, 30, 0, TimeSpan.Zero));
+        timeProvider.SetLocalTimeZone(TimeZoneInfo.CreateCustomTimeZone("UTC+2", TimeSpan.FromHours(2), "UTC+2", "UTC+2"));
+        var database = new Database(timeProvider);
+
+        Assert.Equal(new DateOnly(2026, 3, 11), database.GetToday());
+        Assert.Equal(new DateOnly(2026, 3, 11), Database.GetToday(timeProvider));
+    }
+
+    [Fact]
+    public void CheckTransaction_UsesTimeProvider()
+    {
+        var timeProvider = new FakeTimeProvider(new DateTimeOffset(2026, 3, 10, 12, 0, 0, TimeSpan.Zero));
+        var database = new Database(timeProvider);
+        var account = new Account { Name = "Account 1" };
+        database.SaveAccount(account);
+        var transaction = new Transaction { Account = account, Amount = 1, ValueDate = new DateOnly(2026, 1, 1) };
+        database.SaveTransaction(transaction);
+
+        database.CheckTransaction(transaction);
+
+        Assert.Equal(new DateOnly(2026, 3, 10), transaction.CheckedDate);
+    }
+
+    [Fact]
+    public void Reconcile_UsesTimeProvider()
+    {
+        var now = new DateTimeOffset(2026, 3, 10, 12, 34, 56, TimeSpan.Zero);
+        var timeProvider = new FakeTimeProvider(now);
+        var database = new Database(timeProvider);
+        var account = new Account { Name = "Account 1" };
+        database.SaveAccount(account);
+        var transaction = new Transaction { Account = account, Amount = 1, ValueDate = new DateOnly(2026, 1, 1), CheckedDate = new DateOnly(2026, 1, 1) };
+        database.SaveTransaction(transaction);
+
+        database.Reconcile(account);
+
+        Assert.Equal(now.UtcDateTime, transaction.ReconciliationDate);
+    }
+
+    [Fact]
+    public void LastModifiedDate_UsesTimeProvider()
+    {
+        var timeProvider = new FakeTimeProvider(new DateTimeOffset(2026, 3, 10, 12, 0, 0, TimeSpan.Zero));
+        var database = new Database(timeProvider);
+        Assert.Equal(new DateTime(2026, 3, 10, 12, 0, 0, DateTimeKind.Utc), database.LastModifiedDate);
+
+        timeProvider.Advance(TimeSpan.FromHours(1));
+        database.SaveAccount(new Account { Name = "Account 1" });
+
+        Assert.Equal(new DateTime(2026, 3, 10, 13, 0, 0, DateTimeKind.Utc), database.LastModifiedDate);
+    }
+
+    [Fact]
+    public async Task Load_UsesTimeProviderToProcessScheduledTransactions()
+    {
+        var today = new DateOnly(2026, 3, 10);
+        var timeProvider = new FakeTimeProvider(new DateTimeOffset(2026, 3, 10, 12, 0, 0, TimeSpan.Zero));
+        var database = new Database(timeProvider);
+        var account = new Account { Name = "Account 1" };
+        database.SaveAccount(account);
+        database.SaveScheduledTransaction(new ScheduledTransaction
+        {
+            Account = account,
+            Amount = 1,
+            RecurrenceRuleText = "FREQ=daily",
+            Name = "test",
+            StartDate = today,
+        });
+        var initialCount = database.Transactions.Count;
+
+        timeProvider.Advance(TimeSpan.FromDays(10));
+        var imported = await Database.Load(database.Export(), timeProvider);
+
+        Assert.Same(timeProvider, imported.TimeProvider);
+        Assert.HasCount(initialCount + 10, imported.Transactions);
+        Assert.Equal(today.AddDays(10 + 4), imported.Transactions.Max(t => t.ValueDate));
+    }
+
+    [Fact]
+    public void TransactionEdit_FromAccount_UsesTheProvidedDate()
+    {
+        var model = TransactionEdit.FromAccount(account: null, new DateOnly(2026, 3, 10));
+
+        Assert.Equal(new DateOnly(2026, 3, 10), model.ValueDate);
+    }
+
+    [Fact]
+    public void TransactionEdit_Save_UsesTheDatabaseTimeProviderForCheckedDate()
+    {
+        var timeProvider = new FakeTimeProvider(new DateTimeOffset(2026, 3, 10, 12, 0, 0, TimeSpan.Zero));
+        var database = new Database(timeProvider);
+        var account = new Account { Name = "Account 1", DefaultTransactionState = TransactionState.Checked };
+        database.SaveAccount(account);
+
+        var model = TransactionEdit.FromAccount(account, new DateOnly(2026, 1, 1));
+        model.Save(database);
+
+        var transaction = Assert.Single(database.Transactions);
+        Assert.Equal(new DateOnly(2026, 3, 10), transaction.CheckedDate);
     }
 }

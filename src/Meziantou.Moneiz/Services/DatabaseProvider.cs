@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Http;
 
 namespace Meziantou.Moneiz.Services;
 
-public sealed partial class DatabaseProvider(NavigationManager navigationManager) : IDisposable
+public sealed partial class DatabaseProvider(NavigationManager navigationManager, TimeProvider timeProvider) : IDisposable
 {
     private const string MoneizLocalStorageDbName = "moneiz.db";
     private const string MoneizLocalStorageConfigurationName = "moneiz.configuration";
@@ -68,7 +68,7 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
                     if (_database is null)
                     {
                         var result = await GlobalInterop.GetByteArrayValue(MoneizLocalStorageDbName);
-                        SetDatabase(result is not null ? await Database.Load(result) : new Database());
+                        SetDatabase(result is not null ? await Database.Load(result, timeProvider) : new Database(timeProvider));
                     }
                 }
             }
@@ -346,7 +346,7 @@ public sealed partial class DatabaseProvider(NavigationManager navigationManager
             throw new InvalidOperationException(ImportOperation + ": GitHub returned an empty file.");
 
         var data = Convert.FromBase64String(blob.Content);
-        var database = await Database.Load(data);
+        var database = await Database.Load(data, timeProvider);
         await Import(database);
         configuration.GitHubSha = blob.Sha;
         await SetConfiguration(configuration);
