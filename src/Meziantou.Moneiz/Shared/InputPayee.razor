@@ -173,7 +173,6 @@
         await Task.Delay(150);
         _isOpen = false;
         await CommitValue();
-        StateHasChanged();
     }
 
     private Task CommitValue()

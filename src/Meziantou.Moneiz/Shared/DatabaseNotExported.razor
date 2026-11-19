@@ -68,7 +68,6 @@
     private async Task ExportToGitHub()
     {
         isExporting = true;
-        StateHasChanged();
         await Task.Yield();
 
         try

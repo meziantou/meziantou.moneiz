@@ -11,6 +11,14 @@
 
     <!-- Needed to compare strings-->
     <InvariantGlobalization>false</InvariantGlobalization>
+
+    <!-- BL0016: JS interop call is not guarded with a try/catch block.
+         The app only runs on WebAssembly (no circuit to lose) and only calls its own JS helpers,
+         so a failing call is a bug to surface, not to swallow. -->
+    <NoWarn>$(NoWarn);BL0016</NoWarn>
+
+    <!-- Runtime async (enabled by default for net11.0) is not supported on WebAssembly: the app fails to start -->
+    <MeziantouRuntimeAsync>false</MeziantouRuntimeAsync>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(Configuration)' == 'Release'">

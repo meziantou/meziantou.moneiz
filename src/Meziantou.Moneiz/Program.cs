@@ -1,6 +1,9 @@
-﻿using Meziantou.Moneiz;
+﻿using System.Runtime.Versioning;
+using Meziantou.Moneiz;
 using Meziantou.Moneiz.Services;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+
+[assembly: SupportedOSPlatform("browser")]
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("app");

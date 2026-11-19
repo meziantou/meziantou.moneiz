@@ -1,5 +1,10 @@
 <Project Sdk="Meziantou.NET.Sdk">
 
+  <PropertyGroup>
+    <!-- This library is loaded by the WebAssembly app, where runtime async (enabled by default for net11.0) is not supported -->
+    <MeziantouRuntimeAsync>false</MeziantouRuntimeAsync>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Meziantou.Framework" />
     <PackageReference Include="Meziantou.Framework.Scheduling" />
