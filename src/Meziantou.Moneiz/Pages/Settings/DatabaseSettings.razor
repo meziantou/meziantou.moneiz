@@ -1,10 +1,11 @@
 ﻿@page "/database"
 @inject NavigationManager NavigationManager
 @inject DatabaseProvider DatabaseProvider
+@inject TimeProvider TimeProvider
 
 @if (database != null)
 {
-    <p>Last modification: <span title="@database.LastModifiedDate">@(RelativeDate.Get(database.LastModifiedDate))</span></p>
+    <p>Last modification: <span title="@database.LastModifiedDate">@(RelativeDate.Get(database.LastModifiedDate, TimeProvider))</span></p>
 }
 
 <LoadingIndicator IsLoading="databaseConfiguration == null">
@@ -91,7 +92,7 @@
         try
         {
             using var ms = file.OpenReadStream();
-            var database = await Database.Load(ms);
+            var database = await Database.Load(ms, TimeProvider);
             await DatabaseProvider.Import(database);
             GlobalInterop.Alert("Database imported");
             NavigationManager.NavigateTo("/");

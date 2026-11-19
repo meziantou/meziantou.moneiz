@@ -14,14 +14,15 @@
 </p>
 
 @implements IDisposable
+@inject TimeProvider TimeProvider
 
 @code {
 	private bool isUpdateAvailable;
-	private System.Threading.Timer? timer;
+	private ITimer? timer;
 
 	protected override async Task OnInitializedAsync()
 	{
-		timer = new System.Threading.Timer(CheckForUpdateAvailability, state: null, TimeSpan.FromSeconds(60), TimeSpan.FromMinutes(5));
+		timer = TimeProvider.CreateTimer(CheckForUpdateAvailability, state: null, TimeSpan.FromSeconds(60), TimeSpan.FromMinutes(5));
 		await RefreshUpdateAvailability();
 	}
 

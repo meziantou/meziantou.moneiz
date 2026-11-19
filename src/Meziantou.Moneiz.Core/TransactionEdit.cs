@@ -42,13 +42,13 @@ public sealed class TransactionEdit
         };
     }
 
-    public static TransactionEdit FromAccount(Account? account)
+    public static TransactionEdit FromAccount(Account? account, DateOnly today)
     {
         return new TransactionEdit
         {
             DebitedAccount = account,
             CreditedAccount = account,
-            ValueDate = Database.GetToday(), // We want the local user date
+            ValueDate = today, // We want the local user date
             Amount = account?.DefaultCashFlow == CashFlow.Expense ? -1m : 1m,
         };
     }
@@ -68,7 +68,7 @@ public sealed class TransactionEdit
                 transaction = new Transaction();
                 if (DebitedAccount.DefaultTransactionState == TransactionState.Checked)
                 {
-                    transaction.CheckedDate = Database.GetToday();
+                    transaction.CheckedDate = database.GetToday();
                 }
             }
 
@@ -96,7 +96,7 @@ public sealed class TransactionEdit
                     creditedTransaction = new Transaction();
                     if (CreditedAccount.DefaultTransactionState == TransactionState.Checked)
                     {
-                        creditedTransaction.CheckedDate = Database.GetToday();
+                        creditedTransaction.CheckedDate = database.GetToday();
                     }
                 }
 

@@ -1,4 +1,5 @@
 ﻿@page "/settings"
+@inject TimeProvider TimeProvider
 
 <h1>Settings</h1>
 
@@ -56,10 +57,9 @@
 
     string[] formats = { "yyyy/MM/dd", "dd/MM/yyyy", "MM/dd/yyyy", "dd MMM yyyy" };
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "Get user time")]
     protected override async Task OnInitializedAsync()
     {
-        DateTime now = DateTime.Now;
+        var now = TimeProvider.GetLocalNow();
         sampleDate = new DateOnly(now.Year, 1, DateTime.DaysInMonth(now.Year, 1));
         displaySettings = await SettingsProvider.GetDisplaySettings();
     }

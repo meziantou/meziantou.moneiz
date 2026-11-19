@@ -1,6 +1,10 @@
 ﻿<Project Sdk="Meziantou.NET.Sdk.Test">
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\Meziantou.Moneiz.Core\Meziantou.Moneiz.Core.csproj" />
   </ItemGroup>
 

@@ -77,7 +77,7 @@ public partial class Edit
                 Payee = scheduledTransaction.Payee?.Name,
                 Name = scheduledTransaction.Name,
                 RecurrenceRule = scheduledTransaction.RecurrenceRuleText,
-                StartDate = Id is null ? Database.GetToday() : scheduledTransaction.NextOccurenceDate ?? scheduledTransaction.StartDate,
+                StartDate = Id is null ? _database.GetToday() : scheduledTransaction.NextOccurenceDate ?? scheduledTransaction.StartDate,
             };
         }
         else
@@ -86,7 +86,7 @@ public partial class Edit
             {
                 DebitedAccount = _database.DefaultAccount,
                 CreditedAccount = _database.DefaultAccount,
-                StartDate = Database.GetToday(),
+                StartDate = _database.GetToday(),
             };
 
             if (CreateFromTransactionId is not null)
@@ -116,7 +116,7 @@ public partial class Edit
         var newRecurrenceRule = _model.RecurrenceRule.TrimAndNullify();
         if (scheduledTransaction.RecurrenceRuleText != newRecurrenceRule || scheduledTransaction.StartDate != _model.StartDate)
         {
-            if (_model.StartDate < Database.GetToday())
+            if (_model.StartDate < _database.GetToday())
             {
                 if (!GlobalInterop.Confirm("The schedule starts in the past. Are you sure?"))
                     return;

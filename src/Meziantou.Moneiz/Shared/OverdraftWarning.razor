@@ -1,5 +1,6 @@
 @using Meziantou.Moneiz.Core
 @inject DatabaseProvider DatabaseProvider
+@inject TimeProvider TimeProvider
 @implements IDisposable
 
 @if (hasOverdraftAccounts)
@@ -62,12 +63,12 @@
     private List<OverdraftAccountInfo> overdraftAccounts = new();
     private bool hasOverdraftAccounts;
     private DateOnly today;
-    private System.Threading.Timer? timer;
+    private ITimer? timer;
 
     protected override async Task OnInitializedAsync()
     {
         DatabaseProvider.DatabaseChanged += OnDatabaseChanged;
-        timer = new System.Threading.Timer(CheckOverdraft, state: null, TimeSpan.Zero, TimeSpan.FromMinutes(5));
+        timer = TimeProvider.CreateTimer(CheckOverdraft, state: null, TimeSpan.Zero, TimeSpan.FromMinutes(5));
         await CheckForOverdraft();
     }
 
@@ -92,7 +93,7 @@
         try
         {
             var db = await DatabaseProvider.GetDatabase();
-            today = Database.GetToday();
+            today = db.GetToday();
 
             overdraftAccounts.Clear();
 

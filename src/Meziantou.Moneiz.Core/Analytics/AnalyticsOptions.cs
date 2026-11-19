@@ -2,10 +2,21 @@
 
 public sealed class AnalyticsOptions
 {
+    public AnalyticsOptions()
+        : this(TimeProvider.System)
+    {
+    }
+
+    public AnalyticsOptions(TimeProvider timeProvider)
+    {
+        ToDate = Database.GetToday(timeProvider);
+        FromDate = ToDate.AddDays(-30);
+    }
+
     public event EventHandler? OptionChanged;
 
-    public DateOnly FromDate { get; set; } = Database.GetToday().AddDays(-30);
-    public DateOnly ToDate { get; set; } = Database.GetToday();
+    public DateOnly FromDate { get; set; }
+    public DateOnly ToDate { get; set; }
     public BigTableDateGrouping BigTableDateGrouping { get; set; } = BigTableDateGrouping.Month;
     public ISet<Account> SelectedAccounts { get; } = new HashSet<Account>();
 
