@@ -9,6 +9,8 @@
     <button type="button"
             class="@($"{ComponentCssClass}-control")"
             popovertarget="@_popoverId"
+            aria-haspopup="listbox"
+            aria-expanded="@(_isOpen ? "true" : "false")"
             style="anchor-name: @_anchorName"
             @onclick="OnControlClick">
         <span class="@($"{ComponentCssClass}-value")">
@@ -38,13 +40,15 @@
                        @ref="_searchInput" />
             </div>
 
-            <div class="@($"{ComponentCssClass}-options")">
+            <div class="@($"{ComponentCssClass}-options")" role="listbox">
                 @if (AllowEmpty)
                 {
                     var isSelected = CurrentValue is null;
                     var isHighlighted = _highlightedIndex == -1;
-                    
+
                     <div class="@($"{ComponentCssClass}-option") @(isSelected ? "is-selected" : "") @(isHighlighted ? "is-highlighted" : "")"
+                         role="option"
+                         aria-selected="@(isSelected ? "true" : "false")"
                          @onclick="() => SelectItem(null)"
                          @onmouseenter="() => _highlightedIndex = -1">
                         @EmptyText
@@ -65,7 +69,7 @@
                             currentGroup = groupName;
                             if (!string.IsNullOrEmpty(currentGroup))
                             {
-                                <div class="@($"{ComponentCssClass}-group")">@currentGroup</div>
+                                <div class="@($"{ComponentCssClass}-group")" role="presentation">@currentGroup</div>
                             }
                         }
 
@@ -75,6 +79,8 @@
                         var capturedItem = item;
 
                         <div class="@($"{ComponentCssClass}-option") @(isSelected ? "is-selected" : "") @(isHighlighted ? "is-highlighted" : "")"
+                             role="option"
+                             aria-selected="@(isSelected ? "true" : "false")"
                              @onclick="() => SelectItem(capturedItem)"
                              @onmouseenter="() => _highlightedIndex = capturedIndex">
                             @GetItemDisplayName(item)

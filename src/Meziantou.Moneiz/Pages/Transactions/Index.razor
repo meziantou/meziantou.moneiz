@@ -44,28 +44,28 @@ else
     @if (account is not null)
     {
         <div class="account-balance">
-            <div>
+            <div data-testid="balance-today">
                 <span class="account-balance-title" title="@today.ToLongDateString()">Today:</span>
                 <Amount Value="@database!.GetTodayBalance(account)" Currency="@account.CurrencyIsoCode" />
             </div>
-            <div>
+            <div data-testid="balance-all">
                 <span class="account-balance-title">All transactions:</span>
                 <Amount Value="@database.GetBalance(account)" Currency="@account.CurrencyIsoCode" />
             </div>
-            <div>
+            <div data-testid="balance-reconciled">
                 <span class="account-balance-title">Reconciled transactions:</span>
                 <span>
                     <Amount Value="@database.GetReconciledBalance(account)" Currency="@account.CurrencyIsoCode" />
                 </span>
             </div>
-            <div>
+            <div data-testid="balance-checked">
                 <span class="account-balance-title">Checked transactions:</span>
                 <span id="CheckedBalanceContainer">
                     <Amount Value="@database.GetCheckedBalance(account)" Currency="@account.CurrencyIsoCode" />
                 </span>
             </div>
             <div class="account-balance-actions">
-                <a class="btn btn-primary" @onclick="Reconcile">Reconcile</a>
+                <button type="button" class="btn btn-primary" @onclick="Reconcile">Reconcile</button>
             </div>
         </div>
     }
@@ -147,19 +147,19 @@ else
                     var (transaction, accountBalance) = context;
                 }
 
-                <tr @key="transaction.Id">
+                <tr @key="transaction.Id" data-transaction-id="@transaction.Id" data-transaction-state="@transaction.State">
                     <td class="transaction-state">
                         @if (transaction.State is TransactionState.Reconciliated)
                         {
-                            <div class="btn-transaction-status fas fa-check-square" title="@transaction.State"></div>
+                            <div class="btn-transaction-status fas fa-check-square" title="@transaction.State" role="checkbox" aria-checked="true" aria-disabled="true" aria-label="Reconciled"></div>
                         }
                         else if (transaction.State is TransactionState.Checked)
                         {
-                            <div class="btn-transaction-status far fa-check-square" title="@transaction.State" @onclick="() => Uncheck(transaction)"></div>
+                            <div class="btn-transaction-status far fa-check-square" title="@transaction.State" role="checkbox" aria-checked="true" aria-label="Checked" @onclick="() => Uncheck(transaction)"></div>
                         }
                         else
                         {
-                            <div class="btn-transaction-status far fa-square" title="@transaction.State" @onclick="() => Check(transaction)"></div>
+                            <div class="btn-transaction-status far fa-square" title="@transaction.State" role="checkbox" aria-checked="false" aria-label="Checked" @onclick="() => Check(transaction)"></div>
                         }
                     </td>
                     <td id="@GetInlineEditorCellId(transaction, EditColumn.Date)"
@@ -194,6 +194,7 @@ else
                     <td title="@transaction.FinalTitle">@transaction.FinalTitle</td>
                     <td id="@GetInlineEditorCellId(transaction, EditColumn.Amount)"
                         class="transaction-amount @GetInlineEditCellClass(transaction, EditColumn.Amount)"
+                        data-column="amount"
                         @ondblclick="() => BeginInlineEdit(transaction, EditColumn.Amount)">
                         @if (currentEdit?.Id == transaction.Id && editColumn == EditColumn.Amount)
                         {
@@ -206,7 +207,7 @@ else
                     </td>
                     @if (ShowBalanceColumn)
                     {
-                        <td class="transaction-amount"><Amount Value="@accountBalance" Currency="@GetCellCurrency(transaction)" /></td>
+                        <td class="transaction-amount" data-column="balance"><Amount Value="@accountBalance" Currency="@GetCellCurrency(transaction)" /></td>
                     }
                     <td id="@GetInlineEditorCellId(transaction, EditColumn.Comment)"
                         class="@GetInlineEditCellClass(transaction, EditColumn.Comment)"
