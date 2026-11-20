@@ -7,5 +7,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Meziantou.Moneiz.CoreTests/Meziantou.Moneiz.CoreTests.csproj" />
+    <Project Path="tests/Meziantou.Moneiz.E2ETests/Meziantou.Moneiz.E2ETests.csproj" />
   </Folder>
 </Solution>

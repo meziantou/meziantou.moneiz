@@ -1,0 +1,27 @@
+<Project Sdk="Meziantou.NET.Sdk.Test">
+
+  <PropertyGroup>
+    <MoneizAppProject>$(MSBuildThisFileDirectory)..\..\src\Meziantou.Moneiz\Meziantou.Moneiz.csproj</MoneizAppProject>
+    <MoneizAppPublishDir>$(MSBuildThisFileDirectory)$(BaseIntermediateOutputPath)moneiz-app\</MoneizAppPublishDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Meziantou.AspNetCore.Testing" />
+    <PackageReference Include="Meziantou.Framework.WebPlatform.Wasmtime" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Build order only: the tests load the published application, not its assembly -->
+    <ProjectReference Include="$(MoneizAppProject)" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyMetadata Include="MoneizAppPath" Value="$(MoneizAppPublishDir)wwwroot" />
+  </ItemGroup>
+
+  <Target Name="PublishMoneizApp" BeforeTargets="Build" Condition="'$(DesignTimeBuild)' != 'true'">
+    <MSBuild Projects="$(MoneizAppProject)" Targets="Publish" Properties="Configuration=$(Configuration);PublishDir=$(MoneizAppPublishDir)" />
+  </Target>
+
+</Project>

@@ -32,7 +32,7 @@
     </RepeaterContainerTemplate>
 
     <ItemTemplate Context="scheduledTransaction">
-        <tr>
+        <tr data-scheduled-transaction-id="@scheduledTransaction.Id">
             <td>@scheduledTransaction.Name</td>
             <td>@scheduledTransaction.Account</td>
             <td><Amount Value="scheduledTransaction.Amount" Currency="@scheduledTransaction.Account?.CurrencyIsoCode" /></td>
