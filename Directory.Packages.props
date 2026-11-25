@@ -17,6 +17,6 @@
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="11.0.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="11.0.0" />
     <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="11.0.0" />
-    <PackageVersion Include="System.CommandLine" Version="2.0.14" />
+    <PackageVersion Include="System.CommandLine" Version="2.0.15" />
   </ItemGroup>
 </Project>
